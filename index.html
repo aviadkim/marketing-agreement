@@ -5,112 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק השקעות למוצרים מובנים</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.1.7/signature_pad.css">
 </head>
 <body>
     <div class="container">
-        <form id="marketingAgreement">
-            <!-- Header -->
-            <div class="header">
+        <form id="marketingAgreement" class="form-sections">
+            <!-- Section 1: Client Info -->
+            <section id="clientInfo" class="form-section active">
                 <h1>הסכם שיווק השקעות למוצרים מובנים</h1>
-                <p id="currentDate"></p>
-            </div>
-
-            <!-- Client Info Section -->
-            <section class="form-section">
-                <h2>פרטי לקוח</h2>
-                <div class="client-info">
-                    <div class="form-group">
-                        <label>שם מלא</label>
-                        <input type="text" name="fullName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>מספר זיהוי</label>
-                        <input type="text" name="id" required>
-                    </div>
-                    <div class="form-group">
-                        <label>דואר אלקטרוני</label>
-                        <input type="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label>כתובת</label>
-                        <input type="text" name="address" required>
-                    </div>
-                    <div class="form-group">
-                        <label>מספר טלפון</label>
-                        <input type="tel" name="phone" required>
-                    </div>
+                <div class="date-header">
+                    <p>שנערך ונחתם ביום <span id="currentDay"></span> 
+                       לחודש <span id="currentMonth"></span> 
+                       שנת <span id="currentYear"></span></p>
                 </div>
-            </section>
 
-            <!-- Investment Profile Section -->
-            <section class="form-section">
-                <h2>פרופיל השקעות</h2>
-                <div class="investment-profile">
-                    <div class="form-group">
-                        <label>מהות הקשר בין בעלי החשבון</label>
-                        <div class="radio-group">
-                            <label>
-                                <input type="radio" name="relationshipType" value="couple">
-                                זוג
-                            </label>
-                            <label>
-                                <input type="radio" name="relationshipType" value="other">
-                                אחר
-                            </label>
+                <div class="client-details">
+                    <h2>פרטי לקוח</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>שם מלא</label>
+                            <input type="text" name="fullName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>מספר זיהוי</label>
+                            <input type="text" name="id" required>
+                        </div>
+                        <div class="form-group">
+                            <label>דואר אלקטרוני</label>
+                            <input type="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>כתובת</label>
+                            <input type="text" name="address" required>
+                        </div>
+                        <div class="form-group">
+                            <label>מספר טלפון</label>
+                            <input type="tel" name="phone" required>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>סכום מתוכנן להשקעה במוצרים מובנים</label>
-                        <input type="text" name="plannedInvestment">
-                    </div>
-                    <div class="form-group">
-                        <label>מטבע יחוס</label>
-                        <select name="currency">
-                            <option value="ILS">שקל</option>
-                            <option value="USD">דולר</option>
-                            <option value="EUR">יורו</option>
-                            <option value="GBP">ליש"ט</option>
-                        </select>
-                    </div>
+                    <button type="button" class="next-section">המשך לשאלון סיכונים</button>
                 </div>
             </section>
 
-            <!-- Risk Profile Questions -->
-            <section class="form-section">
-                <h2>שאלון סיכון</h2>
-                <div class="risk-profile">
-                    <div class="form-group">
-                        <label>כיצד נהגת במשברים קודמים בשוק ההון?</label>
-                        <select name="crisisResponse" required>
-                            <option value="">בחר תשובה</option>
-                            <option value="1">מכרתי את כל התיק ועברתי למזומן</option>
-                            <option value="2">הקטנתי משמעותית את החשיפה למניות</option>
-                            <option value="3">לא ביצעתי שום שינוי כי ההשקעות שלי הן לטווח ארוך</option>
-                            <option value="4">ניצלתי את ההזדמנות והגדלתי את מרכיב המניות</option>
-                            <option value="5">לא יודע כיצד הייתי מגיב</option>
-                        </select>
-                    </div>
+            <!-- Section 2: Risk Profile -->
+            <section id="riskProfile" class="form-section">
+                <h2>שאלון סיכונים</h2>
+                <!-- Risk profile questions here -->
+                <div class="form-navigation">
+                    <button type="button" class="prev-section">חזור</button>
+                    <button type="button" class="next-section">המשך לגילוי נאות</button>
                 </div>
             </section>
 
-            <!-- Signature Section -->
-            <section class="form-section">
-                <h2>חתימה</h2>
+            <!-- Section 3: Disclosures -->
+            <section id="disclosures" class="form-section">
+                <h2>גילוי נאות</h2>
+                <div class="disclosure-content">
+                    <!-- Disclosure content here -->
+                </div>
                 <div class="signature-section">
-                    <div class="form-group">
-                        <label>חתימה דיגיטלית (הקלד את שמך המלא)</label>
-                        <input type="text" name="signature" required>
+                    <h3>חתימה דיגיטלית</h3>
+                    <div id="signature-pad" class="signature-pad">
+                        <canvas></canvas>
                     </div>
-                    <div class="form-group">
-                        <label>תאריך</label>
-                        <input type="text" id="signatureDate" readonly>
-                    </div>
+                    <button type="button" id="clear-signature">נקה חתימה</button>
+                </div>
+                <div class="form-navigation">
+                    <button type="button" class="prev-section">חזור</button>
+                    <button type="submit" class="submit-form">שלח טופס</button>
                 </div>
             </section>
-
-            <button type="submit" class="submit-button">שלח הסכם</button>
         </form>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.1.7/signature_pad.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
