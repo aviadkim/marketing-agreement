@@ -3,80 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>הסכם שיווק השקעות למוצרים מובנים</title>
+    <title>הסכם שיווק השקעות למוצרים מובנים - מובנה גלובל</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.1.7/signature_pad.css">
 </head>
 <body>
     <div class="container">
-        <form id="marketingAgreement" class="form-sections">
-            <!-- Section 1: Client Info -->
-            <section id="clientInfo" class="form-section active">
+        <!-- Progress Save Banner -->
+        <div id="saveProgress" class="save-progress">
+            <span>ההתקדמות נשמרת אוטומטית</span>
+            <button id="continueProgress" style="display: none;">המשך מהמקום הקודם</button>
+        </div>
+
+        <!-- Main Form -->
+        <form id="marketingAgreement">
+            <!-- Header Section -->
+            <div class="form-header">
                 <h1>הסכם שיווק השקעות למוצרים מובנים</h1>
                 <div class="date-header">
                     <p>שנערך ונחתם ביום <span id="currentDay"></span> 
                        לחודש <span id="currentMonth"></span> 
                        שנת <span id="currentYear"></span></p>
                 </div>
+            </div>
 
-                <div class="client-details">
-                    <h2>פרטי לקוח</h2>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>שם מלא</label>
-                            <input type="text" name="fullName" required>
-                        </div>
-                        <div class="form-group">
-                            <label>מספר זיהוי</label>
-                            <input type="text" name="id" required>
-                        </div>
-                        <div class="form-group">
-                            <label>דואר אלקטרוני</label>
-                            <input type="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label>כתובת</label>
-                            <input type="text" name="address" required>
-                        </div>
-                        <div class="form-group">
-                            <label>מספר טלפון</label>
-                            <input type="tel" name="phone" required>
+            <!-- Client Info Section -->
+            <section id="clientInfo" class="form-section">
+                <h2>פרטי לקוח</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>שם מלא *</label>
+                        <input type="text" name="fullName" required data-save="true">
+                    </div>
+                    <div class="form-group">
+                        <label>מספר זיהוי *</label>
+                        <input type="text" name="id" required data-save="true">
+                    </div>
+                    <div class="form-group">
+                        <label>דואר אלקטרוני *</label>
+                        <input type="email" name="email" required data-save="true">
+                    </div>
+                    <div class="form-group">
+                        <label>כתובת *</label>
+                        <input type="text" name="address" required data-save="true">
+                    </div>
+                    <div class="form-group">
+                        <label>מספר טלפון *</label>
+                        <input type="tel" name="phone" required data-save="true">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Investment Profile Section -->
+            <section id="investmentProfile" class="form-section">
+                <h2>אפיון השקעות</h2>
+                
+                <!-- Basic Questions -->
+                <div class="question-group">
+                    <h3>שאלות בסיס</h3>
+                    
+                    <div class="form-group">
+                        <label>מהות הקשר בין בעלי החשבון</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="relationshipType" value="couple" data-save="true">
+                                <span class="checkmark"></span>
+                                זוג
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="relationshipType" value="other" data-save="true">
+                                <span class="checkmark"></span>
+                                אחר
+                            </label>
                         </div>
                     </div>
-                    <button type="button" class="next-section">המשך לשאלון סיכונים</button>
-                </div>
-            </section>
 
-            <!-- Section 2: Risk Profile -->
-            <section id="riskProfile" class="form-section">
-                <h2>שאלון סיכונים</h2>
-                <!-- Risk profile questions here -->
-                <div class="form-navigation">
-                    <button type="button" class="prev-section">חזור</button>
-                    <button type="button" class="next-section">המשך לגילוי נאות</button>
-                </div>
-            </section>
-
-            <!-- Section 3: Disclosures -->
-            <section id="disclosures" class="form-section">
-                <h2>גילוי נאות</h2>
-                <div class="disclosure-content">
-                    <!-- Disclosure content here -->
-                </div>
-                <div class="signature-section">
-                    <h3>חתימה דיגיטלית</h3>
-                    <div id="signature-pad" class="signature-pad">
-                        <canvas></canvas>
+                    <div class="form-group">
+                        <label>אזרח ישראל</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="isIsraeliCitizen" value="yes" data-save="true">
+                                <span class="checkmark"></span>
+                                כן
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="isIsraeliCitizen" value="no" data-save="true">
+                                <span class="checkmark"></span>
+                                לא
+                            </label>
+                        </div>
                     </div>
-                    <button type="button" id="clear-signature">נקה חתימה</button>
+
+                    <div class="form-group">
+                        <label>סכום מתוכנן להשקעה במוצרים מובנים</label>
+                        <input type="text" name="plannedInvestment" data-save="true">
+                    </div>
+
+                    <div class="form-group">
+                        <label>מטבע יחוס</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="currency" value="ILS" data-save="true">
+                                <span class="checkmark"></span>
+                                שקל
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="currency" value="USD" data-save="true">
+                                <span class="checkmark"></span>
+                                דולר
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="currency" value="EUR" data-save="true">
+                                <span class="checkmark"></span>
+                                יורו
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="currency" value="GBP" data-save="true">
+                                <span class="checkmark"></span>
+                                ליש"ט
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-navigation">
-                    <button type="button" class="prev-section">חזור</button>
-                    <button type="submit" class="submit-form">שלח טופס</button>
+
+                <!-- Investment Purpose -->
+                <div class="question-group">
+                    <h3>ייעוד הכסף</h3>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="moneyPurpose" value="property" data-save="true">
+                            <span class="checkmark"></span>
+                            רכישת נכס
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="moneyPurpose" value="familySupport" data-save="true">
+                            <span class="checkmark"></span>
+                            סיוע למשפחה
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="moneyPurpose" value="pension" data-save="true">
+                            <span class="checkmark"></span>
+                            פנסיה
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="moneyPurpose" value="inheritance" data-save="true">
+                            <span class="checkmark"></span>
+                            ירושה לילדים
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="moneyPurpose" value="income" data-save="true">
+                            <span class="checkmark"></span>
+                            לקבל הכנסה שוטפת מהשקעה
+                        </label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="moneyPurpose" value="noSpecificPurpose" data-save="true">
+                            <span class="checkmark"></span>
+                            אין ייעוד לכספים כרגע
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Investment Timeline and Goals -->
+                <div class="question-group">
+                    <h3>אופק ומטרות השקעה</h3>
+                    
+                    <div class="form-group">
+                        <label>טווח ההשקעה הצפוי</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="investmentTimeframe" value="upTo2" data-save="true">
+                                <span class="checkmark"></span>
+                                עד שנתיים
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="investmentTimeframe" value="2to5" data-save="true">
+                                <span class="checkmark"></span>
+                                שנתיים עד חמש שנים
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="investmentTimeframe" value="over5" data-save="true">
+                                <span class="checkmark"></span>
+                                מעל חמש שנים
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="investmentTimeframe" value="unlimited" data-save="true">
+                                <span class="checkmark"></span>
+                                לא מוגבל בזמן
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>המטרה העיקרית של ההשקעה</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="mainInvestmentGoal" value="preserve" data-save="true">
+                                <span class="checkmark"></span>
+                                לשמור על הכסף שלי
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="mainInvestmentGoal" value="longTerm" data-save="true">
+                                <span class="checkmark"></span>
+                                לחסוך לטווח ארוך
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="mainInvestmentGoal" value="liquidity" data-save="true">
+                                <span class="checkmark"></span>
+                                שמירה על נזילות
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="mainInvestmentGoal" value="growth" data-save="true">
+                                <span class="checkmark"></span>
+                                להגדיל את ההון
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Experience and Crisis Response -->
+                <div class="question-group">
+                    <h3>ניסיון ותגובה למשברים</h3>
+                    
+                    <div class="form-group">
+                        <label>רמת הידע והניסיון בשוק ההון</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="marketExperience" value="none" data-save="true">
+                                <span class="checkmark"></span>
+                                אין ניסיון
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="marketExperience" value="studies" data-save="true">
+                                <span class="checkmark"></span>
+                                במסגרת לימודים
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="marketExperience" value="follows" data-save="true">
+                                <span class="checkmark"></span>
+                                עוקב ומכיר את שוק ההון
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="marketExperience" value="experienced" data-save="true">
+                                <span class="checkmark"></span>
+                                משקיע בשוק ההון מעל 5 שנים
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="marketExperience" value="structured" data-save="true">
+                                <span class="checkmark"></span>
+                                השקעתי במוצרים מובנים
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>כיצד נהגת במשברים קודמים (2008/2020)?</label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="crisisResponse" value="soldAll" data-save="true">
+                                <span class="checkmark"></span>
+                                מכרתי את כל התיק ועברתי למזומן
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="crisisResponse" value="reduced" data-save="true">
+                                <span class="checkmark"></span>
+                                הקטנתי משמעותית את החשיפה למניות
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="crisisResponse" value="noChange" data-save="true">
+                                <span class="checkmark"></span>
+                                לא ביצעתי שום שינוי כי ההשקעות שלי הן לטווח ארוך
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="crisisResponse" value="increased" data-save="true">
+                                <span class="checkmark"></span>
+                                ניצלתי את ההזדמנות והגדלתי את מרכיב המניות
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Client Needs -->
+                <div class="question-group">
+                    <h3>תיאור צרכי הלקוח</h3>
+                    <div class="form-group">
+                        <textarea name="clientNeeds" rows="4" placeholder="נא לתאר את צרכיך המיוחדים" data-save="true"></textarea>
+                    </div>
                 </div>
             </section>
+
+            <!-- Digital Signature Section -->
+            <section id="signature" class="form-section">
+                <h2>חתימה דיגיטלית</h2>
+                
+                <div class="signature-options">
+                    <div class="signature-choice">
+                        <label>בחר דרך לחתימה:</label>
+                        <select id="signatureType">
+                            <option value="draw">חתימה על המסך</option>
+                            <option value="upload">העלאת קובץ חתימה</option>
+                            <option value="type">הקלדת שם מלא</option>
+                        </select>
+                    </div>
+
+                    <div id="drawSignature" class="signature-method">
+                        <div id="signaturePad">
+                            <canvas></canvas>
+                        </div>
+                        <button type="button" id="clearSignature">נקה חתימה</button>
+                    </div>
+
+                    <div id="uploadSignature" class="signature-method" style="display:none;">
+                        <input type="file" accept="image/*" id="signatureFile">
+                        <div id="signaturePreview"></div>
+                    </div>
+
+                    <div id="typeSignature" class="signature-method" style="display:none;">
+                        <input type="text" id="typedName" placeholder="הקלד את שמך המלא כחתימה">
+                        <div class="signature-preview"></div>
+                    </div>
+
+                    <div class="signature-date">
+                        <span id="signatureDate"></span>
+                    </div>
+
+                    <div class="final-declarations">
+                        <div class="declaration-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" required name="readAndUnderstood">
+                                <span class="checkmark"></span>
+                                קראתי והבנתי את כל תנאי ההסכם
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" required name="acceptTerms">
+                                <span class="checkmark"></span>
+                                אני מסכים/ה לכל התנאים המפורטים
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Submission -->
+            <div class="form-actions">
+                <button type="submit" class="submit-button">שלח טופס</button>
+                <button type="button" class="save-draft-button">שמור טיוטה</button>
+                <div class="success-message" style="display:none;">
+                    הטופס נשלח בהצלחה! עותק נשלח לכתובת המייל שלך
+                </div>
+            </div>
         </form>
     </div>
+
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.1.7/signature_pad.min.js"></script>
     <script src="script.js"></script>
 </body>
