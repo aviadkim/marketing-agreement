@@ -1,13 +1,11 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const { sendFormEmail } = require('./config/email');
-
 const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // להגדיל את הלימיט בגלל החתימה
+app.use(express.json({ limit: '50mb' })); // הגדלת הלימיט בגלל החתימה והתמונות
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Health check endpoint
@@ -23,31 +21,24 @@ app.post('/api/submit', async (req, res) => {
         const formData = req.body;
         
         // Basic validation
-        if (!formData.email || !formData.fullName) {
+        if (!formData.name || !formData.idNumber) {
             throw new Error('Missing required fields');
-        }
-
-        // Send email
-        const emailSent = await sendFormEmail(formData);
-        
-        if (!emailSent) {
-            throw new Error('Failed to send email');
         }
 
         // Log success
         console.log('Form processed successfully');
-        console.log('Email sent to:', formData.email);
-
-        res.json({ 
+        console.log('Email:', formData.email);
+        
+        res.json({
             success: true,
             message: 'Form submitted successfully'
         });
-
+        
     } catch (error) {
         console.error('Form submission error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to process form',
-            message: error.message 
+            message: error.message
         });
     }
 });
@@ -55,14 +46,16 @@ app.post('/api/submit', async (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({ 
+    res.status(500).json({
         error: 'Something broke!',
-        message: err.message 
+        message: err.message
     });
 });
 
+// Configuration
 const PORT = process.env.PORT || 3000;
 
+// Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log('Environment:', process.env.NODE_ENV);
