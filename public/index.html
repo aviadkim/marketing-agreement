@@ -3,37 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>הסכם שיווק השקעות - מובנה</title>
-    <link href="/css/styles.css" rel="stylesheet">
+    <title>הסכם שיווק השקעות</title>
+    <style>
+        :root {
+            --primary-color: #2558e5;
+            --primary-light: #eef3ff;
+            --dark-blue: #1e2c4f;
+            --light-gray: #f8fafc;
+            --border-gray: #e2e8f0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--light-gray);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #1e2c4f 0%, #2558e5 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 25px rgba(37, 88, 229, 0.1);
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 24px;
+        }
+
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 60px 0;
+            position: relative;
+            padding: 0 40px;
+        }
+
+        .steps-container::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border-gray);
+            z-index: 1;
+        }
+
+        .step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--border-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--dark-blue);
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-circle {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 0 0 8px var(--primary-light);
+        }
+
+        .step-label {
+            font-weight: 500;
+            color: var(--dark-blue);
+        }
+
+        .form-content {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--dark-blue);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-gray);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding: 0 40px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 88, 229, 0.2);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 2px solid var(--border-gray);
+            color: var(--dark-blue);
+        }
+
+        .btn-outline:hover {
+            background: var(--light-gray);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px auto;
+            }
+
+            .form-header {
+                padding: 30px 20px;
+            }
+
+            .steps-container {
+                padding: 0 20px;
+            }
+
+            .form-content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="welcome-container">
-        <!-- Header with Logo -->
-        <header class="welcome-header">
+    <div class="container">
+        <header class="form-header">
             <img src="/images/movne-logo.png" alt="מובנה" class="logo">
             <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
         </header>
 
-        <!-- Welcome Content -->
-        <main class="welcome-content">
-            <div class="info-card">
-                <h2>ברוכים הבאים</h2>
-                <p>לפניכם טופס הסכם שיווק השקעות הכולל מספר שלבים:</p>
-                <ol>
-                    <li>פרטים אישיים וחתימה</li>
-                    <li>פרטי השקעה</li>
-                    <li>שאלון סיכון</li>
-                    <li>הצהרות</li>
-                </ol>
-                <p>בסיום התהליך תוכלו לצפות בכל הפרטים לפני שליחה סופית.</p>
+        <div class="steps-container">
+            <div class="step active">
+                <div class="step-circle">1</div>
+                <div class="step-label">פרטים אישיים</div>
             </div>
+            <div class="step">
+                <div class="step-circle">2</div>
+                <div class="step-label">פרטי השקעה</div>
+            </div>
+            <div class="step">
+                <div class="step-circle">3</div>
+                <div class="step-label">שאלון סיכון</div>
+            </div>
+            <div class="step">
+                <div class="step-circle">4</div>
+                <div class="step-label">הצהרות</div>
+            </div>
+        </div>
 
-            <!-- Start Button -->
-            <div class="start-section">
-                <a href="/sections/section1.html" class="btn-start">
-                    התחל למלא טופס
-                </a>
-            </div>
+        <main class="form-content">
+            <form class="form-section">
+                <div class="form-group">
+                    <label>שם פרטי</label>
+                    <input type="text" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>שם משפחה</label>
+                    <input type="text" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>תעודת זהות</label>
+                    <input type="text" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>דוא"ל</label>
+                    <input type="email" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>טלפון נייד</label>
+                    <input type="tel" class="form-control" required>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" class="btn btn-outline">חזור</button>
+                    <button type="button" class="btn btn-primary">המשך לשלב הבא</button>
+                </div>
+            </form>
         </main>
     </div>
 </body>
