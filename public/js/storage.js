@@ -1,42 +1,55 @@
-// storage.js
 document.addEventListener('DOMContentLoaded', function() {
-    const formData = {};
-
-    // שמירת נתונים בכל שינוי בטופס
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('change', function(e) {
-            const formSection = this.id; // section1-form, section2-form, etc.
-            
-            // שומר את כל הנתונים מהטופס הנוכחי
-            const formElements = new FormData(this);
-            formData[formSection] = {};
-            
-            formElements.forEach((value, key) => {
-                formData[formSection][key] = value;
-            });
-
-            // שמירה ב-localStorage
-            localStorage.setItem('formData', JSON.stringify(formData));
-
-            // הצגת הודעת שמירה
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('change', function() {
+            saveFormData();
             showSaveMessage();
         });
-    });
+    }
 
-    // טעינת נתונים שמורים בטעינת הדף
+    function saveFormData() {
+        if (!form) return;
+        const formData = {};
+        const formElements = form.elements;
+
+        for (let element of formElements) {
+            if (element.name) {
+                if (element.type === 'checkbox') {
+                    formData[element.name] = element.checked;
+                } else if (element.type === 'radio') {
+                    if (element.checked) {
+                        formData[element.name] = element.value;
+                    }
+                } else {
+                    formData[element.name] = element.value;
+                }
+            }
+        }
+
+        const currentPage = window.location.pathname.split('/').pop();
+        let savedData = JSON.parse(localStorage.getItem('formData') || '{}');
+        savedData[currentPage] = formData;
+        localStorage.setItem('formData', JSON.stringify(savedData));
+    }
+
     function loadSavedData() {
         const savedData = localStorage.getItem('formData');
         if (savedData) {
             const parsedData = JSON.parse(savedData);
-            const currentForm = document.querySelector('form');
-            if (currentForm && parsedData[currentForm.id]) {
-                Object.entries(parsedData[currentForm.id]).forEach(([key, value]) => {
-                    const input = currentForm.querySelector(`[name="${key}"]`);
-                    if (input) {
-                        if (input.type === 'checkbox' || input.type === 'radio') {
-                            input.checked = value === 'true' || value === true;
+            const currentPage = window.location.pathname.split('/').pop();
+            const pageData = parsedData[currentPage];
+
+            if (pageData && form) {
+                Object.keys(pageData).forEach(key => {
+                    const element = form.elements[key];
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = pageData[key];
+                        } else if (element.type === 'radio') {
+                            const radio = form.querySelector(`input[name="${key}"][value="${pageData[key]}"]`);
+                            if (radio) radio.checked = true;
                         } else {
-                            input.value = value;
+                            element.value = pageData[key];
                         }
                     }
                 });
@@ -44,16 +57,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // הצגת הודעת שמירה
     function showSaveMessage() {
+        const existingMessage = document.querySelector('.save-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
         const message = document.createElement('div');
         message.className = 'save-message';
-        message.textContent = 'הנתונים נשמרו באופן אוטומטי';
-        document.body.appendChild(message);
+        message.textContent = 'הנתונים נשמרו';
+        message.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s, fadeOut 0.3s 2s forwards;
+        `;
 
+        document.body.appendChild(message);
         setTimeout(() => {
             message.remove();
-        }, 2000);
+        }, 2300);
     }
 
     loadSavedData();
