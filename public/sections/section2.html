@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הסכם שיווק השקעות - פרטי השקעה</title>
+    <link href="/css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header with Logo -->
+    <header class="form-header">
+        <img src="/images/movne-logo.png" alt="מובנה" class="logo">
+        <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-steps">
+            <div class="step completed" data-step="1">
+                <div class="step-circle">
+                    <span class="step-number">1</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">פרטים אישיים</div>
+                <div class="step-time">כ-2 דקות</div>
+            </div>
+            <div class="step active" data-step="2">
+                <div class="step-circle">
+                    <span class="step-number">2</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">פרטי השקעה</div>
+                <div class="step-time">כ-3 דקות</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-circle">
+                    <span class="step-number">3</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">שאלון סיכון</div>
+                <div class="step-time">כ-5 דקות</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="step-circle">
+                    <span class="step-number">4</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">הצהרות</div>
+                <div class="step-time">כ-3 דקות</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Content -->
+    <main class="form-content">
+        <form id="section2-form" class="form-section">
+            <div class="grid-2">
+                <div class="input-group">
+                    <label>סכום מתוכנן להשקעה במוצרים מובנים</label>
+                    <input type="number" name="investmentAmount" required min="0">
+                    <div class="input-hint">יש להזין סכום בש"ח ללא נקודה עשרונית</div>
+                </div>
+                <div class="input-group">
+                    <label>בנק</label>
+                    <select name="bank" required>
+                        <option value="">בחר/י בנק...</option>
+                        <option value="poalim">הפועלים</option>
+                        <option value="leumi">לאומי</option>
+                        <option value="discount">דיסקונט</option>
+                        <option value="mizrahi">מזרחי טפחות</option>
+                        <option value="firstInt">הבינלאומי</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Currency Options -->
+            <div class="option-group mt-6">
+                <label>מטבע יחוס</label>
+                <div class="radio-grid">
+                    <label class="radio-container">
+                        <input type="radio" name="currency" value="ILS" required>
+                        <span class="radio-mark"></span>
+                        שקל
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="currency" value="USD">
+                        <span class="radio-mark"></span>
+                        דולר
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="currency" value="EUR">
+                        <span class="radio-mark"></span>
+                        יורו
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="currency" value="GBP">
+                        <span class="radio-mark"></span>
+                        ליש"ט
+                    </label>
+                </div>
+            </div>
+
+            <!-- Investment Purpose -->
+            <div class="option-group mt-6">
+                <label>ייעוד הכסף (ניתן לבחור יותר מתשובה אחת)</label>
+                <div class="checkbox-grid">
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="purpose" value="property">
+                        <span class="checkmark"></span>
+                        רכישת נכס
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="purpose" value="pension">
+                        <span class="checkmark"></span>
+                        חסכון לפנסיה
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="purpose" value="savings">
+                        <span class="checkmark"></span>
+                        חסכון לטווח ארוך
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="purpose" value="income">
+                        <span class="checkmark"></span>
+                        יצירת הכנסה
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="purpose" value="other">
+                        <span class="checkmark"></span>
+                        אחר
+                        <input type="text" name="purposeOther" class="inline-input" placeholder="נא לפרט">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Investment Timeline -->
+            <div class="option-group mt-6">
+                <label>טווח השקעה מתוכנן</label>
+                <div class="radio-grid">
+                    <label class="radio-container">
+                        <input type="radio" name="timeline" value="short" required>
+                        <span class="radio-mark"></span>
+                        קצר (עד שנתיים)
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="timeline" value="medium">
+                        <span class="radio-mark"></span>
+                        בינוני (2-5 שנים)
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="timeline" value="long">
+                        <span class="radio-mark"></span>
+                        ארוך (מעל 5 שנים)
+                    </label>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <!-- Navigation -->
+    <footer class="form-navigation">
+        <div class="container">
+            <button type="button" class="btn-prev" onclick="window.location.href='section1.html'">חזור</button>
+            <button type="button" id="saveAndContinue" class="btn-next">המשך לשלב הבא</button>
+        </div>
+    </footer>
+
+    <script src="/js/navigation.js"></script>
+    <script src="/js/storage.js"></script>
+    <script>
+        // Show/hide other purpose input
+        document.querySelector('input[name="purpose"][value="other"]').addEventListener('change', function() {
+            const otherInput = document.querySelector('input[name="purposeOther"]');
+            otherInput.style.display = this.checked ? 'inline-block' : 'none';
+            if (!this.checked) otherInput.value = '';
+        });
+    </script>
+</body>
+</html>
