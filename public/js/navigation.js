@@ -1,64 +1,95 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const saveAndContinue = document.getElementById('saveAndContinue');
+    const finalSubmit = document.getElementById('finalSubmit');
     const backButton = document.getElementById('btnBack');
 
-    // פונקציה לניווט לעמוד הבא
-    function navigateToNext() {
-        const routes = {
-            'index.html': '/sections/section2.html',
-            'section1.html': '/sections/section2.html',
-            'section2.html': '/sections/section3.html',
-            'section3.html': '/sections/section4.html',
-            'section4.html': '/sections/preview.html',
-            'preview.html': '/sections/thank-you.html'
-        };
+    // אובייקט הנתיבים עם כתובות URL מלאות
+    const routes = {
+        'index.html': 'https://marketing-agreement-production.up.railway.app/sections/section1.html',
+        'section1.html': 'https://marketing-agreement-production.up.railway.app/sections/section2.html',
+        'section2.html': 'https://marketing-agreement-production.up.railway.app/sections/section3.html',
+        'section3.html': 'https://marketing-agreement-production.up.railway.app/sections/section4.html',
+        'section4.html': 'https://marketing-agreement-production.up.railway.app/sections/thank-you.html',
+        'preview.html': 'https://marketing-agreement-production.up.railway.app/sections/thank-you.html',
+    };
 
+    // פונקציית מעבר לעמוד הבא
+    function navigateToNext() {
         const currentPath = window.location.pathname;
         const currentPage = currentPath.split('/').pop();
 
-        const nextPage = routes[currentPage] || null;
+        const nextPage = routes[currentPage];
 
         if (nextPage) {
-            console.log('מעבר לעמוד הבא:', nextPage);
             window.location.href = nextPage;
         } else {
-            console.error('לא נמצא העמוד הבא עבור:', currentPage);
+            showError(`לא נמצא העמוד הבא עבור: ${currentPage}`);
         }
     }
 
-    // פונקציה לחזור לעמוד הקודם
+    // פונקציית חזרה לעמוד הקודם
     function goBack() {
-        const routes = {
-            'section2.html': '/index.html',
-            'section3.html': '/sections/section2.html',
-            'section4.html': '/sections/section3.html',
-            'preview.html': '/sections/section4.html',
-            'thank-you.html': '/sections/preview.html'
-        };
-
         const currentPath = window.location.pathname;
         const currentPage = currentPath.split('/').pop();
 
-        const prevPage = routes[currentPage] || null;
+        const prevRoutes = {
+            'section1.html': 'https://marketing-agreement-production.up.railway.app/index.html',
+            'section2.html': 'https://marketing-agreement-production.up.railway.app/sections/section1.html',
+            'section3.html': 'https://marketing-agreement-production.up.railway.app/sections/section2.html',
+            'section4.html': 'https://marketing-agreement-production.up.railway.app/sections/section3.html',
+            'thank-you.html': 'https://marketing-agreement-production.up.railway.app/sections/section4.html',
+        };
+
+        const prevPage = prevRoutes[currentPage];
 
         if (prevPage) {
-            console.log('חזרה לעמוד הקודם:', prevPage);
             window.location.href = prevPage;
         } else {
-            console.error('לא נמצא העמוד הקודם עבור:', currentPage);
+            showError(`לא נמצא העמוד הקודם עבור: ${currentPage}`);
         }
     }
 
-    // האזנה לאירועים
+    // פונקציה להצגת הודעת שגיאה
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        `;
+
+        document.body.appendChild(errorDiv);
+        setTimeout(() => errorDiv.remove(), 3000);
+    }
+
+    // מאזיני אירועים לכפתורים
     if (saveAndContinue) {
-        saveAndContinue.addEventListener('click', function() {
-            navigateToNext();
-        });
+        saveAndContinue.addEventListener('click', navigateToNext);
+    }
+
+    if (finalSubmit) {
+        finalSubmit.addEventListener('click', navigateToNext);
     }
 
     if (backButton) {
-        backButton.addEventListener('click', function() {
+        backButton.addEventListener('click', function (e) {
+            e.preventDefault();
             goBack();
         });
     }
+
+    // ניווט באמצעות מקלדת
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.ctrlKey && saveAndContinue) {
+            navigateToNext();
+        }
+    });
 });
