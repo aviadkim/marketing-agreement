@@ -71,39 +71,43 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!validateForm()) return;
 
         const currentPath = window.location.pathname;
-        let nextPage;
+        const currentPage = currentPath.split('/').pop();
 
         const routes = {
-            'section1.html': 'section2.html',
-            'section2.html': 'section3.html',
-            'section3.html': 'section4.html',
-            'section4.html': 'preview.html'
+            'section1.html': '/sections/section2.html',
+            'section2.html': '/sections/section3.html',
+            'section3.html': '/sections/section4.html',
+            'section4.html': '/sections/preview.html'
         };
 
-        const currentPage = currentPath.split('/').pop();
-        nextPage = routes[currentPage];
+        const nextPage = routes[currentPage];
 
         if (nextPage) {
             saveFormData();
             window.location.href = nextPage;
+        } else {
+            showError('לא נמצא העמוד הבא');
         }
     }
 
     function goBack() {
         const currentPath = window.location.pathname;
+        const currentPage = currentPath.split('/').pop();
+
         const routes = {
-            'section2.html': 'section1.html',
-            'section3.html': 'section2.html',
-            'section4.html': 'section3.html',
-            'preview.html': 'section4.html'
+            'section2.html': '/sections/section1.html',
+            'section3.html': '/sections/section2.html',
+            'section4.html': '/sections/section3.html',
+            'preview.html': '/sections/section4.html'
         };
 
-        const currentPage = currentPath.split('/').pop();
         const prevPage = routes[currentPage];
 
         if (prevPage) {
             saveFormData();
             window.location.href = prevPage;
+        } else {
+            showError('לא נמצא העמוד הקודם');
         }
     }
 
