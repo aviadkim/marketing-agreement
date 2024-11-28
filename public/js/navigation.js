@@ -1,15 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     const saveAndContinue = document.getElementById('saveAndContinue');
-    const finalSubmit = document.getElementById('finalSubmit');
     const backButton = document.getElementById('btnBack');
 
     // פונקציה לניווט לעמוד הבא
     function navigateToNext() {
-        if (!validateForm()) return; // בודק אם הטופס תקין
-
-        const currentPath = window.location.pathname;
-        const currentPage = currentPath.split('/').pop();
-
         const routes = {
             'index.html': '/sections/section2.html',
             'section1.html': '/sections/section2.html',
@@ -19,9 +13,13 @@ document.addEventListener('DOMContentLoaded', function() {
             'preview.html': '/sections/thank-you.html'
         };
 
-        const nextPage = routes[currentPage];
+        const currentPath = window.location.pathname;
+        const currentPage = currentPath.split('/').pop();
+
+        const nextPage = routes[currentPage] || null;
 
         if (nextPage) {
+            console.log('מעבר לעמוד הבא:', nextPage);
             window.location.href = nextPage;
         } else {
             console.error('לא נמצא העמוד הבא עבור:', currentPage);
@@ -30,9 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // פונקציה לחזור לעמוד הקודם
     function goBack() {
-        const currentPath = window.location.pathname;
-        const currentPage = currentPath.split('/').pop();
-
         const routes = {
             'section2.html': '/index.html',
             'section3.html': '/sections/section2.html',
@@ -41,27 +36,28 @@ document.addEventListener('DOMContentLoaded', function() {
             'thank-you.html': '/sections/preview.html'
         };
 
-        const prevPage = routes[currentPage];
+        const currentPath = window.location.pathname;
+        const currentPage = currentPath.split('/').pop();
+
+        const prevPage = routes[currentPage] || null;
 
         if (prevPage) {
+            console.log('חזרה לעמוד הקודם:', prevPage);
             window.location.href = prevPage;
         } else {
             console.error('לא נמצא העמוד הקודם עבור:', currentPage);
         }
     }
 
-    // מאזינים לאירועים
+    // האזנה לאירועים
     if (saveAndContinue) {
-        saveAndContinue.addEventListener('click', navigateToNext);
-    }
-
-    if (finalSubmit) {
-        finalSubmit.addEventListener('click', navigateToNext);
+        saveAndContinue.addEventListener('click', function() {
+            navigateToNext();
+        });
     }
 
     if (backButton) {
-        backButton.addEventListener('click', function(e) {
-            e.preventDefault();
+        backButton.addEventListener('click', function() {
             goBack();
         });
     }
