@@ -1,13 +1,12 @@
-// js/navigation.js
-
 document.addEventListener('DOMContentLoaded', function() {
     const saveAndContinue = document.getElementById('saveAndContinue');
     const finalSubmit = document.getElementById('finalSubmit');
     const backButton = document.getElementById('btnBack');
 
-    // פונקציית ניווט ללא תנאי אימות
+    // פונקציה לניווט לעמוד הבא
     function navigateToNext() {
-        // שמירת הנתיב לעמוד הבא
+        if (!validateForm()) return; // בודק אם הטופס תקין
+
         const currentPath = window.location.pathname;
         const currentPage = currentPath.split('/').pop();
 
@@ -29,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // פונקציית חזרה ללא תנאים
+    // פונקציה לחזור לעמוד הקודם
     function goBack() {
         const currentPath = window.location.pathname;
         const currentPage = currentPath.split('/').pop();
@@ -57,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (finalSubmit) {
-        finalSubmit.addEventListener('click', navigateToNext); // השתמש בפונקציית מעבר
+        finalSubmit.addEventListener('click', navigateToNext);
     }
 
     if (backButton) {
