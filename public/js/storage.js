@@ -1,12 +1,13 @@
-// js/storage.js
+// storage.js
 
 // Define saveFormData in the global scope
 function saveFormData() {
     const form = document.querySelector('form');
     if (!form) return;
+    
     const formData = {};
     const formElements = form.elements;
-
+    
     for (let element of formElements) {
         if (element.name) {
             if (element.type === 'checkbox') {
@@ -20,22 +21,21 @@ function saveFormData() {
             }
         }
     }
-
+    
     const currentPage = window.location.pathname.split('/').pop();
     let savedData = JSON.parse(localStorage.getItem('formData') || '{}');
     savedData[currentPage] = formData;
     localStorage.setItem('formData', JSON.stringify(savedData));
 }
 
-// Other functions need to be in the global scope as well
 function loadSavedData() {
     const savedData = localStorage.getItem('formData');
     if (savedData) {
         const parsedData = JSON.parse(savedData);
         const currentPage = window.location.pathname.split('/').pop();
         const pageData = parsedData[currentPage];
-
         const form = document.querySelector('form');
+        
         if (pageData && form) {
             Object.keys(pageData).forEach(key => {
                 const element = form.elements[key];
@@ -59,7 +59,7 @@ function showSaveMessage() {
     if (existingMessage) {
         existingMessage.remove();
     }
-
+    
     const message = document.createElement('div');
     message.className = 'save-message';
     message.textContent = 'הנתונים נשמרו';
@@ -67,13 +67,14 @@ function showSaveMessage() {
         position: fixed;
         bottom: 20px;
         left: 20px;
-        background: #2558e5; /* var(--primary-color) */
+        background: #2558e5;
         color: white;
         padding: 12px 24px;
         border-radius: 8px;
         animation: fadeIn 0.3s, fadeOut 0.3s 2s forwards;
+        z-index: 1000;
     `;
-
+    
     document.body.appendChild(message);
     setTimeout(() => {
         message.remove();
@@ -82,15 +83,9 @@ function showSaveMessage() {
 
 // Event listener for DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Load saved data on page load
+    // Load saved data on page load only
     loadSavedData();
-
-    // Auto-save on form change
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('change', function() {
-            saveFormData();
-            showSaveMessage();
-        });
-    }
+    
+    // Remove the auto-save on form change
+    // Let navigation.js handle the saving when clicking the next button
 });
