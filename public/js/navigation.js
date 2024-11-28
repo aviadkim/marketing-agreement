@@ -1,66 +1,72 @@
 document.addEventListener('DOMContentLoaded', function () {
     const saveAndContinue = document.getElementById('saveAndContinue');
     const finalSubmit = document.getElementById('finalSubmit');
-    const backButton = document.getElementById('btnBack');
 
     // פונקציית מעבר לעמוד הבא
     function navigateToNext() {
-        // בדיקת תקינות הטופס
         const form = document.querySelector('form');
-        if (form) {
-            const requiredFields = form.querySelectorAll('[required]');
-            let isValid = true;
-            
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('error');
-                    isValid = false;
-                } else {
-                    field.classList.remove('error');
-                }
-            });
+        if (!form) {
+            console.error('Form not found');
+            return;
+        }
 
-            if (!isValid) {
-                showError('נא למלא את כל השדות החובה');
+        // בדיקת שם הטופס כדי לדעת באיזה דף אנחנו
+        const formId = form.id; // למשל section1-form
+        console.log('Form ID:', formId);
+
+        // קביעת העמוד הבא לפי ID של הטופס
+        let nextPage;
+        switch(formId) {
+            case 'section1-form':
+                nextPage = 'sections/section2.html';
+                break;
+            case 'section2-form':
+                nextPage = 'sections/section3.html';
+                break;
+            case 'section3-form':
+                nextPage = 'sections/section4.html';
+                break;
+            case 'section4-form':
+                nextPage = 'sections/thank-you.html';
+                break;
+            default:
+                console.error('Unknown form ID:', formId);
+                showError('שגיאה בניווט');
                 return;
-            }
         }
 
-        // מציאת העמוד הבא
-        const currentPath = window.location.pathname;
-        const currentPage = currentPath.includes('sections/') ? 
-            currentPath.split('sections/')[1] : 
-            currentPath.split('/').pop();
-
-        console.log('Current page:', currentPage);
-
-        // מיפוי נתיבים מדויק
-        const nextPage = (() => {
-            switch (currentPage) {
-                case 'section1.html':
-                    return '/sections/section2.html';
-                case 'section2.html':
-                    return '/sections/section3.html';
-                case 'section3.html':
-                    return '/sections/section4.html';
-                case 'section4.html':
-                    return '/sections/thank-you.html';
-                default:
-                    return null;
-            }
-        })();
-
-        if (nextPage) {
-            // שמירת נתונים לפני מעבר
-            if (typeof saveFormData === 'function') {
-                saveFormData();
-            }
-            window.location.href = nextPage;
-        } else {
-            showError(`לא נמצא העמוד הבא עבור: ${currentPage}`);
-            console.error('Current path:', currentPath);
-            console.error('Current page:', currentPage);
+        // בדיקת תקינות
+        if (!validateForm(form)) {
+            return;
         }
+
+        // שמירת נתונים ומעבר
+        if (typeof saveFormData === 'function') {
+            saveFormData();
+        }
+        
+        console.log('Navigating to:', nextPage);
+        window.location.href = nextPage;
+    }
+
+    function validateForm(form) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('error');
+                isValid = false;
+            } else {
+                field.classList.remove('error');
+            }
+        });
+
+        if (!isValid) {
+            showError('נא למלא את כל השדות החובה');
+        }
+
+        return isValid;
     }
 
     function showError(message) {
@@ -81,12 +87,12 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => errorDiv.remove(), 3000);
     }
 
-    // הוספת מאזינים לכפתורים
+    // Event Listeners
     if (saveAndContinue) {
         saveAndContinue.addEventListener('click', navigateToNext);
     }
 
     if (finalSubmit) {
-        finalSubmit.addEventListener('click', navigateToNext);
+        finalSubmit.addEventListener('click', submitForm);
     }
 });
