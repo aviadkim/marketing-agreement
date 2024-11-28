@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק השקעות</title>
     <style>
+        /* CSS Styles */
         :root {
             --primary-color: #2558e5;
             --primary-light: #eef3ff;
@@ -167,6 +168,16 @@
             background: var(--light-gray);
         }
 
+        .error {
+            border-color: #dc3545 !important;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 20px auto;
@@ -182,6 +193,11 @@
 
             .form-content {
                 padding: 30px 20px;
+            }
+
+            .form-navigation {
+                flex-direction: column;
+                gap: 20px;
             }
         }
     </style>
@@ -213,38 +229,43 @@
         </div>
 
         <main class="form-content">
-            <form class="form-section">
+            <form class="form-section" id="section1-form">
                 <div class="form-group">
-                    <label>שם פרטי</label>
-                    <input type="text" class="form-control" required>
+                    <label for="firstName">שם פרטי</label>
+                    <input type="text" class="form-control" name="firstName" id="firstName" required>
                 </div>
                 
                 <div class="form-group">
-                    <label>שם משפחה</label>
-                    <input type="text" class="form-control" required>
+                    <label for="lastName">שם משפחה</label>
+                    <input type="text" class="form-control" name="lastName" id="lastName" required>
                 </div>
                 
                 <div class="form-group">
-                    <label>תעודת זהות</label>
-                    <input type="text" class="form-control" required>
+                    <label for="idNumber">תעודת זהות</label>
+                    <input type="text" class="form-control" name="idNumber" id="idNumber" required>
                 </div>
 
                 <div class="form-group">
-                    <label>דוא"ל</label>
-                    <input type="email" class="form-control" required>
+                    <label for="email">דוא"ל</label>
+                    <input type="email" class="form-control" name="email" id="email" required>
                 </div>
 
                 <div class="form-group">
-                    <label>טלפון נייד</label>
-                    <input type="tel" class="form-control" required>
+                    <label for="phone">טלפון נייד</label>
+                    <input type="tel" class="form-control" name="phone" id="phone" required>
                 </div>
 
                 <div class="form-navigation">
-                    <button type="button" class="btn btn-outline">חזור</button>
-                    <button type="button" class="btn btn-primary">המשך לשלב הבא</button>
+                    <button type="button" class="btn btn-outline" id="btnBack">חזור</button>
+                    <button type="button" class="btn btn-primary" id="saveAndContinue">המשך לשלב הבא</button>
                 </div>
             </form>
         </main>
     </div>
+
+    <!-- Include the required JavaScript files -->
+    <script src="/js/validation.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/js/storage.js"></script>
 </body>
 </html>

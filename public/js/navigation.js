@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const saveAndContinue = document.getElementById('saveAndContinue');
     const finalSubmit = document.getElementById('finalSubmit');
-    const backButton = document.querySelector('.btn-prev');
+    const backButton = document.getElementById('btnBack');
 
     // Form validation functions
     function validateIdNumber(value) {
@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentPage = currentPath.split('/').pop();
 
         const routes = {
+            'index.html': '/sections/section2.html',
             'section1.html': '/sections/section2.html',
             'section2.html': '/sections/section3.html',
             'section3.html': '/sections/section4.html',
@@ -95,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentPage = currentPath.split('/').pop();
 
         const routes = {
-            'section2.html': '/sections/section1.html',
+            'section2.html': '/index.html',
             'section3.html': '/sections/section2.html',
             'section4.html': '/sections/section3.html',
             'preview.html': '/sections/section4.html'
