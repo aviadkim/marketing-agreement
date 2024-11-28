@@ -3,24 +3,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const finalSubmit = document.getElementById('finalSubmit');
     const backButton = document.getElementById('btnBack');
 
-    // אובייקט הנתיבים עם כתובות URL מלאות
+    // אובייקט הנתיבים עם נתיבים יחסיים
     const routes = {
-        'index.html': 'https://marketing-agreement-production.up.railway.app/sections/section1.html',
-        'section1.html': 'https://marketing-agreement-production.up.railway.app/sections/section2.html',
-        'section2.html': 'https://marketing-agreement-production.up.railway.app/sections/section3.html',
-        'section3.html': 'https://marketing-agreement-production.up.railway.app/sections/section4.html',
-        'section4.html': 'https://marketing-agreement-production.up.railway.app/sections/thank-you.html',
-        'preview.html': 'https://marketing-agreement-production.up.railway.app/sections/thank-you.html',
+        'index.html': 'sections/section1.html',
+        'section1.html': 'section2.html',
+        'section2.html': 'section3.html',
+        'section3.html': 'section4.html',
+        'section4.html': 'thank-you.html'
     };
 
     // פונקציית מעבר לעמוד הבא
     function navigateToNext() {
+        if (!validateForm()) return;
+        
         const currentPath = window.location.pathname;
         const currentPage = currentPath.split('/').pop();
-
+        console.log('Current page:', currentPage); // לדיבוג
+        
         const nextPage = routes[currentPage];
-
         if (nextPage) {
+            saveFormData(); // שמירת הנתונים לפני המעבר
             window.location.href = nextPage;
         } else {
             showError(`לא נמצא העמוד הבא עבור: ${currentPage}`);
@@ -31,25 +33,45 @@ document.addEventListener('DOMContentLoaded', function () {
     function goBack() {
         const currentPath = window.location.pathname;
         const currentPage = currentPath.split('/').pop();
-
+        
         const prevRoutes = {
-            'section1.html': 'https://marketing-agreement-production.up.railway.app/index.html',
-            'section2.html': 'https://marketing-agreement-production.up.railway.app/sections/section1.html',
-            'section3.html': 'https://marketing-agreement-production.up.railway.app/sections/section2.html',
-            'section4.html': 'https://marketing-agreement-production.up.railway.app/sections/section3.html',
-            'thank-you.html': 'https://marketing-agreement-production.up.railway.app/sections/section4.html',
+            'section1.html': 'index.html',
+            'section2.html': 'section1.html',
+            'section3.html': 'section2.html',
+            'section4.html': 'section3.html'
         };
-
+        
         const prevPage = prevRoutes[currentPage];
-
         if (prevPage) {
+            saveFormData(); // שמירת הנתונים לפני החזרה
             window.location.href = prevPage;
-        } else {
-            showError(`לא נמצא העמוד הקודם עבור: ${currentPage}`);
         }
     }
 
-    // פונקציה להצגת הודעת שגיאה
+    // בדיקת תקינות הטופס
+    function validateForm() {
+        const form = document.querySelector('form');
+        if (!form) return true;
+        
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('error');
+                isValid = false;
+            } else {
+                field.classList.remove('error');
+            }
+        });
+
+        if (!isValid) {
+            showError('נא למלא את כל השדות החובה');
+        }
+        
+        return isValid;
+    }
+
     function showError(message) {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
@@ -63,14 +85,13 @@ document.addEventListener('DOMContentLoaded', function () {
             padding: 12px 24px;
             border-radius: 8px;
             z-index: 1000;
-            animation: fadeIn 0.3s;
         `;
-
+        
         document.body.appendChild(errorDiv);
         setTimeout(() => errorDiv.remove(), 3000);
     }
 
-    // מאזיני אירועים לכפתורים
+    // מאזיני אירועים
     if (saveAndContinue) {
         saveAndContinue.addEventListener('click', navigateToNext);
     }
@@ -80,16 +101,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (backButton) {
-        backButton.addEventListener('click', function (e) {
-            e.preventDefault();
-            goBack();
-        });
+        backButton.addEventListener('click', goBack);
     }
-
-    // ניווט באמצעות מקלדת
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && e.ctrlKey && saveAndContinue) {
-            navigateToNext();
-        }
-    });
 });
