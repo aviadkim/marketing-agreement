@@ -3,73 +3,64 @@ document.addEventListener('DOMContentLoaded', function () {
     const finalSubmit = document.getElementById('finalSubmit');
     const backButton = document.getElementById('btnBack');
 
-    // אובייקט הנתיבים עם נתיבים יחסיים
-    const routes = {
-        'index.html': 'sections/section1.html',
-        'section1.html': 'section2.html',
-        'section2.html': 'section3.html',
-        'section3.html': 'section4.html',
-        'section4.html': 'thank-you.html'
-    };
-
     // פונקציית מעבר לעמוד הבא
     function navigateToNext() {
-        if (!validateForm()) return;
-        
+        // בדיקת תקינות הטופס
+        const form = document.querySelector('form');
+        if (form) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    isValid = false;
+                } else {
+                    field.classList.remove('error');
+                }
+            });
+
+            if (!isValid) {
+                showError('נא למלא את כל השדות החובה');
+                return;
+            }
+        }
+
+        // מציאת העמוד הבא
         const currentPath = window.location.pathname;
-        const currentPage = currentPath.split('/').pop();
-        console.log('Current page:', currentPage); // לדיבוג
-        
-        const nextPage = routes[currentPage];
+        const currentPage = currentPath.includes('sections/') ? 
+            currentPath.split('sections/')[1] : 
+            currentPath.split('/').pop();
+
+        console.log('Current page:', currentPage);
+
+        // מיפוי נתיבים מדויק
+        const nextPage = (() => {
+            switch (currentPage) {
+                case 'section1.html':
+                    return '/sections/section2.html';
+                case 'section2.html':
+                    return '/sections/section3.html';
+                case 'section3.html':
+                    return '/sections/section4.html';
+                case 'section4.html':
+                    return '/sections/thank-you.html';
+                default:
+                    return null;
+            }
+        })();
+
         if (nextPage) {
-            saveFormData(); // שמירת הנתונים לפני המעבר
+            // שמירת נתונים לפני מעבר
+            if (typeof saveFormData === 'function') {
+                saveFormData();
+            }
             window.location.href = nextPage;
         } else {
             showError(`לא נמצא העמוד הבא עבור: ${currentPage}`);
+            console.error('Current path:', currentPath);
+            console.error('Current page:', currentPage);
         }
-    }
-
-    // פונקציית חזרה לעמוד הקודם
-    function goBack() {
-        const currentPath = window.location.pathname;
-        const currentPage = currentPath.split('/').pop();
-        
-        const prevRoutes = {
-            'section1.html': 'index.html',
-            'section2.html': 'section1.html',
-            'section3.html': 'section2.html',
-            'section4.html': 'section3.html'
-        };
-        
-        const prevPage = prevRoutes[currentPage];
-        if (prevPage) {
-            saveFormData(); // שמירת הנתונים לפני החזרה
-            window.location.href = prevPage;
-        }
-    }
-
-    // בדיקת תקינות הטופס
-    function validateForm() {
-        const form = document.querySelector('form');
-        if (!form) return true;
-        
-        const requiredFields = form.querySelectorAll('[required]');
-        let isValid = true;
-        
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                field.classList.add('error');
-                isValid = false;
-            } else {
-                field.classList.remove('error');
-            }
-        });
-
-        if (!isValid) {
-            showError('נא למלא את כל השדות החובה');
-        }
-        
-        return isValid;
     }
 
     function showError(message) {
@@ -86,21 +77,16 @@ document.addEventListener('DOMContentLoaded', function () {
             border-radius: 8px;
             z-index: 1000;
         `;
-        
         document.body.appendChild(errorDiv);
         setTimeout(() => errorDiv.remove(), 3000);
     }
 
-    // מאזיני אירועים
+    // הוספת מאזינים לכפתורים
     if (saveAndContinue) {
         saveAndContinue.addEventListener('click', navigateToNext);
     }
 
     if (finalSubmit) {
         finalSubmit.addEventListener('click', navigateToNext);
-    }
-
-    if (backButton) {
-        backButton.addEventListener('click', goBack);
     }
 });
