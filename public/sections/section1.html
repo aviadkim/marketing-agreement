@@ -1,4 +1,4 @@
-echo '<!DOCTYPE html>
+<!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
@@ -8,83 +8,67 @@ echo '<!DOCTYPE html>
     <link href="/css/landing.css" rel="stylesheet">
 </head>
 <body>
-    <header class="landing-header">
-        <img src="/images/movne-logo.png" alt="מובנה" class="landing-logo">
-        <h1 class="landing-title">הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
-    </header>
+    <div class="container">
+        <header class="form-header">
+            <img src="/images/movne-logo.png" alt="מובנה" class="logo">
+            <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
+        </header>
 
-    <!-- Progress Steps -->
-    <div class="progress-container">
-        <div class="progress-steps">
-            <div class="step active" data-step="1">
-                <div class="step-circle">
-                    <span class="step-number">1</span>
-                    <span class="step-check">✓</span>
-                </div>
+        <div class="steps-container">
+            <div class="step active">
+                <div class="step-circle">1</div>
                 <div class="step-label">פרטים אישיים</div>
             </div>
-            <div class="step" data-step="2">
-                <div class="step-circle">
-                    <span class="step-number">2</span>
-                    <span class="step-check">✓</span>
-                </div>
+            <div class="step">
+                <div class="step-circle">2</div>
                 <div class="step-label">פרטי השקעה</div>
             </div>
-            <div class="step" data-step="3">
-                <div class="step-circle">
-                    <span class="step-number">3</span>
-                    <span class="step-check">✓</span>
-                </div>
+            <div class="step">
+                <div class="step-circle">3</div>
                 <div class="step-label">שאלון סיכון</div>
             </div>
-            <div class="step" data-step="4">
-                <div class="step-circle">
-                    <span class="step-number">4</span>
-                    <span class="step-check">✓</span>
-                </div>
+            <div class="step">
+                <div class="step-circle">4</div>
                 <div class="step-label">הצהרות</div>
             </div>
         </div>
+
+        <main class="form-content">
+            <form id="section1-form" class="form-section" onsubmit="return false">
+                <div class="form-group">
+                    <label>שם פרטי</label>
+                    <input type="text" name="firstName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>שם משפחה</label>
+                    <input type="text" name="lastName" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>תעודת זהות</label>
+                    <input type="text" name="idNumber" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>דוא"ל</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>טלפון נייד</label>
+                    <input type="tel" name="phone" class="form-control" required>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" class="btn btn-primary" id="saveAndContinue">המשך לשלב הבא</button>
+                </div>
+            </form>
+        </main>
     </div>
-
-    <!-- Form Content -->
-    <main class="form-content">
-        <form id="section1-form" class="form-section" onsubmit="return false">
-            <div class="form-group">
-                <label>שם פרטי</label>
-                <input type="text" name="firstName" class="form-control" required>
-            </div>
-            
-            <div class="form-group">
-                <label>שם משפחה</label>
-                <input type="text" name="lastName" class="form-control" required>
-            </div>
-
-            <div class="form-group">
-                <label>תעודת זהות</label>
-                <input type="text" name="idNumber" class="form-control" required>
-            </div>
-
-            <div class="form-group">
-                <label>דוא"ל</label>
-                <input type="email" name="email" class="form-control" required>
-            </div>
-
-            <div class="form-group">
-                <label>טלפון נייד</label>
-                <input type="tel" name="phone" class="form-control" required>
-            </div>
-
-            <div class="form-navigation">
-                <button type="button" class="btn btn-primary" id="saveAndContinue">המשך לשלב הבא</button>
-            </div>
-        </form>
-    </main>
 
     <script src="/js/validation.js"></script>
     <script src="/js/navigation.js"></script>
     <script src="/js/storage.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
-    <script src="/js/signature.js"></script>
 </body>
-</html>' > "public/sections/section1.html"
+</html>
