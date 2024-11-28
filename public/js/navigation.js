@@ -1,5 +1,6 @@
-// navigation.js
+// js/navigation.js
 
+// Event listener for DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
     const saveAndContinue = document.getElementById('saveAndContinue');
     const finalSubmit = document.getElementById('finalSubmit');

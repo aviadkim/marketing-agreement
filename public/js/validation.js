@@ -1,4 +1,4 @@
-// validation.js
+// js/validation.js
 
 // Form validation functions
 function validateIdNumber(value) {

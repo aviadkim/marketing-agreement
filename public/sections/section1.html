@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק השקעות - פרטים אישיים</title>
     <link href="/css/styles.css" rel="stylesheet">
-    <link href="/css/landing.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
+        <!-- Header with Logo -->
         <header class="form-header">
             <img src="/images/movne-logo.png" alt="מובנה" class="logo">
             <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
         </header>
 
+        <!-- Progress Bar -->
         <div class="steps-container">
             <div class="step active">
                 <div class="step-circle">1</div>
@@ -33,42 +34,49 @@
             </div>
         </div>
 
+        <!-- Form Content -->
         <main class="form-content">
-            <form id="section1-form" class="form-section" onsubmit="return false">
+            <form id="section1-form" class="form-section">
+                <!-- Copy the form fields from index.html or adjust as needed -->
                 <div class="form-group">
-                    <label>שם פרטי</label>
-                    <input type="text" name="firstName" class="form-control" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>שם משפחה</label>
-                    <input type="text" name="lastName" class="form-control" required>
+                    <label for="firstName">שם פרטי</label>
+                    <input type="text" class="form-control" name="firstName" id="firstName" required>
                 </div>
 
                 <div class="form-group">
-                    <label>תעודת זהות</label>
-                    <input type="text" name="idNumber" class="form-control" required>
+                    <label for="lastName">שם משפחה</label>
+                    <input type="text" class="form-control" name="lastName" id="lastName" required>
                 </div>
 
                 <div class="form-group">
-                    <label>דוא"ל</label>
-                    <input type="email" name="email" class="form-control" required>
+                    <label for="idNumber">תעודת זהות</label>
+                    <input type="text" class="form-control" name="idNumber" id="idNumber" required>
                 </div>
 
                 <div class="form-group">
-                    <label>טלפון נייד</label>
-                    <input type="tel" name="phone" class="form-control" required>
+                    <label for="email">דוא"ל</label>
+                    <input type="email" class="form-control" name="email" id="email" required>
                 </div>
 
-                <div class="form-navigation">
-                    <button type="button" class="btn btn-primary" id="saveAndContinue">המשך לשלב הבא</button>
+                <div class="form-group">
+                    <label for="phone">טלפון נייד</label>
+                    <input type="tel" class="form-control" name="phone" id="phone" required>
                 </div>
             </form>
         </main>
+
+        <!-- Navigation -->
+        <footer class="form-navigation">
+            <div class="container">
+                <!-- No back button on the first section -->
+                <button type="button" id="saveAndContinue" class="btn btn-primary">המשך לשלב הבא</button>
+            </div>
+        </footer>
     </div>
 
+    <!-- Include the required JavaScript files -->
     <script src="/js/validation.js"></script>
-    <script src="/js/navigation.js"></script>
     <script src="/js/storage.js"></script>
+    <script src="/js/navigation.js"></script>
 </body>
 </html>
