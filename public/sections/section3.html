@@ -1,188 +1,187 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>הסכם שיווק השקעות - שאלון סיכון</title>
-   <link href="/css/styles.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הסכם שיווק השקעות - שאלון סיכון</title>
+    <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
-   <!-- Header with Logo -->
-   <header class="form-header">
-       <img src="/images/movne-logo.png" alt="מובנה" class="logo">
-       <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
-   </header>
+    <!-- Header with Logo -->
+    <header class="form-header">
+        <img src="images/movne-logo.png" alt="מובנה" class="logo">
+        <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
+    </header>
 
-   <!-- Progress Bar -->
-   <div class="progress-container">
-       <div class="progress-steps">
-           <div class="step completed" data-step="1">
-               <div class="step-circle">
-                   <span class="step-number">1</span>
-                   <span class="step-check">✓</span>
-               </div>
-               <div class="step-label">פרטים אישיים</div>
-               <div class="step-time">כ-2 דקות</div>
-           </div>
-           <div class="step completed" data-step="2">
-               <div class="step-circle">
-                   <span class="step-number">2</span>
-                   <span class="step-check">✓</span>
-               </div>
-               <div class="step-label">פרטי השקעה</div>
-               <div class="step-time">כ-3 דקות</div>
-           </div>
-           <div class="step active" data-step="3">
-               <div class="step-circle">
-                   <span class="step-number">3</span>
-                   <span class="step-check">✓</span>
-               </div>
-               <div class="step-label">שאלון סיכון</div>
-               <div class="step-time">כ-5 דקות</div>
-           </div>
-           <div class="step" data-step="4">
-               <div class="step-circle">
-                   <span class="step-number">4</span>
-                   <span class="step-check">✓</span>
-               </div>
-               <div class="step-label">הצהרות</div>
-               <div class="step-time">כ-3 דקות</div>
-           </div>
-       </div>
-   </div>
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-steps">
+            <div class="step completed" data-step="1">
+                <div class="step-circle">
+                    <span class="step-number">1</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">פרטים אישיים</div>
+                <div class="step-time">כ-2 דקות</div>
+            </div>
+            <div class="step completed" data-step="2">
+                <div class="step-circle">
+                    <span class="step-number">2</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">פרטי השקעה</div>
+                <div class="step-time">כ-3 דקות</div>
+            </div>
+            <div class="step active" data-step="3">
+                <div class="step-circle">
+                    <span class="step-number">3</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">שאלון סיכון</div>
+                <div class="step-time">כ-5 דקות</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="step-circle">
+                    <span class="step-number">4</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">הצהרות</div>
+                <div class="step-time">כ-3 דקות</div>
+            </div>
+        </div>
+    </div>
 
-   <!-- Form Content -->
-   <main class="form-content">
-       <form id="section3-form" class="form-section">
-           <!-- Market Experience -->
-           <div class="form-group">
-               <label>רמת הידע והניסיון בשוק ההון</label>
-               <div class="checkbox-grid">
-                   <label class="checkbox-container">
-                       <input type="checkbox" name="marketExperience" value="none">
-                       <span class="checkmark"></span>
-                       אין לי ניסיון בשוק ההון
-                   </label>
-                   <label class="checkbox-container">
-                       <input type="checkbox" name="marketExperience" value="basic">
-                       <span class="checkmark"></span>
-                       יש לי ידע בסיסי בשוק ההון
-                   </label>
-                   <label class="checkbox-container">
-                       <input type="checkbox" name="marketExperience" value="advanced">
-                       <span class="checkmark"></span>
-                       אני מכיר/ה היטב את שוק ההון
-                   </label>
-                   <label class="checkbox-container">
-                       <input type="checkbox" name="marketExperience" value="professional">
-                       <span class="checkmark"></span>
-                       יש לי ניסיון מקצועי בתחום
-                   </label>
-               </div>
-           </div>
+    <!-- Form Content -->
+    <main class="form-content">
+        <form id="section3-form" class="form-section">
+            <!-- Market Experience -->
+            <div class="form-group">
+                <label>רמת הידע והניסיון בשוק ההון</label>
+                <div class="error-message" style="display: none;">יש לבחור לפחות אפשרות אחת</div>
+                <div class="checkbox-grid">
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="marketExperience" value="none" required>
+                        <span class="checkmark"></span>
+                        אין לי ניסיון בשוק ההון
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="marketExperience" value="basic">
+                        <span class="checkmark"></span>
+                        יש לי ידע בסיסי בשוק ההון
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="marketExperience" value="advanced">
+                        <span class="checkmark"></span>
+                        אני מכיר/ה היטב את שוק ההון
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="marketExperience" value="professional">
+                        <span class="checkmark"></span>
+                        יש לי ניסיון מקצועי בתחום
+                    </label>
+                </div>
+            </div>
 
-           <!-- Risk Tolerance -->
-           <div class="form-group mt-6">
-               <label>מהי רמת הסיכון שאת/ה מוכן/ה לקחת בהשקעותיך?</label>
-               <div class="radio-grid">
-                   <label class="radio-container">
-                       <input type="radio" name="riskTolerance" value="low" required>
-                       <span class="radio-mark"></span>
-                       נמוכה - עדיפות לשמירה על הקרן
-                   </label>
-                   <label class="radio-container">
-                       <input type="radio" name="riskTolerance" value="medium">
-                       <span class="radio-mark"></span>
-                       בינונית - נכונות לתנודתיות מתונה
-                   </label>
-                   <label class="radio-container">
-                       <input type="radio" name="riskTolerance" value="high">
-                       <span class="radio-mark"></span>
-                       גבוהה - נכונות לתנודתיות משמעותית
-                   </label>
-               </div>
-           </div>
+            <!-- Risk Tolerance -->
+            <div class="form-group mt-6">
+                <label>מהי רמת הסיכון שאת/ה מוכן/ה לקחת בהשקעותיך?</label>
+                <div class="radio-grid">
+                    <label class="radio-container">
+                        <input type="radio" name="riskTolerance" value="low" required>
+                        <span class="radio-mark"></span>
+                        נמוכה - עדיפות לשמירה על הקרן
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="riskTolerance" value="medium">
+                        <span class="radio-mark"></span>
+                        בינונית - נכונות לתנודתיות מתונה
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="riskTolerance" value="high">
+                        <span class="radio-mark"></span>
+                        גבוהה - נכונות לתנודתיות משמעותית
+                    </label>
+                </div>
+            </div>
 
-           <!-- Loss Response -->
-           <div class="form-group mt-6">
-               <label>כיצד היית מגיב/ה להפסד של 20% בתיק ההשקעות?</label>
-               <div class="radio-grid">
-                   <label class="radio-container">
-                       <input type="radio" name="lossResponse" value="sell" required>
-                       <span class="radio-mark"></span>
-                       מוכר/ת את כל ההשקעות
-                   </label>
-                   <label class="radio-container">
-                       <input type="radio" name="lossResponse" value="partial_sell">
-                       <span class="radio-mark"></span>
-                       מוכר/ת חלק מההשקעות
-                   </label>
-                   <label class="radio-container">
-                       <input type="radio" name="lossResponse" value="hold">
-                       <span class="radio-mark"></span>
-                       ממשיך/ה להחזיק ללא שינוי
-                   </label>
-                   <label class="radio-container">
-                       <input type="radio" name="lossResponse" value="buy">
-                       <span class="radio-mark"></span>
-                       רואה הזדמנות לקנות עוד
-                   </label>
-               </div>
-           </div>
+            <!-- Loss Response -->
+            <div class="form-group mt-6">
+                <label>כיצד היית מגיב/ה להפסד של 20% בתיק ההשקעות?</label>
+                <div class="radio-grid">
+                    <label class="radio-container">
+                        <input type="radio" name="lossResponse" value="sell" required>
+                        <span class="radio-mark"></span>
+                        מוכר/ת את כל ההשקעות
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="lossResponse" value="partial_sell">
+                        <span class="radio-mark"></span>
+                        מוכר/ת חלק מההשקעות
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="lossResponse" value="hold">
+                        <span class="radio-mark"></span>
+                        ממשיך/ה להחזיק ללא שינוי
+                    </label>
+                    <label class="radio-container">
+                        <input type="radio" name="lossResponse" value="buy">
+                        <span class="radio-mark"></span>
+                        רואה הזדמנות לקנות עוד
+                    </label>
+                </div>
+            </div>
 
-           <!-- Investment Knowledge -->
-           <div class="form-group mt-6">
-               <label>באילו מכשירי השקעה יש לך ניסיון?</label>
-               <div class="checkbox-grid">
-                   <label class="checkbox-container">
-                       <input type="checkbox" name="investmentKnowledge" value="stocks">
-                       <span class="checkmark"></span>
-                       מניות
-                   </label>
-                   <label class="checkbox-container">
-                       <input type="checkbox" name="investmentKnowledge" value="bonds">
-                       <span class="checkmark"></span>
-                       אגרות חוב
-                   </label>
-                   <label class="checkbox-container">
-                       <input type="checkbox" name="investmentKnowledge" value="mutual_funds">
-                       <span class="checkmark"></span>
-                       קרנות נאמנות
-                   </label>
-                   <label class="checkbox-container">
-                       <input type="checkbox" name="investmentKnowledge" value="options">
-                       <span class="checkmark"></span>
-                       אופציות ונגזרים
-                   </label>
-                   <label class="checkbox-container">
-                       <input type="checkbox" name="investmentKnowledge" value="real_estate">
-                       <span class="checkmark"></span>
-                       נדל"ן להשקעה
-                   </label>
-               </div>
-           </div>
+            <!-- Investment Knowledge -->
+            <div class="form-group mt-6">
+                <label>באילו מכשירי השקעה יש לך ניסיון?</label>
+                <div class="checkbox-grid">
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="investmentKnowledge" value="stocks">
+                        <span class="checkmark"></span>
+                        מניות
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="investmentKnowledge" value="bonds">
+                        <span class="checkmark"></span>
+                        אגרות חוב
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="investmentKnowledge" value="mutual_funds">
+                        <span class="checkmark"></span>
+                        קרנות נאמנות
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="investmentKnowledge" value="options">
+                        <span class="checkmark"></span>
+                        אופציות ונגזרים
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="investmentKnowledge" value="real_estate">
+                        <span class="checkmark"></span>
+                        נדל"ן להשקעה
+                    </label>
+                </div>
+            </div>
 
-           <!-- Investment Restrictions -->
-           <div class="form-group mt-6">
-               <label>האם קיימות מגבלות מיוחדות על השקעותיך?</label>
-               <textarea name="investmentRestrictions" rows="4" class="w-full" 
-                         placeholder="לדוגמה: מגבלות הלכתיות, מגבלות רגולטוריות, וכו'"></textarea>
-           </div>
-       </form>
-   </main>
+            <!-- Investment Restrictions -->
+            <div class="form-group mt-6">
+                <label>האם קיימות מגבלות מיוחדות על השקעותיך?</label>
+                <textarea name="investmentRestrictions" rows="4" class="form-control" 
+                          placeholder="לדוגמה: מגבלות הלכתיות, מגבלות רגולטוריות, וכו'"></textarea>
+            </div>
+        </form>
+    </main>
 
-   <!-- Navigation -->
-   <footer class="form-navigation">
-       <div class="container">
-           <button type="button" class="btn-prev" onclick="window.location.href='section2.html'">חזור</button>
-           <button type="button" id="saveAndContinue" class="btn-next">המשך לשלב הבא</button>
-       </div>
-   </footer>
+    <!-- Navigation -->
+    <footer class="form-navigation">
+        <div class="container">
+            <button type="button" id="btnBack" class="btn-prev">חזור</button>
+            <button type="button" id="saveAndContinue" class="btn-next">המשך לשלב הבא</button>
+        </div>
+    </footer>
 
-   <script src="/js/navigation.js"></script>
-   <script src="/js/storage.js"></script>
-   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
-   <script src="/js/signature.js"></script>
-   <script src="/js/validation.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/validation.js"></script>
 </body>
 </html>
