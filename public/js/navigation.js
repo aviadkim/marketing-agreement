@@ -3,64 +3,68 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveAndContinue = document.getElementById('saveAndContinue');
     const finalSubmit = document.getElementById('finalSubmit');
 
-    // בדיקת תקינות לפני מעבר לדף הבא
-    function validateCurrentSection() {
-        const currentForm = document.querySelector('form');
-        if (!currentForm.checkValidity()) {
-            // הצגת הודעות שגיאה מובנות של הדפדפן
-            currentForm.reportValidity();
-            return false;
-        }
-        return true;
+    // בדיקת תקינות הטופס
+    function validateForm() {
+        const form = document.querySelector('form');
+        const allInputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+        let isValid = true;
+
+        allInputs.forEach(input => {
+            if (!input.value) {
+                isValid = false;
+                input.classList.add('error');
+            } else {
+                input.classList.remove('error');
+            }
+        });
+
+        return isValid;
     }
 
-    // המשך לדף הבא
+    // מעבר לדף הבא
     function navigateToNext() {
-        const currentSection = window.location.pathname.split('/').pop();
-        const nextSection = getNextSection(currentSection);
-        
-        if (validateCurrentSection()) {
-            window.location.href = nextSection;
+        if (!validateForm()) {
+            alert('נא למלא את כל השדות החובה');
+            return;
+        }
+
+        const currentPath = window.location.pathname;
+        let nextPage;
+
+        if (currentPath.includes('section1.html')) {
+            nextPage = 'section2.html';
+        } else if (currentPath.includes('section2.html')) {
+            nextPage = 'section3.html';
+        } else if (currentPath.includes('section3.html')) {
+            nextPage = 'section4.html';
+        }
+
+        if (nextPage) {
+            window.location.href = nextPage;
         }
     }
 
-    // קבלת הדף הבא לפי הדף הנוכחי
-    function getNextSection(currentSection) {
-        const sections = {
-            'section1.html': 'section2.html',
-            'section2.html': 'section3.html',
-            'section3.html': 'section4.html',
-            'section4.html': 'preview.html'
-        };
-        return sections[currentSection] || 'section1.html';
-    }
-
-    // הגשה סופית של הטופס
+    // הגשת הטופס
     async function submitForm() {
-        if (!validateCurrentSection()) return;
+        if (!validateForm()) {
+            alert('נא למלא את כל השדות החובה');
+            return;
+        }
 
         try {
-            const allData = JSON.parse(localStorage.getItem('formData'));
-            
-            // איסוף כל הנתונים מכל החלקים
+            const formData = new FormData(document.querySelector('form'));
             const response = await fetch('/api/submit', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(allData)
+                body: formData
             });
 
             if (response.ok) {
-                // מעבר לדף תודה
                 window.location.href = '/thank-you.html';
-                // ניקוי הנתונים השמורים
-                localStorage.clear();
             } else {
                 throw new Error('שגיאה בשליחת הטופס');
             }
         } catch (error) {
-            alert('אירעה שגיאה בשליחת הטופס: ' + error.message);
+            alert('אירעה שגיאה: ' + error.message);
         }
     }
 
