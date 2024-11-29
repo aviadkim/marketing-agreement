@@ -82,16 +82,16 @@ document.addEventListener('DOMContentLoaded', function() {
         let nextPage;
         switch(formId) {
             case 'section1-form':
-                nextPage = 'section2.html';
+                nextPage = '/sections/section2.html';  // שינוי כאן
                 break;
             case 'section2-form':
-                nextPage = 'section3.html';
+                nextPage = '/sections/section3.html';  // שינוי כאן
                 break;
             case 'section3-form':
-                nextPage = 'section4.html';
+                nextPage = '/sections/section4.html';  // שינוי כאן
                 break;
             case 'section4-form':
-                nextPage = 'thank-you.html';
+                nextPage = '/sections/thank-you.html';  // שינוי כאן
                 break;
             default:
                 console.error('Unknown form ID:', formId);
@@ -117,13 +117,13 @@ document.addEventListener('DOMContentLoaded', function() {
         let prevPage;
         switch(formId) {
             case 'section2-form':
-                prevPage = 'section1.html';
+                prevPage = '/sections/section1.html';  // שינוי כאן
                 break;
             case 'section3-form':
-                prevPage = 'section2.html';
+                prevPage = '/sections/section2.html';  // שינוי כאן
                 break;
             case 'section4-form':
-                prevPage = 'section3.html';
+                prevPage = '/sections/section3.html';  // שינוי כאן
                 break;
             default:
                 return;
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (response.ok) {
                 localStorage.removeItem('formData');
-                window.location.href = 'thank-you.html';
+                window.location.href = '/sections/thank-you.html';  // שינוי כאן
             } else {
                 throw new Error('שגיאה בשליחת הטופס');
             }
