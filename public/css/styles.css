@@ -109,7 +109,7 @@ body {
     display: none;
 }
 
-/* Form Content - Updated */
+/* Form Content */
 .form-content {
     background: white;
     padding: 32px;
@@ -119,7 +119,7 @@ body {
     margin: 0 auto;
 }
 
-/* Form Groups - Updated */
+/* Form Groups */
 .form-group {
     background: white;
     padding: 24px;
@@ -163,7 +163,7 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 0 4px var(--primary-light);
 }
 
-/* Radio and Checkbox Groups - Updated with new styles */
+/* Radio and Checkbox Groups */
 .radio-grid, .checkbox-grid {
     display: flex;
     flex-direction: column;
@@ -181,35 +181,25 @@ input:focus, select:focus, textarea:focus {
     transition: all 0.2s ease;
     margin: 0;
     gap: 12px;
-    position: relative;
 }
 
-/* Removed the blue line before selection */
-.radio-container::before, .checkbox-container::before {
-    display: none;
-}
-
-/* Hover state */
 .radio-container:hover, .checkbox-container:hover {
     background: var(--primary-light);
     border-color: var(--primary-color);
 }
 
-/* Selected state with clear indication */
-.radio-container.selected, .checkbox-container.selected {
-    background: var(--primary-light);
-    border-color: var(--primary-color);
-}
-
-/* Improved radio and checkbox markers */
+/* Updated radio and checkbox markers */
 .radio-mark, .checkmark {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border: 2px solid var(--border-gray);
     position: relative;
     margin-left: 12px;
     background: white;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .radio-mark {
@@ -220,11 +210,14 @@ input:focus, select:focus, textarea:focus {
     border-radius: 6px;
 }
 
-/* Clear checkmark when selected */
+/* Improved checkmark when selected */
 .radio-container input:checked ~ .radio-mark,
 .checkbox-container input:checked ~ .checkmark {
     background: var(--primary-color);
     border-color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .radio-container input:checked ~ .radio-mark:after,
@@ -232,8 +225,9 @@ input:focus, select:focus, textarea:focus {
     content: "✓";
     position: absolute;
     color: white;
-    font-size: 16px;
-    top: 45%;
+    font-size: 20px;
+    line-height: 1;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     font-weight: bold;
@@ -254,6 +248,12 @@ input:focus, select:focus, textarea:focus {
 .checkbox-container input:checked + span {
     font-weight: 600;
     color: var(--primary-color);
+}
+
+/* Add smooth transitions */
+.radio-mark, .checkmark,
+.radio-mark:after, .checkmark:after {
+    transition: all 0.2s ease-in-out;
 }
 
 /* Navigation */
