@@ -22,7 +22,6 @@
                     <span class="step-check">✓</span>
                 </div>
                 <div class="step-label">פרטים אישיים</div>
-                <div class="step-time">כ-2 דקות</div>
             </div>
             <div class="step completed" data-step="2">
                 <div class="step-circle">
@@ -30,7 +29,6 @@
                     <span class="step-check">✓</span>
                 </div>
                 <div class="step-label">פרטי השקעה</div>
-                <div class="step-time">כ-3 דקות</div>
             </div>
             <div class="step completed" data-step="3">
                 <div class="step-circle">
@@ -38,7 +36,6 @@
                     <span class="step-check">✓</span>
                 </div>
                 <div class="step-label">שאלון סיכון</div>
-                <div class="step-time">כ-5 דקות</div>
             </div>
             <div class="step active" data-step="4">
                 <div class="step-circle">
@@ -46,14 +43,13 @@
                     <span class="step-check">✓</span>
                 </div>
                 <div class="step-label">הצהרות</div>
-                <div class="step-time">כ-3 דקות</div>
             </div>
         </div>
     </div>
 
     <!-- Form Content -->
     <main class="form-content">
-        <!-- Declarations Header & Progress -->
+        <!-- Declarations Header -->
         <div class="declarations-header">
             <h2>הצהרות והסכמות</h2>
             <p class="legal-notice">
@@ -79,7 +75,6 @@
         <form id="section4-form" class="form-section">
             <!-- Declarations Accordion -->
             <div class="accordion-container">
-                <!-- הצהרה 1 -->
                 <div class="accordion-item" data-declaration="declaration1">
                     <button type="button" class="accordion-header">
                         <span class="accordion-title">הצהרת הבנת סיכונים</span>
@@ -105,7 +100,6 @@
                     </div>
                 </div>
 
-                <!-- הצהרה 2 -->
                 <div class="accordion-item" data-declaration="declaration2">
                     <button type="button" class="accordion-header">
                         <span class="accordion-title">הצהרת אי הסתמכות והחלטה עצמאית</span>
@@ -130,14 +124,13 @@
                     </div>
                 </div>
 
-                <!-- הצהרה 3 -->
                 <div class="accordion-item" data-declaration="declaration3">
                     <button type="button" class="accordion-header">
                         <span class="accordion-title">התחייבות לעדכון פרטים</span>
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p>
+                        <p class="mb-4">
                             אני מתחייב/ת בזאת:
                         </p>
                         <ul class="declaration-list">
@@ -146,9 +139,6 @@
                             <li>לעדכן על שינויים בנסיבות האישיות שעשויים להשפיע על פרופיל הסיכון שלי</li>
                             <li>להודיע על שינויים במטרות ההשקעה או באופק ההשקעה המתוכנן</li>
                         </ul>
-                        <p class="mt-4">
-                            ידוע לי כי אי עדכון פרטים עלול לפגוע בהתאמת השירות לצרכיי ובאיכות השירות שאקבל.
-                        </p>
                         <label class="checkbox-container mt-4">
                             <input type="checkbox" name="updateCommitment" required>
                             <span class="checkmark"></span>
@@ -192,93 +182,12 @@
         </div>
     </footer>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
+    <script src="../../js/signature.js"></script>
     <script src="../../js/navigation.js"></script>
     <script src="../../js/storage.js"></script>
     <script src="../../js/validation.js"></script>
     <script src="../../js/accordion.js"></script>
-
-    <script>
-        // אתחול ה-SignaturePad
-        const canvas = document.getElementById('signatureCanvas');
-        const signaturePad = new SignaturePad(canvas, {
-            backgroundColor: 'white',
-            penColor: 'black'
-        });
-
-        // התאמת גודל הקנבס
-        function resizeCanvas() {
-            const ratio =  Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            canvas.getContext("2d").scale(ratio, ratio);
-            signaturePad.clear();
-        }
-
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
-
-        // כפתורי החתימה
-        document.getElementById('clearSignature').addEventListener('click', () => {
-            signaturePad.clear();
-        });
-
-        document.getElementById('copySignature').addEventListener('click', () => {
-            const previousSignature = localStorage.getItem('signature');
-            if (previousSignature) {
-                signaturePad.fromDataURL(previousSignature);
-            }
-        });
-
-        // עדכון תצוגת התקדמות ההצהרות
-        function updateDeclarationProgress() {
-            let allChecked = true;
-            document.querySelectorAll('.accordion-item').forEach(item => {
-                const checkbox = item.querySelector('input[type="checkbox"]');
-                const declarationId = item.dataset.declaration;
-                const marker = document.querySelector(`.progress-marker[data-declaration="${declarationId}"]`);
-                
-                if (checkbox.checked) {
-                    marker.classList.add('completed');
-                } else {
-                    marker.classList.remove('completed');
-                    allChecked = false;
-                }
-            });
-
-            // עדכון כפתור האישור הסופי
-            const finalConfirmation = document.querySelector('input[name="finalConfirmation"]');
-            finalConfirmation.disabled = !allChecked;
-            
-            if (allChecked) {
-                finalConfirmation.closest('.final-confirmation').classList.add('enabled');
-            } else {
-                finalConfirmation.closest('.final-confirmation').classList.remove('enabled');
-            }
-        }
-
-        // מעקב אחר שינויים בתיבות הסימון
-        document.querySelectorAll('.accordion-item input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', updateDeclarationProgress);
-        });
-
-        // מעקב אחר אישור סופי
-        document.querySelector('input[name="finalConfirmation"]').addEventListener('change', function() {
-            document.getElementById('finalSubmit').disabled = !this.checked;
-        });
-
-        // פתיחת אקורדיון אוטומטית כשמגיעים אליו
-        document.querySelectorAll('.accordion-header').forEach(header => {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting && !header.classList.contains('opened')) {
-                        setTimeout(() => header.click(), 500);
-                    }
-                });
-            }, { threshold: 0.5 });
-            
-            observer.observe(header);
-        });
-    </script>
 </body>
 </html>
