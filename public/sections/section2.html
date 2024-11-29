@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק השקעות - פרטי השקעה</title>
-    <link href="/css/styles.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
     <!-- Header with Logo -->
     <header class="form-header">
-        <img src="/images/movne-logo.png" alt="מובנה" class="logo">
+        <img src="images/movne-logo.png" alt="מובנה" class="logo">
         <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
     </header>
 
@@ -160,13 +160,14 @@
     <!-- Navigation -->
     <footer class="form-navigation">
         <div class="container">
-            <button type="button" class="btn-prev" onclick="window.location.href='section1.html'">חזור</button>
+            <button type="button" id="btnBack" class="btn-prev">חזור</button>
             <button type="button" id="saveAndContinue" class="btn-next">המשך לשלב הבא</button>
         </div>
     </footer>
 
-    <script src="/js/navigation.js"></script>
-    <script src="/js/storage.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/validation.js"></script>
     <script>
         // Show/hide other purpose input
         document.querySelector('input[name="purpose"][value="other"]').addEventListener('change', function() {
@@ -174,9 +175,13 @@
             otherInput.style.display = this.checked ? 'inline-block' : 'none';
             if (!this.checked) otherInput.value = '';
         });
+
+        // Initialize other purpose input display
+        window.addEventListener('DOMContentLoaded', function() {
+            const otherCheckbox = document.querySelector('input[name="purpose"][value="other"]');
+            const otherInput = document.querySelector('input[name="purposeOther"]');
+            otherInput.style.display = otherCheckbox.checked ? 'inline-block' : 'none';
+        });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
-    <script src="/js/signature.js"></script>
-    <script src="/js/validation.js"></script>
 </body>
 </html>
