@@ -60,7 +60,7 @@
                 <div class="error-message" style="display: none;">יש לבחור לפחות אפשרות אחת</div>
                 <div class="checkbox-grid">
                     <label class="checkbox-container">
-                        <input type="checkbox" name="marketExperience" value="none" required>
+                        <input type="checkbox" name="marketExperience" value="none" required data-exclusive="true">
                         <span class="checkmark"></span>
                         אין לי ניסיון בשוק ההון
                     </label>
@@ -136,6 +136,11 @@
                 <div class="question-title">באילו מכשירי השקעה יש לך ניסיון?</div>
                 <div class="checkbox-grid">
                     <label class="checkbox-container">
+                        <input type="checkbox" name="investmentKnowledge" value="none" data-exclusive="true">
+                        <span class="checkmark"></span>
+                        אין לי ניסיון
+                    </label>
+                    <label class="checkbox-container">
                         <input type="checkbox" name="investmentKnowledge" value="stocks">
                         <span class="checkmark"></span>
                         מניות
@@ -183,5 +188,37 @@
     <script src="../../js/navigation.js"></script>
     <script src="../../js/storage.js"></script>
     <script src="../../js/validation.js"></script>
+
+    <script>
+        // טיפול בתיבות סימון אקסקלוסיביות
+        document.querySelectorAll('input[data-exclusive="true"]').forEach(exclusive => {
+            exclusive.addEventListener('change', function() {
+                const name = this.name;
+                const otherCheckboxes = document.querySelectorAll(`input[name="${name}"]:not([data-exclusive="true"])`);
+                if (this.checked) {
+                    otherCheckboxes.forEach(cb => {
+                        cb.checked = false;
+                        cb.disabled = true;
+                    });
+                } else {
+                    otherCheckboxes.forEach(cb => {
+                        cb.disabled = false;
+                    });
+                }
+            });
+        });
+
+        // כשבוחרים אופציה אחרת, לבטל את האקסקלוסיבית
+        document.querySelectorAll('input[type="checkbox"]:not([data-exclusive="true"])').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    const exclusive = document.querySelector(`input[name="${this.name}"][data-exclusive="true"]`);
+                    if (exclusive) {
+                        exclusive.checked = false;
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
