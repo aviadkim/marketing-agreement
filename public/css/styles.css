@@ -119,21 +119,24 @@ body {
     margin: 0 auto;
 }
 
-/* Form Groups */
+/* Form Groups - Updated */
 .form-group {
     background: white;
-    padding: 24px;
+    padding: 28px;
     border-radius: 12px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.form-group label {
-    display: block;
-    font-size: 1.1rem;
-    font-weight: 600;
+/* Question Title - New */
+.question-title {
+    font-size: 1.25rem;
+    font-weight: 700;
     color: var(--dark-blue);
-    margin-bottom: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary-light);
+    line-height: 1.4;
 }
 
 .input-group {
@@ -163,7 +166,7 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 0 4px var(--primary-light);
 }
 
-/* Radio and Checkbox Groups */
+/* Radio and Checkbox Groups - Updated */
 .radio-grid, .checkbox-grid {
     display: flex;
     flex-direction: column;
@@ -173,22 +176,25 @@ input:focus, select:focus, textarea:focus {
 .radio-container, .checkbox-container {
     display: flex;
     align-items: center;
-    padding: 16px;
-    background: white;
-    border: 2px solid var(--border-gray);
+    padding: 14px 16px;
+    background: var(--light-gray);
+    border: 1px solid var(--border-gray);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     margin: 0;
     gap: 12px;
+    font-size: 1rem;
+    color: #4a5568;
 }
 
 .radio-container:hover, .checkbox-container:hover {
-    background: var(--primary-light);
+    background: white;
     border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(37, 88, 229, 0.1);
 }
 
-/* Updated radio and checkbox markers */
 .radio-mark, .checkmark {
     width: 28px;
     height: 28px;
@@ -210,7 +216,6 @@ input:focus, select:focus, textarea:focus {
     border-radius: 6px;
 }
 
-/* Improved checkmark when selected */
 .radio-container input:checked ~ .radio-mark,
 .checkbox-container input:checked ~ .checkmark {
     background: var(--primary-color);
@@ -233,7 +238,6 @@ input:focus, select:focus, textarea:focus {
     font-weight: bold;
 }
 
-/* Hide original inputs */
 .radio-container input,
 .checkbox-container input {
     position: absolute;
@@ -243,17 +247,15 @@ input:focus, select:focus, textarea:focus {
     width: 0;
 }
 
-/* Selected text style */
-.radio-container input:checked + span,
-.checkbox-container input:checked + span {
-    font-weight: 600;
+.radio-container input:checked ~ span,
+.checkbox-container input:checked ~ span {
     color: var(--primary-color);
+    font-weight: 600;
 }
 
-/* Add smooth transitions */
-.radio-mark, .checkmark,
-.radio-mark:after, .checkmark:after {
-    transition: all 0.2s ease-in-out;
+/* Form Groups Spacing */
+.form-group + .form-group {
+    margin-top: 36px;
 }
 
 /* Navigation */
