@@ -53,19 +53,28 @@
 
     <!-- Form Content -->
     <main class="form-content">
-        <!-- Progress Markers -->
+        <!-- New Declarations Header -->
         <div class="declarations-progress">
-            <div class="progress-marker" data-declaration="declaration1">
-                <div class="marker-circle"></div>
-                <div class="marker-label">הצהרת סיכונים</div>
+            <div class="declarations-header">
+                <h2>הצהרות והסכמות</h2>
+                <p class="legal-notice">
+                    נא לקרוא בעיון את ההצהרות הבאות. פתיחה וקריאה של כל נושא תיחשב כהסכמה לתוכנו. 
+                    יש לקרוא את כל ההצהרות על מנת להמשיך לשלב החתימה.
+                </p>
             </div>
-            <div class="progress-marker" data-declaration="declaration2">
-                <div class="marker-circle"></div>
-                <div class="marker-label">החלטה עצמאית</div>
-            </div>
-            <div class="progress-marker" data-declaration="declaration3">
-                <div class="marker-circle"></div>
-                <div class="marker-label">עדכון פרטים</div>
+            <div class="progress-markers">
+                <div class="progress-marker" data-declaration="declaration1">
+                    <div class="marker-circle"></div>
+                    <div class="marker-label">הצהרת סיכונים</div>
+                </div>
+                <div class="progress-marker" data-declaration="declaration2">
+                    <div class="marker-circle"></div>
+                    <div class="marker-label">החלטה עצמאית</div>
+                </div>
+                <div class="progress-marker" data-declaration="declaration3">
+                    <div class="marker-circle"></div>
+                    <div class="marker-label">עדכון פרטים</div>
+                </div>
             </div>
         </div>
 
@@ -265,7 +274,7 @@
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting && !header.classList.contains('opened')) {
-                        header.click();
+                        setTimeout(() => header.click(), 500);
                     }
                 });
             }, { threshold: 0.5 });
