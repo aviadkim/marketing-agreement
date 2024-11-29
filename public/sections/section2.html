@@ -56,12 +56,12 @@
         <form id="section2-form" class="form-section">
             <div class="grid-2">
                 <div class="input-group">
-                    <label>סכום מתוכנן להשקעה במוצרים מובנים</label>
-                    <input type="number" name="investmentAmount" required min="0">
+                    <div class="question-title">סכום מתוכנן להשקעה במוצרים מובנים</div>
+                    <input type="number" name="investmentAmount" required min="0" placeholder="הכנס סכום">
                     <div class="input-hint">יש להזין סכום בש"ח ללא נקודה עשרונית</div>
                 </div>
                 <div class="input-group">
-                    <label>בנק</label>
+                    <div class="question-title">בנק</div>
                     <select name="bank" required>
                         <option value="">בחר/י בנק...</option>
                         <option value="poalim">הפועלים</option>
@@ -75,7 +75,7 @@
 
             <!-- Currency Options -->
             <div class="option-group mt-6">
-                <label>מטבע יחוס</label>
+                <div class="question-title">מטבע יחוס</div>
                 <div class="radio-grid">
                     <label class="radio-container">
                         <input type="radio" name="currency" value="ILS" required>
@@ -102,7 +102,7 @@
 
             <!-- Investment Purpose -->
             <div class="option-group mt-6">
-                <label>ייעוד הכסף (ניתן לבחור יותר מתשובה אחת)</label>
+                <div class="question-title">ייעוד הכסף (ניתן לבחור יותר מתשובה אחת)</div>
                 <div class="checkbox-grid">
                     <label class="checkbox-container">
                         <input type="checkbox" name="purpose" value="property">
@@ -135,7 +135,7 @@
 
             <!-- Investment Timeline -->
             <div class="option-group mt-6">
-                <label>טווח השקעה מתוכנן</label>
+                <div class="question-title">טווח השקעה מתוכנן</div>
                 <div class="radio-grid">
                     <label class="radio-container">
                         <input type="radio" name="timeline" value="short" required>
