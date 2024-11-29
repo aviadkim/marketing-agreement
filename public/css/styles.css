@@ -163,7 +163,7 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 0 4px var(--primary-light);
 }
 
-/* Radio and Checkbox Groups - Updated */
+/* Radio and Checkbox Groups - Updated with new styles */
 .radio-grid, .checkbox-grid {
     display: flex;
     flex-direction: column;
@@ -174,26 +174,42 @@ input:focus, select:focus, textarea:focus {
     display: flex;
     align-items: center;
     padding: 16px;
-    background: var(--light-gray);
+    background: white;
     border: 2px solid var(--border-gray);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     margin: 0;
     gap: 12px;
+    position: relative;
 }
 
+/* Removed the blue line before selection */
+.radio-container::before, .checkbox-container::before {
+    display: none;
+}
+
+/* Hover state */
 .radio-container:hover, .checkbox-container:hover {
     background: var(--primary-light);
     border-color: var(--primary-color);
 }
 
+/* Selected state with clear indication */
+.radio-container.selected, .checkbox-container.selected {
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+}
+
+/* Improved radio and checkbox markers */
 .radio-mark, .checkmark {
     width: 24px;
     height: 24px;
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--border-gray);
     position: relative;
     margin-left: 12px;
+    background: white;
+    flex-shrink: 0;
 }
 
 .radio-mark {
@@ -204,6 +220,7 @@ input:focus, select:focus, textarea:focus {
     border-radius: 6px;
 }
 
+/* Clear checkmark when selected */
 .radio-container input:checked ~ .radio-mark,
 .checkbox-container input:checked ~ .checkmark {
     background: var(--primary-color);
@@ -215,17 +232,28 @@ input:focus, select:focus, textarea:focus {
     content: "✓";
     position: absolute;
     color: white;
-    font-size: 14px;
-    top: 50%;
+    font-size: 16px;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
+    font-weight: bold;
 }
 
+/* Hide original inputs */
 .radio-container input,
 .checkbox-container input {
     position: absolute;
     opacity: 0;
     cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* Selected text style */
+.radio-container input:checked + span,
+.checkbox-container input:checked + span {
+    font-weight: 600;
+    color: var(--primary-color);
 }
 
 /* Navigation */
