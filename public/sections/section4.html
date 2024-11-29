@@ -53,11 +53,27 @@
 
     <!-- Form Content -->
     <main class="form-content">
+        <!-- Progress Markers -->
+        <div class="declarations-progress">
+            <div class="progress-marker" data-declaration="declaration1">
+                <div class="marker-circle"></div>
+                <div class="marker-label">הצהרת סיכונים</div>
+            </div>
+            <div class="progress-marker" data-declaration="declaration2">
+                <div class="marker-circle"></div>
+                <div class="marker-label">החלטה עצמאית</div>
+            </div>
+            <div class="progress-marker" data-declaration="declaration3">
+                <div class="marker-circle"></div>
+                <div class="marker-label">עדכון פרטים</div>
+            </div>
+        </div>
+
         <form id="section4-form" class="form-section">
             <!-- Declarations Accordion -->
             <div class="accordion-container">
                 <!-- הצהרה 1 -->
-                <div class="accordion-item">
+                <div class="accordion-item" data-declaration="declaration1">
                     <button type="button" class="accordion-header">
                         <span class="accordion-title">הצהרת הבנת סיכונים</span>
                         <span class="accordion-icon">▼</span>
@@ -83,7 +99,7 @@
                 </div>
 
                 <!-- הצהרה 2 -->
-                <div class="accordion-item">
+                <div class="accordion-item" data-declaration="declaration2">
                     <button type="button" class="accordion-header">
                         <span class="accordion-title">הצהרת אי הסתמכות והחלטה עצמאית</span>
                         <span class="accordion-icon">▼</span>
@@ -108,7 +124,7 @@
                 </div>
 
                 <!-- הצהרה 3 -->
-                <div class="accordion-item">
+                <div class="accordion-item" data-declaration="declaration3">
                     <button type="button" class="accordion-header">
                         <span class="accordion-title">התחייבות לעדכון פרטים</span>
                         <span class="accordion-icon">▼</span>
@@ -151,7 +167,7 @@
             <!-- Final Confirmation -->
             <div class="final-confirmation mt-6">
                 <label class="checkbox-container">
-                    <input type="checkbox" name="finalConfirmation" required>
+                    <input type="checkbox" name="finalConfirmation" required disabled>
                     <span class="checkmark"></span>
                     <span class="text-bold">
                         אני מאשר/ת שקראתי והבנתי את כל ההצהרות לעיל, ומסכים/ה להן באופן מלא ובלתי חוזר
@@ -165,7 +181,7 @@
     <footer class="form-navigation">
         <div class="container">
             <button type="button" id="btnBack" class="btn-prev">חזור</button>
-            <button type="button" id="finalSubmit" class="btn-next">סיים והגש טופס</button>
+            <button type="button" id="finalSubmit" class="btn-next" disabled>סיים והגש טופס</button>
         </div>
     </footer>
 
@@ -174,5 +190,88 @@
     <script src="../../js/storage.js"></script>
     <script src="../../js/validation.js"></script>
     <script src="../../js/accordion.js"></script>
+
+    <script>
+        // אתחול ה-SignaturePad
+        const canvas = document.getElementById('signatureCanvas');
+        const signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'white',
+            penColor: 'black'
+        });
+
+        // התאמת גודל הקנבס
+        function resizeCanvas() {
+            const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            signaturePad.clear();
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        // כפתורי החתימה
+        document.getElementById('clearSignature').addEventListener('click', () => {
+            signaturePad.clear();
+        });
+
+        document.getElementById('copySignature').addEventListener('click', () => {
+            const previousSignature = localStorage.getItem('signature');
+            if (previousSignature) {
+                signaturePad.fromDataURL(previousSignature);
+            }
+        });
+
+        // עדכון תצוגת התקדמות ההצהרות
+        function updateDeclarationProgress() {
+            let allChecked = true;
+            document.querySelectorAll('.accordion-item').forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                const declarationId = item.dataset.declaration;
+                const marker = document.querySelector(`.progress-marker[data-declaration="${declarationId}"]`);
+                
+                if (checkbox.checked) {
+                    marker.classList.add('completed');
+                } else {
+                    marker.classList.remove('completed');
+                    allChecked = false;
+                }
+            });
+
+            // עדכון כפתור האישור הסופי
+            const finalConfirmation = document.querySelector('input[name="finalConfirmation"]');
+            finalConfirmation.disabled = !allChecked;
+            
+            if (allChecked) {
+                finalConfirmation.closest('.final-confirmation').classList.add('enabled');
+            } else {
+                finalConfirmation.closest('.final-confirmation').classList.remove('enabled');
+            }
+        }
+
+        // מעקב אחר שינויים בתיבות הסימון
+        document.querySelectorAll('.accordion-item input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateDeclarationProgress);
+        });
+
+        // מעקב אחר אישור סופי
+        document.querySelector('input[name="finalConfirmation"]').addEventListener('change', function() {
+            document.getElementById('finalSubmit').disabled = !this.checked;
+        });
+
+        // פתיחת אקורדיון אוטומטית כשמגיעים אליו
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !header.classList.contains('opened')) {
+                        header.click();
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            observer.observe(header);
+        });
+    </script>
 </body>
 </html>
