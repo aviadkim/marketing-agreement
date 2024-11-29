@@ -1,70 +1,102 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     const saveAndContinue = document.getElementById('saveAndContinue');
     const finalSubmit = document.getElementById('finalSubmit');
+    const btnBack = document.getElementById('btnBack');
 
-    // פונקציית מעבר לעמוד הבא
     function navigateToNext() {
+        if (!validateForm()) return;
+
+        // Get current form ID to determine which page we're on
         const form = document.querySelector('form');
-        if (!form) {
-            console.error('Form not found');
-            return;
-        }
-
-        // בדיקת שם הטופס כדי לדעת באיזה דף אנחנו
-        const formId = form.id; // למשל section1-form
-        console.log('Form ID:', formId);
-
-        // קביעת העמוד הבא לפי ID של הטופס
+        const formId = form.id;
         let nextPage;
+
+        // Define navigation map
         switch(formId) {
             case 'section1-form':
-                nextPage = 'sections/section2.html';
+                nextPage = 'section2.html';
                 break;
             case 'section2-form':
-                nextPage = 'sections/section3.html';
+                nextPage = 'section3.html';
                 break;
             case 'section3-form':
-                nextPage = 'sections/section4.html';
+                nextPage = 'section4.html';
                 break;
             case 'section4-form':
-                nextPage = 'sections/thank-you.html';
+                nextPage = 'thank-you.html';
                 break;
             default:
                 console.error('Unknown form ID:', formId);
-                showError('שגיאה בניווט');
                 return;
         }
 
-        // בדיקת תקינות
-        if (!validateForm(form)) {
-            return;
-        }
-
-        // שמירת נתונים ומעבר
+        // Save form data before navigation
         if (typeof saveFormData === 'function') {
             saveFormData();
         }
-        
-        console.log('Navigating to:', nextPage);
+
+        // Navigate to next page
         window.location.href = nextPage;
     }
 
-    function validateForm(form) {
+    function navigateBack() {
+        // Get current form ID
+        const form = document.querySelector('form');
+        const formId = form.id;
+        let prevPage;
+
+        // Define reverse navigation map
+        switch(formId) {
+            case 'section2-form':
+                prevPage = 'section1.html';
+                break;
+            case 'section3-form':
+                prevPage = 'section2.html';
+                break;
+            case 'section4-form':
+                prevPage = 'section3.html';
+                break;
+            default:
+                return;
+        }
+
+        // Save current form data before going back
+        if (typeof saveFormData === 'function') {
+            saveFormData();
+        }
+
+        window.location.href = prevPage;
+    }
+
+    function validateForm() {
+        const form = document.querySelector('form');
+        if (!form) return false;
+
         const requiredFields = form.querySelectorAll('[required]');
         let isValid = true;
-        
+
         requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                field.classList.add('error');
+            if (field.type === 'radio') {
+                // For radio buttons, check if any in the group is checked
+                const groupName = field.name;
+                const isChecked = form.querySelector(`input[name="${groupName}"]:checked`);
+                if (!isChecked) {
+                    isValid = false;
+                    showError(`נא לבחור ${field.closest('.form-group').querySelector('label').textContent}`);
+                }
+            } else if (field.type === 'checkbox' && field.required) {
+                if (!field.checked) {
+                    isValid = false;
+                    showError(`נא לסמן ${field.closest('.checkbox-container').textContent.trim()}`);
+                }
+            } else if (!field.value.trim()) {
                 isValid = false;
+                field.classList.add('error');
+                showError(`נא למלא ${field.closest('.form-group').querySelector('label').textContent}`);
             } else {
                 field.classList.remove('error');
             }
         });
-
-        if (!isValid) {
-            showError('נא למלא את כל השדות החובה');
-        }
 
         return isValid;
     }
@@ -82,9 +114,20 @@ document.addEventListener('DOMContentLoaded', function () {
             padding: 12px 24px;
             border-radius: 8px;
             z-index: 1000;
+            animation: fadeIn 0.3s ease-in;
         `;
+
+        // Remove any existing error messages
+        const existingError = document.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+
         document.body.appendChild(errorDiv);
-        setTimeout(() => errorDiv.remove(), 3000);
+        setTimeout(() => {
+            errorDiv.style.animation = 'fadeOut 0.3s ease-out';
+            setTimeout(() => errorDiv.remove(), 300);
+        }, 3000);
     }
 
     // Event Listeners
@@ -93,6 +136,37 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (finalSubmit) {
-        finalSubmit.addEventListener('click', submitForm);
+        finalSubmit.addEventListener('click', function() {
+            if (validateForm()) {
+                saveFormData();
+                // Here you would typically submit the form to your server
+                alert('הטופס נשלח בהצלחה!');
+            }
+        });
     }
+
+    if (btnBack) {
+        btnBack.addEventListener('click', navigateBack);
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.ctrlKey && saveAndContinue) {
+            navigateToNext();
+        }
+    });
+
+    // Add CSS for animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+    `;
+    document.head.appendChild(style);
 });
