@@ -119,7 +119,7 @@ body {
     margin: 0 auto;
 }
 
-/* Form Groups - Updated */
+/* Form Groups */
 .form-group {
     background: white;
     padding: 28px;
@@ -128,7 +128,7 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* Question Title - New */
+/* Question Title */
 .question-title {
     font-size: 1.25rem;
     font-weight: 700;
@@ -139,6 +139,57 @@ body {
     line-height: 1.4;
 }
 
+/* Declarations Progress - New */
+.declarations-progress {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.progress-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    text-align: center;
+}
+
+.marker-circle {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border-gray);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.progress-marker.completed .marker-circle {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.progress-marker.completed .marker-circle::after {
+    content: "✓";
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.marker-label {
+    font-size: 14px;
+    color: var(--dark-blue);
+    font-weight: 500;
+}
+
+/* Input Group */
 .input-group {
     margin-bottom: 20px;
 }
@@ -166,7 +217,7 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 0 4px var(--primary-light);
 }
 
-/* Radio and Checkbox Groups - Updated */
+/* Radio and Checkbox Groups */
 .radio-grid, .checkbox-grid {
     display: flex;
     flex-direction: column;
@@ -220,9 +271,6 @@ input:focus, select:focus, textarea:focus {
 .checkbox-container input:checked ~ .checkmark {
     background: var(--primary-color);
     border-color: var(--primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .radio-container input:checked ~ .radio-mark:after,
@@ -253,9 +301,95 @@ input:focus, select:focus, textarea:focus {
     font-weight: 600;
 }
 
-/* Form Groups Spacing */
-.form-group + .form-group {
-    margin-top: 36px;
+/* Accordion Styles - Updated */
+.accordion-item {
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    background: white;
+}
+
+.accordion-header {
+    width: 100%;
+    padding: 16px;
+    text-align: right;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-blue);
+}
+
+.accordion-content {
+    padding: 0 16px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.accordion-content.open {
+    padding: 16px;
+    border-top: 1px solid var(--border-gray);
+}
+
+/* Declaration List */
+.declaration-list {
+    padding-right: 20px;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.declaration-list li {
+    margin-bottom: 12px;
+    color: #4a5568;
+}
+
+/* Final Confirmation */
+.final-confirmation {
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+    padding: 20px;
+    background: var(--primary-light);
+    border-radius: 8px;
+    margin-top: 32px;
+}
+
+.final-confirmation.enabled {
+    opacity: 1;
+}
+
+/* Signature Styles */
+.signature-pad {
+    width: 100%;
+    height: 200px;
+    background: white;
+    border: 2px solid var(--border-gray);
+    border-radius: 8px;
+    margin-top: 24px;
+}
+
+.signature-controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.btn-secondary {
+    padding: 8px 16px;
+    border: 1px solid var(--border-gray);
+    border-radius: 4px;
+    background: white;
+    color: var(--dark-blue);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: var(--light-gray);
 }
 
 /* Navigation */
@@ -301,62 +435,20 @@ input:focus, select:focus, textarea:focus {
     margin-top: 24px;
 }
 
-.error {
-    border-color: #dc3545 !important;
-}
-
-.error-message {
-    color: #dc3545;
-    font-size: 14px;
-    margin-top: 8px;
-    display: block;
-}
-
-.input-hint {
-    font-size: 14px;
-    color: #666;
-    margin-top: 4px;
-}
-
-/* Accordion Styles */
-.accordion-item {
-    border: 1px solid var(--border-gray);
-    border-radius: 8px;
+.mb-4 {
     margin-bottom: 16px;
 }
 
-.accordion-header {
-    width: 100%;
-    padding: 16px;
-    text-align: right;
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.text-gray-600 {
+    color: #666;
 }
 
-.accordion-content {
-    padding: 0 16px;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
+.text-sm {
+    font-size: 14px;
 }
 
-/* Signature Styles */
-.signature-pad {
-    width: 100%;
-    height: 200px;
-    background-color: white;
-    border: 2px solid var(--border-gray);
-    border-radius: 8px;
-}
-
-.signature-controls {
-    display: flex;
-    gap: 12px;
-    margin-top: 12px;
+.text-bold {
+    font-weight: 600;
 }
 
 /* Responsive Design */
@@ -375,5 +467,10 @@ input:focus, select:focus, textarea:focus {
 
     .btn-prev, .btn-next {
         padding: 12px 24px;
+    }
+
+    .declarations-progress {
+        flex-direction: column;
+        gap: 16px;
     }
 }
