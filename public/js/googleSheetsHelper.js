@@ -1,67 +1,107 @@
-const { GoogleSpreadsheet } = require('google-spreadsheet');
-
-const SPREADSHEET_ID = '11z5zIfLN8ViVPQUGfjfxC9vJp4P_Dsu9CpcLuiq2u5s';
-
-async function addRowToGoogleSheet(formData) {
-    try {
-        const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
-        await doc.useServiceAccountAuth({
-            client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-            private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-        });
-        
-        await doc.loadInfo();
-        const sheet = doc.sheetsByIndex[0];
-
-        // Prepare row data from all form sections
-        const row = {
-            timestamp: new Date().toISOString(),
-            
-            // Personal Details (Section 1)
-            firstName: formData.firstName || '',
-            lastName: formData.lastName || '',
-            idNumber: formData.idNumber || '',
-            email: formData.email || '',
-            phone: formData.phone || '',
-            
-            // Investment Details (Section 2)
-            investmentAmount: formData.investmentAmount || '',
-            bank: formData.bank || '',
-            currency: formData.currency || '',
-            purpose: Array.isArray(formData.purpose) ? formData.purpose.join(', ') : formData.purpose || '',
-            purposeOther: formData.purposeOther || '',
-            timeline: formData.timeline || '',
-            
-            // Risk Assessment (Section 3)
-            marketExperience: Array.isArray(formData.marketExperience) ? formData.marketExperience.join(', ') : formData.marketExperience || '',
-            riskTolerance: formData.riskTolerance || '',
-            lossResponse: formData.lossResponse || '',
-            investmentKnowledge: Array.isArray(formData.investmentKnowledge) ? formData.investmentKnowledge.join(', ') : formData.investmentKnowledge || '',
-            investmentRestrictions: formData.investmentRestrictions || '',
-            
-            // Declarations (Section 4)
-            riskAcknowledgement: formData.riskAcknowledgement ? 'כן' : 'לא',
-            independentDecision: formData.independentDecision ? 'כן' : 'לא',
-            updateCommitment: formData.updateCommitment ? 'כן' : 'לא',
-            
-            // Form Screenshots and Signature
-            section1Screenshot: formData.section1Screenshot || '',
-            section2Screenshot: formData.section2Screenshot || '',
-            section3Screenshot: formData.section3Screenshot || '',
-            section4Screenshot: formData.section4Screenshot || '',
-            signature: formData.finalSignature || '',
-            
-            // General
-            submissionDate: new Date().toLocaleDateString('he-IL'),
-            fullFormScreenshot: formData.fullFormScreenshot || ''
-        };
-
-        await sheet.addRow(row);
-        return true;
-    } catch (error) {
-        console.error('Error adding row to Google Sheet:', error);
-        throw error;
-    }
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    // יצירת תיקייה לשמירת הקבצים אם לא קיימת
+    const folder = getOrCreateFolder('Marketing Agreement Forms');
+    
+    // שמירת התמונות והחתימה בדרייב
+    const fileUrls = saveFiles(folder, data);
+    
+    // הוספת שורה לגיליון
+    const row = [
+      new Date(),                    // תאריך ושעה
+      data.firstName,                // פרטים אישיים
+      data.lastName,
+      data.idNumber,
+      data.email,
+      data.phone,
+      
+      data.investmentAmount,         // פרטי השקעה
+      data.bank,
+      data.currency,
+      data.purpose,
+      data.purposeOther,
+      data.timeline,
+      
+      data.marketExperience,         // שאלון סיכון
+      data.riskTolerance,
+      data.lossResponse,
+      data.investmentKnowledge,
+      data.investmentRestrictions,
+      
+      data.riskAcknowledgement ? 'כן' : 'לא',  // הצהרות
+      data.independentDecision ? 'כן' : 'לא',
+      data.updateCommitment ? 'כן' : 'לא',
+      
+      fileUrls.signature || '',      // קישורים לקבצים
+      fileUrls.screenshot || '',
+      
+      data.submissionDate           // תאריך שליחה
+    ];
+    
+    sheet.appendRow(row);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      result: 'success',
+      row: row
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch(error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      result: 'error',
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
-module.exports = { addRowToGoogleSheet };
+function getOrCreateFolder(folderName) {
+  const folders = DriveApp.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  return DriveApp.createFolder(folderName);
+}
+
+function saveFiles(folder, data) {
+  const fileUrls = {};
+  const timestamp = new Date().getTime();
+  const idNumber = data.idNumber || 'unknown';
+  
+  // שמירת החתימה
+  if (data.signature) {
+    try {
+      const signatureData = data.signature.replace(/^data:image\/(png|jpg|jpeg);base64,/, '');
+      const signatureBlob = Utilities.newBlob(
+        Utilities.base64Decode(signatureData),
+        'image/png',
+        `signature_${idNumber}_${timestamp}.png`
+      );
+      const signatureFile = folder.createFile(signatureBlob);
+      signatureFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      fileUrls.signature = signatureFile.getUrl();
+    } catch (error) {
+      Logger.log('Error saving signature: ' + error.toString());
+    }
+  }
+  
+  // שמירת צילום הטופס
+  if (data.formScreenshot) {
+    try {
+      const screenshotData = data.formScreenshot.replace(/^data:image\/(png|jpg|jpeg);base64,/, '');
+      const screenshotBlob = Utilities.newBlob(
+        Utilities.base64Decode(screenshotData),
+        'image/png',
+        `form_${idNumber}_${timestamp}.png`
+      );
+      const screenshotFile = folder.createFile(screenshotBlob);
+      screenshotFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      fileUrls.screenshot = screenshotFile.getUrl();
+    } catch (error) {
+      Logger.log('Error saving screenshot: ' + error.toString());
+    }
+  }
+  
+  return fileUrls;
+}
