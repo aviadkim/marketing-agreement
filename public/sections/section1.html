@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק השקעות - פרטים אישיים</title>
-    <link href="css/styles.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body>
     <!-- Header with Logo -->
     <header class="form-header">
-        <img src="images/movne-logo.png" alt="מובנה" class="logo">
+        <img src="/images/movne-logo.png" alt="מובנה" class="logo">
         <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
     </header>
 
@@ -76,6 +76,19 @@
                     <input type="tel" name="phone" required>
                 </div>
             </div>
+
+            <!-- Signature Section -->
+            <div class="form-group mt-6">
+                <label>חתימה דיגיטלית</label>
+                <div class="signature-container">
+                    <canvas id="signature1" class="signature-canvas" width="800" height="200"></canvas>
+                    <div class="signature-controls">
+                        <button type="button" class="btn-secondary" data-clear-for="signature1">נקה חתימה</button>
+                        <button type="button" class="btn-secondary" data-copy-for="signature1">העתק חתימה קודמת</button>
+                    </div>
+                </div>
+                <input type="hidden" id="signature-data" name="signature">
+            </div>
         </form>
     </main>
 
@@ -86,11 +99,12 @@
         </div>
     </footer>
 
-    <!-- Include the required JavaScript files -->
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script type="module" src="/js/formHandler.js"></script>
     <script src="/js/validation.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>  <!-- הוסף שורה זו -->
     <script src="/js/storage.js"></script>
-    <script type="module" src="../js/navigation.js"></script>
-    <script src="/js/signature.js"></script>
+    <script type="module" src="/js/navigation.js"></script>
 </body>
 </html>

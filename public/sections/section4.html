@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק השקעות - הצהרות</title>
-    <link href="../../css/styles.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body>
     <!-- Header with Logo -->
     <header class="form-header">
-        <img src="../../images/movne-logo.png" alt="מובנה" class="logo">
+        <img src="/images/movne-logo.png" alt="מובנה" class="logo">
         <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
     </header>
 
@@ -149,22 +149,22 @@
             </div>
 
             <!-- Digital Signature -->
-            <div class="signature-section mt-6">
-                <h3>חתימה דיגיטלית</h3>
-                <div class="text-sm text-gray-600 mb-4">נא לחתום להסכמה על כל ההצהרות הנ"ל</div>
-                
-                <canvas id="signatureCanvas" class="signature-pad"></canvas>
-                <div class="signature-controls">
-                    <button type="button" id="clearSignature" class="btn-secondary">נקה חתימה</button>
-                    <button type="button" id="copySignature" class="btn-secondary">העתק חתימה קודמת</button>
-                    <input type="hidden" id="signatureData" name="finalSignature">
+            <div class="form-group mt-6">
+                <label>חתימה דיגיטלית</label>
+                <div class="signature-container">
+                    <canvas id="signature4" class="signature-canvas" width="800" height="200"></canvas>
+                    <div class="signature-controls">
+                        <button type="button" class="btn-secondary" data-clear-for="signature4">נקה חתימה</button>
+                        <button type="button" class="btn-secondary" data-copy-for="signature4">העתק חתימה קודמת</button>
+                    </div>
                 </div>
+                <input type="hidden" id="signature-data-4" name="signature4">
             </div>
 
             <!-- Final Confirmation -->
             <div class="final-confirmation mt-6">
                 <label class="checkbox-container">
-                    <input type="checkbox" name="finalConfirmation" required disabled>
+                    <input type="checkbox" name="finalConfirmation" required>
                     <span class="checkmark"></span>
                     <span class="text-bold">
                         אני מאשר/ת שקראתי והבנתי את כל ההצהרות לעיל, ומסכים/ה להן באופן מלא ובלתי חוזר
@@ -178,16 +178,101 @@
     <footer class="form-navigation">
         <div class="container">
             <button type="button" id="btnBack" class="btn-prev">חזור</button>
-            <button type="button" id="finalSubmit" class="btn-next" disabled>סיים והגש טופס</button>
+            <button type="submit" id="finalSubmit" class="btn-next">סיים והגש טופס</button>
         </div>
     </footer>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
-    <script src="../../js/signature.js"></script>
-    <script type="module" src="../../js/navigation.js"></script>
-    <script src="../../js/storage.js"></script>
-    <script src="../../js/validation.js"></script>
-    <script src="../../js/accordion.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script type="module" src="/js/formHandler.js"></script>
+    <script src="/js/validation.js"></script>
+    <script src="/js/storage.js"></script>
+    <script type="module" src="/js/navigation.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // מעקב אחר קריאת ההצהרות
+            const declarations = {
+                declaration1: false,
+                declaration2: false,
+                declaration3: false
+            };
+
+            // פתיחה וסגירה של האקורדיון
+            document.querySelectorAll('.accordion-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('.accordion-icon');
+                    const isOpen = content.classList.contains('open');
+                    const declarationId = this.closest('.accordion-item').dataset.declaration;
+
+                    // סגירת כל החלקים האחרים
+                    document.querySelectorAll('.accordion-content').forEach(item => {
+                        item.classList.remove('open');
+                        item.style.maxHeight = null;
+                        item.previousElementSibling.querySelector('.accordion-icon').textContent = '▼';
+                    });
+
+                    if (!isOpen) {
+                        content.classList.add('open');
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.textContent = '▲';
+                        
+                        // סימון כנקרא
+                        setTimeout(() => {
+                            declarations[declarationId] = true;
+                            updateProgressMarkers();
+                            checkAllDeclarationsRead();
+                        }, 1000);
+                    }
+                });
+            });
+
+            // עדכון סמני התקדמות
+            function updateProgressMarkers() {
+                Object.entries(declarations).forEach(([id, isRead]) => {
+                    const marker = document.querySelector(`.progress-marker[data-declaration="${id}"]`);
+                    if (marker) {
+                        if (isRead) {
+                            marker.classList.add('completed');
+                        } else {
+                            marker.classList.remove('completed');
+                        }
+                    }
+                });
+            }
+
+            // בדיקה האם כל ההצהרות נקראו
+            function checkAllDeclarationsRead() {
+                const allRead = Object.values(declarations).every(val => val);
+                const finalCheckbox = document.querySelector('input[name="finalConfirmation"]');
+                
+                if (finalCheckbox) {
+                    finalCheckbox.disabled = !allRead;
+                    if (allRead) {
+                        finalCheckbox.closest('.final-confirmation').classList.add('enabled');
+                    }
+                }
+            }
+
+            // וולידציה של הטופס
+            document.querySelector('form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // בדיקה שכל ההצהרות נקראו וסומנו
+                const allChecked = ['riskAcknowledgement', 'independentDecision', 'updateCommitment', 'finalConfirmation']
+                    .every(name => document.querySelector(`input[name="${name}"]`).checked);
+
+                if (!allChecked) {
+                    alert('נא לקרוא ולאשר את כל ההצהרות');
+                    return;
+                }
+
+                // המשך לשליחת הטופס
+                this.submit();
+            });
+        });
+    </script>
 </body>
 </html>
