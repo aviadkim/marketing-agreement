@@ -1,61 +1,53 @@
 // signatureHandler.js
 class SignatureHandler {
     constructor() {
-        console.log('SignatureHandler initialization started');
-        // וודא שה-SignaturePad קיים
         if (typeof SignaturePad === 'undefined') {
-            console.error('SignaturePad library is not loaded!');
+            console.error('SignaturePad library not loaded');
             return;
         }
         this.initialize();
     }
 
     initialize() {
-        const canvas = document.getElementById('signatureCanvas4');
-        console.log('Found canvas:', canvas);
+        document.querySelectorAll('.signature-canvas').forEach(canvas => {
+            if (!canvas) return;
+            
+            try {
+                const signaturePad = new SignaturePad(canvas, {
+                    minWidth: 1,
+                    maxWidth: 2.5,
+                    throttle: 16,
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    penColor: 'rgb(0, 0, 0)'
+                });
 
-        if (!canvas) {
-            console.error('Canvas element not found');
-            return;
-        }
+                this.setupCanvas(canvas, signaturePad);
+                this.setupButtons(canvas, signaturePad);
+                this.attachEvents(canvas, signaturePad);
 
-        try {
-            this.signaturePad = new SignaturePad(canvas, {
-                minWidth: 1,
-                maxWidth: 2.5,
-                throttle: 16,
-                backgroundColor: 'rgb(255, 255, 255)',
-                penColor: 'rgb(0, 0, 0)'
-            });
-
-            console.log('SignaturePad initialized successfully');
-
-            this.setupCanvas(canvas);
-            this.setupButtons(canvas);
-            this.attachEvents(canvas);
-
-        } catch (error) {
-            console.error('Error initializing SignaturePad:', error);
-        }
+            } catch (error) {
+                console.error('Error initializing SignaturePad:', error);
+            }
+        });
     }
 
-    setupCanvas(canvas) {
+    setupCanvas(canvas, signaturePad) {
         const resizeCanvas = () => {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
             const context = canvas.getContext("2d");
             
-            // שמירת הנתונים הנוכחיים
-            const data = this.signaturePad.toData();
+            // Save current data
+            const data = signaturePad.toData();
             
-            // עדכון גודל
+            // Adjust canvas size
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
             context.scale(ratio, ratio);
             
-            // שחזור הנתונים
-            this.signaturePad.clear();
+            // Restore data
+            signaturePad.clear();
             if (data) {
-                this.signaturePad.fromData(data);
+                signaturePad.fromData(data);
             }
         };
 
@@ -66,25 +58,28 @@ class SignatureHandler {
         resizeCanvas();
     }
 
-    setupButtons(canvas) {
-        // כפתור ניקוי
+    setupButtons(canvas, signaturePad) {
         const clearButton = document.querySelector(`[data-clear-for="${canvas.id}"]`);
         if (clearButton) {
             clearButton.addEventListener('click', () => {
-                console.log('Clear button clicked');
-                this.signaturePad.clear();
+                signaturePad.clear();
                 this.updateHiddenInput(canvas.id, '');
             });
         }
 
-        // כפתור העתקה
         const copyButton = document.querySelector(`[data-copy-for="${canvas.id}"]`);
         if (copyButton) {
             copyButton.addEventListener('click', () => {
-                console.log('Copy button clicked');
                 const previousSignature = localStorage.getItem('signature');
                 if (previousSignature) {
-                    this.loadSignature(previousSignature, canvas);
+                    const image = new Image();
+                    image.onload = () => {
+                        signaturePad.clear();
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+                        this.updateHiddenInput(canvas.id, previousSignature);
+                    };
+                    image.src = previousSignature;
                 } else {
                     alert('לא נמצאה חתימה קודמת');
                 }
@@ -92,30 +87,27 @@ class SignatureHandler {
         }
     }
 
-    attachEvents(canvas) {
-        this.signaturePad.addEventListener("beginStroke", () => {
-            console.log('Signature stroke began');
-        });
-
-        this.signaturePad.addEventListener("endStroke", () => {
-            console.log('Signature stroke ended');
-            if (!this.signaturePad.isEmpty()) {
-                const signatureData = this.signaturePad.toDataURL('image/png');
-                localStorage.setItem('signature', signatureData);
-                this.updateHiddenInput(canvas.id, signatureData);
+    attachEvents(canvas, signaturePad) {
+        signaturePad.addEventListener("beginStroke", () => {
+            const container = canvas.closest('.signature-container');
+            if (container) {
+                container.classList.add('signature-active');
             }
         });
-    }
 
-    loadSignature(signatureData, canvas) {
-        const image = new Image();
-        image.onload = () => {
-            this.signaturePad.clear();
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-            this.updateHiddenInput(canvas.id, signatureData);
-        };
-        image.src = signatureData;
+        signaturePad.addEventListener("endStroke", () => {
+            if (!signaturePad.isEmpty()) {
+                const signatureData = signaturePad.toDataURL('image/png');
+                localStorage.setItem('signature', signatureData);
+                this.updateHiddenInput(canvas.id, signatureData);
+                
+                const container = canvas.closest('.signature-container');
+                if (container) {
+                    container.classList.remove('signature-active');
+                    container.classList.add('signature-valid');
+                }
+            }
+        });
     }
 
     updateHiddenInput(canvasId, value) {
@@ -128,7 +120,7 @@ class SignatureHandler {
     }
 }
 
-// וודא שהדף נטען לחלוטין לפני יצירת ה-SignatureHandler
+// Initialize when DOM is loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         window.signatureHandler = new SignatureHandler();
