@@ -1,11 +1,9 @@
-import { submitFormToGoogleSheets } from './googleSheetsHelper.js';
-
 document.addEventListener('DOMContentLoaded', function() {
     const saveAndContinue = document.getElementById('saveAndContinue');
     const finalSubmit = document.getElementById('finalSubmit');
     const backButton = document.querySelector('.btn-prev');
 
-    // Validation functions remain the same as your original code
+    // Validation functions
     function validateIdNumber(value) {
         if (value.length !== 9) return false;
         return Array.from(value, Number)
@@ -39,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!field.value.trim()) {
                 fieldIsValid = false;
             } else {
+                // Specific validations
                 switch(field.name) {
                     case 'idNumber':
                         fieldIsValid = validateIdNumber(field.value);
@@ -67,46 +66,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return isValid;
     }
 
-    // Updated submitFinalForm function
-    async function submitFinalForm() {
-        if (!validateForm()) return;
-
-        try {
-            // Get all saved form data
-            const allData = JSON.parse(localStorage.getItem('formData') || '{}');
-            
-            // Add current form data
-            const currentForm = document.querySelector('form');
-            if (currentForm) {
-                const formData = new FormData(currentForm);
-                Object.assign(allData, Object.fromEntries(formData));
-            }
-
-            // Get signature if exists
-            const signaturePad = document.querySelector('#signaturePad');
-            if (signaturePad && typeof signaturePad.toDataURL === 'function') {
-                allData.signature = signaturePad.toDataURL();
-            }
-
-            // Submit to Google Sheets
-            await submitFormToGoogleSheets(allData);
-            
-            // Clear saved data and show success
-            localStorage.removeItem('formData');
-            window.location.href = '/sections/thank-you.html';
-        } catch (error) {
-            showError('אירעה שגיאה בשליחת הטופס: ' + error.message);
-            console.error('Form submission error:', error);
-        }
-    }
-
-    // Rest of your navigation code remains the same
+    // Navigation functions
     function navigateToNext() {
-        if (!validateForm()) return;
+        console.log("Navigate next clicked");
+        
+        if (!validateForm()) {
+            console.log("Form validation failed");
+            return;
+        }
 
         const form = document.querySelector('form');
         const formId = form.id;
-        
+        console.log("Current form ID:", formId);
+
         let nextPage;
         switch(formId) {
             case 'section1-form':
@@ -118,6 +90,9 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'section3-form':
                 nextPage = '/sections/section4.html';
                 break;
+            case 'section4-form':
+                nextPage = '/sections/thank-you.html';
+                break;
             default:
                 console.error('Unknown form ID:', formId);
                 showError('שגיאה בניווט');
@@ -125,15 +100,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (typeof saveFormData === 'function') {
+            console.log("Saving form data");
             saveFormData();
         }
 
+        console.log("Navigating to:", nextPage);
         window.location.href = nextPage;
     }
 
     function goBack() {
         const form = document.querySelector('form');
         const formId = form.id;
+        console.log("Going back from form:", formId);
 
         let prevPage;
         switch(formId) {
@@ -157,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = prevPage;
     }
 
-    // Error handling function
+    // Error handling
     function showError(message) {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
@@ -186,6 +164,46 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
+    // Form submission
+    async function submitFinalForm() {
+        if (!validateForm()) return;
+
+        try {
+            const allData = JSON.parse(localStorage.getItem('formData') || '{}');
+            
+            const currentForm = document.querySelector('form');
+            if (currentForm) {
+                const formData = new FormData(currentForm);
+                Object.assign(allData, Object.fromEntries(formData));
+            }
+
+            // Get signature if exists
+            const signaturePad = document.querySelector('#signaturePad');
+            if (signaturePad && typeof signaturePad.toDataURL === 'function') {
+                allData.signature = signaturePad.toDataURL();
+            }
+
+            // Submit data
+            const response = await fetch('/api/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(allData)
+            });
+
+            if (response.ok) {
+                localStorage.removeItem('formData');
+                window.location.href = '/sections/thank-you.html';
+            } else {
+                throw new Error('שגיאה בשליחת הטופס');
+            }
+        } catch (error) {
+            showError('אירעה שגיאה בשליחת הטופס: ' + error.message);
+            console.error('Form submission error:', error);
+        }
+    }
+
     // Event listeners
     if (saveAndContinue) {
         saveAndContinue.addEventListener('click', navigateToNext);
@@ -196,7 +214,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (backButton) {
-        backButton.addEventListener('click', goBack);
+        backButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            goBack();
+        });
     }
 
     // Handle keyboard navigation
