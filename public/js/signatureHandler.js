@@ -1,53 +1,51 @@
-// signatureHandler.js
 class SignatureHandler {
     constructor() {
-        if (typeof SignaturePad === 'undefined') {
-            console.error('SignaturePad library not loaded');
-            return;
-        }
         this.initialize();
     }
 
     initialize() {
-        document.querySelectorAll('.signature-canvas').forEach(canvas => {
-            if (!canvas) return;
-            
-            try {
-                const signaturePad = new SignaturePad(canvas, {
-                    minWidth: 1,
-                    maxWidth: 2.5,
-                    throttle: 16,
-                    backgroundColor: 'rgb(255, 255, 255)',
-                    penColor: 'rgb(0, 0, 0)'
-                });
+        const canvas = document.getElementById('signatureCanvas1');
+        if (!canvas) {
+            console.error('Canvas element not found');
+            return;
+        }
 
-                this.setupCanvas(canvas, signaturePad);
-                this.setupButtons(canvas, signaturePad);
-                this.attachEvents(canvas, signaturePad);
+        try {
+            this.signaturePad = new SignaturePad(canvas, {
+                minWidth: 1,
+                maxWidth: 2.5,
+                throttle: 16,
+                backgroundColor: 'rgb(255, 255, 255)',
+                penColor: 'rgb(0, 0, 0)'
+            });
 
-            } catch (error) {
-                console.error('Error initializing SignaturePad:', error);
-            }
-        });
+            console.log('SignaturePad initialized successfully');
+            this.setupCanvas(canvas);
+            this.setupButtons(canvas);
+            this.attachEvents(canvas);
+
+        } catch (error) {
+            console.error('Error initializing SignaturePad:', error);
+        }
     }
 
-    setupCanvas(canvas, signaturePad) {
+    setupCanvas(canvas) {
         const resizeCanvas = () => {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
             const context = canvas.getContext("2d");
             
-            // Save current data
-            const data = signaturePad.toData();
+            // שמירת הנתונים הנוכחיים
+            const data = this.signaturePad.toData();
             
-            // Adjust canvas size
+            // עדכון גודל
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
             context.scale(ratio, ratio);
             
-            // Restore data
-            signaturePad.clear();
+            // שחזור הנתונים
+            this.signaturePad.clear();
             if (data) {
-                signaturePad.fromData(data);
+                this.signaturePad.fromData(data);
             }
         };
 
@@ -58,11 +56,11 @@ class SignatureHandler {
         resizeCanvas();
     }
 
-    setupButtons(canvas, signaturePad) {
+    setupButtons(canvas) {
         const clearButton = document.querySelector(`[data-clear-for="${canvas.id}"]`);
         if (clearButton) {
             clearButton.addEventListener('click', () => {
-                signaturePad.clear();
+                this.signaturePad.clear();
                 this.updateHiddenInput(canvas.id, '');
             });
         }
@@ -74,7 +72,7 @@ class SignatureHandler {
                 if (previousSignature) {
                     const image = new Image();
                     image.onload = () => {
-                        signaturePad.clear();
+                        this.signaturePad.clear();
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
                         this.updateHiddenInput(canvas.id, previousSignature);
@@ -87,17 +85,17 @@ class SignatureHandler {
         }
     }
 
-    attachEvents(canvas, signaturePad) {
-        signaturePad.addEventListener("beginStroke", () => {
+    attachEvents(canvas) {
+        this.signaturePad.addEventListener("beginStroke", () => {
             const container = canvas.closest('.signature-container');
             if (container) {
                 container.classList.add('signature-active');
             }
         });
 
-        signaturePad.addEventListener("endStroke", () => {
-            if (!signaturePad.isEmpty()) {
-                const signatureData = signaturePad.toDataURL('image/png');
+        this.signaturePad.addEventListener("endStroke", () => {
+            if (!this.signaturePad.isEmpty()) {
+                const signatureData = this.signaturePad.toDataURL('image/png');
                 localStorage.setItem('signature', signatureData);
                 this.updateHiddenInput(canvas.id, signatureData);
                 
