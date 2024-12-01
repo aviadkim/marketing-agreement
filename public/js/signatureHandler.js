@@ -4,108 +4,80 @@ class SignatureHandler {
     }
 
     initialize() {
-        const canvas = document.getElementById('signatureCanvas1');
-        if (!canvas) {
-            console.error('Canvas element not found');
-            return;
-        }
-
-        try {
-            this.signaturePad = new SignaturePad(canvas, {
-                minWidth: 1,
-                maxWidth: 2.5,
-                throttle: 16,
-                backgroundColor: 'rgb(255, 255, 255)',
-                penColor: 'rgb(0, 0, 0)'
-            });
-
-            console.log('SignaturePad initialized successfully');
-            this.setupCanvas(canvas);
-            this.setupButtons(canvas);
-            this.attachEvents(canvas);
-
-        } catch (error) {
-            console.error('Error initializing SignaturePad:', error);
-        }
-    }
-
-    setupCanvas(canvas) {
-        const resizeCanvas = () => {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            const context = canvas.getContext("2d");
+        document.querySelectorAll('.signature-canvas').forEach(canvas => {
+            if (!canvas) return;
             
-            // שמירת הנתונים הנוכחיים
-            const data = this.signaturePad.toData();
-            
-            // עדכון גודל
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            context.scale(ratio, ratio);
-            
-            // שחזור הנתונים
-            this.signaturePad.clear();
-            if (data) {
-                this.signaturePad.fromData(data);
-            }
-        };
+            try {
+                // Create signature pad
+                const signaturePad = new SignaturePad(canvas, {
+                    minWidth: 1,
+                    maxWidth: 2.5,
+                    throttle: 16,
+                    backgroundColor: 'rgb(255, 255, 255)',
+                    penColor: 'rgb(0, 0, 0)'
+                });
 
-        window.addEventListener("resize", resizeCanvas);
-        window.addEventListener("orientationchange", () => {
-            setTimeout(resizeCanvas, 100);
-        });
-        resizeCanvas();
-    }
+                // Canvas setup
+                this.resizeCanvas(canvas, signaturePad);
+                window.addEventListener('resize', () => this.resizeCanvas(canvas, signaturePad));
 
-    setupButtons(canvas) {
-        const clearButton = document.querySelector(`[data-clear-for="${canvas.id}"]`);
-        if (clearButton) {
-            clearButton.addEventListener('click', () => {
-                this.signaturePad.clear();
-                this.updateHiddenInput(canvas.id, '');
-            });
-        }
-
-        const copyButton = document.querySelector(`[data-copy-for="${canvas.id}"]`);
-        if (copyButton) {
-            copyButton.addEventListener('click', () => {
-                const previousSignature = localStorage.getItem('signature');
-                if (previousSignature) {
-                    const image = new Image();
-                    image.onload = () => {
-                        this.signaturePad.clear();
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-                        this.updateHiddenInput(canvas.id, previousSignature);
-                    };
-                    image.src = previousSignature;
-                } else {
-                    alert('לא נמצאה חתימה קודמת');
+                // Button handlers
+                const clearBtn = document.querySelector(`[data-clear-for="${canvas.id}"]`);
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        signaturePad.clear();
+                        this.updateHiddenInput(canvas.id, '');
+                    });
                 }
-            });
-        }
+
+                const copyBtn = document.querySelector(`[data-copy-for="${canvas.id}"]`);
+                if (copyBtn) {
+                    copyBtn.addEventListener('click', () => {
+                        const previousSignature = localStorage.getItem('signature');
+                        if (previousSignature) {
+                            const image = new Image();
+                            image.onload = () => {
+                                signaturePad.clear();
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+                                this.updateHiddenInput(canvas.id, previousSignature);
+                            };
+                            image.src = previousSignature;
+                        } else {
+                            alert('לא נמצאה חתימה קודמת');
+                        }
+                    });
+                }
+
+                // Save signature when drawing ends
+                signaturePad.onEnd = () => {
+                    if (!signaturePad.isEmpty()) {
+                        const data = signaturePad.toDataURL();
+                        localStorage.setItem('signature', data);
+                        this.updateHiddenInput(canvas.id, data);
+                    }
+                };
+
+            } catch (error) {
+                console.error('Error initializing SignaturePad:', error);
+            }
+        });
     }
 
-    attachEvents(canvas) {
-        this.signaturePad.addEventListener("beginStroke", () => {
-            const container = canvas.closest('.signature-container');
-            if (container) {
-                container.classList.add('signature-active');
-            }
-        });
-
-        this.signaturePad.addEventListener("endStroke", () => {
-            if (!this.signaturePad.isEmpty()) {
-                const signatureData = this.signaturePad.toDataURL('image/png');
-                localStorage.setItem('signature', signatureData);
-                this.updateHiddenInput(canvas.id, signatureData);
-                
-                const container = canvas.closest('.signature-container');
-                if (container) {
-                    container.classList.remove('signature-active');
-                    container.classList.add('signature-valid');
-                }
-            }
-        });
+    resizeCanvas(canvas, signaturePad) {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const context = canvas.getContext("2d");
+        
+        const data = signaturePad.toData();
+        
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        context.scale(ratio, ratio);
+        
+        signaturePad.clear();
+        if (data) {
+            signaturePad.fromData(data);
+        }
     }
 
     updateHiddenInput(canvasId, value) {
@@ -119,10 +91,6 @@ class SignatureHandler {
 }
 
 // Initialize when DOM is loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.signatureHandler = new SignatureHandler();
-    });
-} else {
-    window.signatureHandler = new SignatureHandler();
-}
+document.addEventListener('DOMContentLoaded', () => {
+    new SignatureHandler();
+});
