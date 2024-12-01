@@ -2,6 +2,11 @@
 class SignatureHandler {
     constructor() {
         console.log('SignatureHandler initialization started');
+        // וודא שה-SignaturePad קיים
+        if (typeof SignaturePad === 'undefined') {
+            console.error('SignaturePad library is not loaded!');
+            return;
+        }
         this.initialize();
     }
 
@@ -52,12 +57,6 @@ class SignatureHandler {
             if (data) {
                 this.signaturePad.fromData(data);
             }
-
-            console.log('Canvas resized:', { 
-                width: canvas.width, 
-                height: canvas.height, 
-                ratio 
-            });
         };
 
         window.addEventListener("resize", resizeCanvas);
@@ -94,13 +93,8 @@ class SignatureHandler {
     }
 
     attachEvents(canvas) {
-        // אירועי חתימה
         this.signaturePad.addEventListener("beginStroke", () => {
             console.log('Signature stroke began');
-            const container = canvas.closest('.signature-container');
-            if (container) {
-                container.classList.add('signature-active');
-            }
         });
 
         this.signaturePad.addEventListener("endStroke", () => {
@@ -109,13 +103,6 @@ class SignatureHandler {
                 const signatureData = this.signaturePad.toDataURL('image/png');
                 localStorage.setItem('signature', signatureData);
                 this.updateHiddenInput(canvas.id, signatureData);
-                console.log('Signature saved, length:', signatureData.length);
-                
-                const container = canvas.closest('.signature-container');
-                if (container) {
-                    container.classList.remove('signature-active');
-                    container.classList.add('signature-valid');
-                }
             }
         });
     }
@@ -127,13 +114,6 @@ class SignatureHandler {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
             this.updateHiddenInput(canvas.id, signatureData);
-            
-            const container = canvas.closest('.signature-container');
-            if (container) {
-                container.classList.add('signature-valid');
-            }
-            
-            console.log('Previous signature loaded');
         };
         image.src = signatureData;
     }
@@ -142,17 +122,17 @@ class SignatureHandler {
         const input = document.getElementById(`${canvasId}-data`);
         if (input) {
             input.value = value;
-            console.log('Hidden input updated with signature data');
-            
-            // Trigger change event
             const event = new Event('change', { bubbles: true });
             input.dispatchEvent(event);
         }
     }
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, creating SignatureHandler');
+// וודא שהדף נטען לחלוטין לפני יצירת ה-SignatureHandler
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.signatureHandler = new SignatureHandler();
+    });
+} else {
     window.signatureHandler = new SignatureHandler();
-});
+}
