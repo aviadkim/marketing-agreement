@@ -1,285 +1,132 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="he">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>הסכם שיווק השקעות - הצהרות</title>
-    <link href="/css/styles.css" rel="stylesheet">
-</head>
-<body>
-    <header class="form-header">
-        <img src="/images/movne-logo.png" alt="מובנה" class="logo">
-        <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
-    </header>
+// section4.js
+document.addEventListener('DOMContentLoaded', function() {
+    const declarations = {
+        declaration1: false,
+        declaration2: false,
+        declaration3: false
+    };
 
-    <div class="progress-container">
-        <div class="progress-steps">
-            <div class="step completed" data-step="1">
-                <div class="step-circle">
-                    <span class="step-number">1</span>
-                    <span class="step-check">✓</span>
-                </div>
-                <div class="step-label">פרטים אישיים</div>
-            </div>
-            <div class="step completed" data-step="2">
-                <div class="step-circle">
-                    <span class="step-number">2</span>
-                    <span class="step-check">✓</span>
-                </div>
-                <div class="step-label">פרטי השקעה</div>
-            </div>
-            <div class="step completed" data-step="3">
-                <div class="step-circle">
-                    <span class="step-number">3</span>
-                    <span class="step-check">✓</span>
-                </div>
-                <div class="step-label">שאלון סיכון</div>
-            </div>
-            <div class="step active" data-step="4">
-                <div class="step-circle">
-                    <span class="step-number">4</span>
-                    <span class="step-check">✓</span>
-                </div>
-                <div class="step-label">הצהרות</div>
-            </div>
-        </div>
-    </div>
+    // ניהול האקורדיון
+    document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', function() {
+            const content = this.nextElementSibling;
+            const icon = this.querySelector('.accordion-icon');
+            const isOpen = content.classList.contains('open');
+            const declarationId = this.closest('.accordion-item').dataset.declaration;
 
-    <main class="form-content">
-        <div class="declarations-header">
-            <h2>הצהרות והסכמות</h2>
-            <p class="legal-notice">נא לקרוא בעיון את ההצהרות הבאות. פתיחה וקריאה של כל נושא תיחשב כהסכמה לתוכנו.</p>
-            <div class="progress-markers">
-                <div class="progress-marker" data-declaration="declaration1">
-                    <div class="marker-circle"></div>
-                    <div class="marker-label">הצהרת סיכונים</div>
-                </div>
-                <div class="progress-marker" data-declaration="declaration2">
-                    <div class="marker-circle"></div>
-                    <div class="marker-label">החלטה עצמאית</div>
-                </div>
-                <div class="progress-marker" data-declaration="declaration3">
-                    <div class="marker-circle"></div>
-                    <div class="marker-label">עדכון פרטים</div>
-                </div>
-            </div>
-        </div>
-
-        <form id="section4-form" class="form-section">
-            <div class="accordion-container">
-                <div class="accordion-item" data-declaration="declaration1">
-                    <button type="button" class="accordion-header">
-                        <span class="accordion-title">הצהרת הבנת סיכונים</span>
-                        <span class="accordion-icon">▼</span>
-                    </button>
-                    <div class="accordion-content">
-                        <p class="mb-4">אני מצהיר/ה בזאת כי הובהר לי שההשקעה במוצרים מובנים כרוכה בסיכונים מיוחדים, לרבות:</p>
-                        <ul class="declaration-list">
-                            <li>סיכון לאובדן חלק או כל הקרן המושקעת</li>
-                            <li>סיכוני שוק ותנודתיות</li>
-                            <li>סיכוני נזילות ואפשרות מוגבלת למכירה לפני מועד הפירעון</li>
-                            <li>סיכוני מטבע ושערי חליפין במידה ורלוונטי</li>
-                            <li>תלות בחוסנם הפיננסי של מנפיקי המוצרים המובנים</li>
-                            <li>מורכבות המוצרים והקושי בהערכת שווים</li>
-                        </ul>
-                        <label class="checkbox-container mt-4">
-                            <input type="checkbox" name="riskAcknowledgement" required>
-                            <span class="checkmark"></span>
-                            קראתי והבנתי את כל הסיכונים המפורטים לעיל
-                        </label>
-                    </div>
-                </div>
-
-                <div class="accordion-item" data-declaration="declaration2">
-                    <button type="button" class="accordion-header">
-                        <span class="accordion-title">הצהרת אי הסתמכות והחלטה עצמאית</span>
-                        <span class="accordion-icon">▼</span>
-                    </button>
-                    <div class="accordion-content">
-                        <p class="mb-4">אני מצהיר/ה בזאת כי:</p>
-                        <ul class="declaration-list">
-                            <li>ההחלטה להשקיע במוצרים מובנים התקבלה על פי שיקול דעתי העצמאי בלבד</li>
-                            <li>איני מסתמך/ת על עצות או המלצות של החברה או מי מטעמה</li>
-                            <li>הובהר לי שהחברה אינה משמשת כיועץ השקעות ואינה מספקת ייעוץ אישי</li>
-                            <li>בדקתי את התאמת ההשקעה לצרכיי ולמטרותיי הפיננסיות</li>
-                            <li>אני מבין/ה שביצועי עבר אינם מעידים על ביצועים עתידיים</li>
-                        </ul>
-                        <label class="checkbox-container mt-4">
-                            <input type="checkbox" name="independentDecision" required>
-                            <span class="checkmark"></span>
-                            אני מאשר/ת את כל ההצהרות הנ"ל
-                        </label>
-                    </div>
-                </div>
-
-                <div class="accordion-item" data-declaration="declaration3">
-                    <button type="button" class="accordion-header">
-                        <span class="accordion-title">התחייבות לעדכון פרטים</span>
-                        <span class="accordion-icon">▼</span>
-                    </button>
-                    <div class="accordion-content">
-                        <p class="mb-4">אני מתחייב/ת בזאת:</p>
-                        <ul class="declaration-list">
-                            <li>לעדכן את החברה בכתב על כל שינוי מהותי בפרטים שמסרתי בטופס זה</li>
-                            <li>להודיע מיידית על כל שינוי במצבי הפיננסי שעשוי להשפיע על השקעותיי</li>
-                            <li>לעדכן על שינויים בנסיבות האישיות שעשויים להשפיע על פרופיל הסיכון שלי</li>
-                            <li>להודיע על שינויים במטרות ההשקעה או באופק ההשקעה המתוכנן</li>
-                        </ul>
-                        <label class="checkbox-container mt-4">
-                            <input type="checkbox" name="updateCommitment" required>
-                            <span class="checkmark"></span>
-                            אני מתחייב/ת לעדכן על כל שינוי מהותי כמפורט לעיל
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group mt-6">
-                <label>חתימה דיגיטלית</label>
-                <div class="signature-container">
-                    <canvas id="signatureCanvas4" class="signature-canvas"></canvas>
-                    <div class="signature-controls">
-                        <button type="button" class="btn-secondary" data-clear-for="signatureCanvas4">נקה חתימה</button>
-                        <button type="button" class="btn-secondary" data-copy-for="signatureCanvas4">העתק חתימה קודמת</button>
-                    </div>
-                </div>
-                <input type="hidden" id="signatureCanvas4-data" name="signature" required>
-            </div>
-
-            <div class="final-confirmation mt-6">
-                <label class="checkbox-container">
-                    <input type="checkbox" name="finalConfirmation" required>
-                    <span class="checkmark"></span>
-                    <span class="text-bold">אני מאשר/ת שקראתי והבנתי את כל ההצהרות לעיל, ומסכים/ה להן באופן מלא ובלתי חוזר</span>
-                </label>
-            </div>
-        </form>
-    </main>
-
-    <footer class="form-navigation">
-        <div class="container">
-            <button type="button" id="btnBack" class="btn-prev">חזור</button>
-            <button type="button" id="finalSubmit" class="btn-next">סיים והגש טופס</button>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="/js/signatureHandler.js"></script>
-    <script src="/js/validation.js"></script>
-    <script src="/js/storage.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const declarations = {
-                declaration1: false,
-                declaration2: false,
-                declaration3: false
-            };
-
-            document.querySelectorAll('.accordion-header').forEach(header => {
-                header.addEventListener('click', function() {
-                    const content = this.nextElementSibling;
-                    const icon = this.querySelector('.accordion-icon');
-                    const isOpen = content.classList.contains('open');
-                    const declarationId = this.closest('.accordion-item').dataset.declaration;
-
-                    document.querySelectorAll('.accordion-content').forEach(item => {
-                        item.classList.remove('open');
-                        item.style.maxHeight = null;
-                        item.previousElementSibling.querySelector('.accordion-icon').textContent = '▼';
-                    });
-
-                    if (!isOpen) {
-                        content.classList.add('open');
-                        content.style.maxHeight = content.scrollHeight + 'px';
-                        icon.textContent = '▲';
-                        
-                        setTimeout(() => {
-                            declarations[declarationId] = true;
-                            updateProgressMarkers();
-                            checkAllDeclarationsRead();
-                        }, 1000);
-                    }
-                });
+            // סגירת כל האקורדיונים האחרים
+            document.querySelectorAll('.accordion-content').forEach(item => {
+                item.classList.remove('open');
+                item.style.maxHeight = null;
+                item.previousElementSibling.querySelector('.accordion-icon').textContent = '▼';
             });
 
-            function updateProgressMarkers() {
-                Object.entries(declarations).forEach(([id, isRead]) => {
-                    const marker = document.querySelector(`.progress-marker[data-declaration="${id}"]`);
-                    if (marker) {
-                        if (isRead) {
-                            marker.classList.add('completed');
-                        } else {
-                            marker.classList.remove('completed');
-                        }
-                    }
-                });
-            }
-
-            function checkAllDeclarationsRead() {
-                const allRead = Object.values(declarations).every(val => val);
-                const finalCheckbox = document.querySelector('input[name="finalConfirmation"]');
+            // פתיחת האקורדיון הנוכחי
+            if (!isOpen) {
+                content.classList.add('open');
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.textContent = '▲';
                 
-                if (finalCheckbox) {
-                    finalCheckbox.disabled = !allRead;
-                    if (allRead) {
-                        finalCheckbox.closest('.final-confirmation').classList.add('enabled');
-                    }
-                }
+                setTimeout(() => {
+                    declarations[declarationId] = true;
+                    updateProgressMarkers();
+                    checkAllDeclarationsRead();
+                }, 1000);
             }
+        });
+    });
 
-            document.getElementById('finalSubmit').addEventListener('click', async function(e) {
-                e.preventDefault();
-
-                const signatureData = document.getElementById('signatureCanvas4-data').value;
-                if (!signatureData) {
-                    alert('נא להוסיף חתימה דיגיטלית');
-                    return;
-                }
-
-                const allChecked = ['riskAcknowledgement', 'independentDecision', 'updateCommitment', 'finalConfirmation']
-                    .every(name => document.querySelector(`input[name="${name}"]`).checked);
-
-                if (!allChecked) {
-                    alert('נא לקרוא ולאשר את כל ההצהרות');
-                    return;
-                }
-
-                await submitForm();
-            });
-
-            async function submitForm() {
-                try {
-                    const form = document.getElementById('section4-form');
-                    const formData = new FormData(form);
-                    const data = Object.fromEntries(formData);
-
-                    const response = await fetch('/api/submit', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('שגיאה בשליחת הטופס');
-                    }
-
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        alert('הטופס נשלח בהצלחה!');
-                        window.location.href = '/thank-you.html';
-                    } else {
-                        throw new Error(result.message || 'שגיאה בשליחת הטופס');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('אירעה שגיאה בשליחת הטופס: ' + error.message);
+    // עדכון סמני התקדמות
+    function updateProgressMarkers() {
+        Object.entries(declarations).forEach(([id, isRead]) => {
+            const marker = document.querySelector(`.progress-marker[data-declaration="${id}"]`);
+            if (marker) {
+                if (isRead) {
+                    marker.classList.add('completed');
+                } else {
+                    marker.classList.remove('completed');
                 }
             }
         });
-    </script>
-</body>
-</html>
+    }
+
+    // בדיקת קריאת כל ההצהרות
+    function checkAllDeclarationsRead() {
+        const allRead = Object.values(declarations).every(val => val);
+        const finalCheckbox = document.querySelector('input[name="finalConfirmation"]');
+        
+        if (finalCheckbox) {
+            finalCheckbox.disabled = !allRead;
+            if (allRead) {
+                finalCheckbox.closest('.final-confirmation').classList.add('enabled');
+            }
+        }
+    }
+
+    // טיפול בכפתור שליחה
+    document.getElementById('finalSubmit').addEventListener('click', async function(e) {
+        e.preventDefault();
+        console.log('Submit button clicked');
+
+        // בדיקת חתימה
+        const signatureData = document.getElementById('signatureCanvas4-data').value;
+        console.log('Checking signature data:', !!signatureData);
+
+        if (!signatureData) {
+            alert('נא להוסיף חתימה דיגיטלית');
+            const signatureContainer = document.querySelector('.signature-container');
+            signatureContainer.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+
+        // בדיקת תיבות סימון
+        const allChecked = ['riskAcknowledgement', 'independentDecision', 'updateCommitment', 'finalConfirmation']
+            .every(name => {
+                const checked = document.querySelector(`input[name="${name}"]`).checked;
+                console.log(`Checkbox ${name}:`, checked);
+                return checked;
+            });
+
+        if (!allChecked) {
+            alert('נא לקרוא ולאשר את כל ההצהרות');
+            return;
+        }
+
+        await submitForm();
+    });
+
+    // שליחת הטופס
+    async function submitForm() {
+        try {
+            const form = document.getElementById('section4-form');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+
+            console.log('Submitting form data:', data);
+
+            const response = await fetch('/api/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error('שגיאה בשליחת הטופס');
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('הטופס נשלח בהצלחה!');
+                window.location.href = '/thank-you.html';
+            } else {
+                throw new Error(result.message || 'שגיאה בשליחת הטופס');
+            }
+        } catch (error) {
+            console.error('Form submission error:', error);
+            alert('אירעה שגיאה בשליחת הטופס: ' + error.message);
+        }
+    }
+});
