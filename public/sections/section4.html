@@ -1,4 +1,3 @@
-// section4.js
 document.addEventListener('DOMContentLoaded', function() {
     const declarations = {
         declaration1: false,
@@ -6,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function() {
         declaration3: false
     };
 
-    // ניהול האקורדיון
     document.querySelectorAll('.accordion-header').forEach(header => {
         header.addEventListener('click', function() {
             const content = this.nextElementSibling;
@@ -14,14 +12,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const isOpen = content.classList.contains('open');
             const declarationId = this.closest('.accordion-item').dataset.declaration;
 
-            // סגירת כל האקורדיונים האחרים
             document.querySelectorAll('.accordion-content').forEach(item => {
                 item.classList.remove('open');
                 item.style.maxHeight = null;
                 item.previousElementSibling.querySelector('.accordion-icon').textContent = '▼';
             });
 
-            // פתיחת האקורדיון הנוכחי
             if (!isOpen) {
                 content.classList.add('open');
                 content.style.maxHeight = content.scrollHeight + 'px';
@@ -36,7 +32,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // עדכון סמני התקדמות
+    document.querySelectorAll('.accordion-content').forEach(content => {
+        content.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+
+    document.querySelectorAll('.checkbox-container input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const declarationId = this.closest('.accordion-item')?.dataset.declaration;
+            if (declarationId) {
+                declarations[declarationId] = this.checked;
+                updateProgressMarkers();
+            }
+            checkAllDeclarationsRead();
+        });
+    });
+
+    document.querySelectorAll('.form-group input, .form-group select').forEach(input => {
+        input.addEventListener('change', function() {
+            validateInput(this);
+        });
+    });
+
     function updateProgressMarkers() {
         Object.entries(declarations).forEach(([id, isRead]) => {
             const marker = document.querySelector(`.progress-marker[data-declaration="${id}"]`);
@@ -50,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // בדיקת קריאת כל ההצהרות
     function checkAllDeclarationsRead() {
         const allRead = Object.values(declarations).every(val => val);
         const finalCheckbox = document.querySelector('input[name="finalConfirmation"]');
@@ -61,17 +78,58 @@ document.addEventListener('DOMContentLoaded', function() {
                 finalCheckbox.closest('.final-confirmation').classList.add('enabled');
             }
         }
+
+        updateSubmitButton();
     }
 
-    // טיפול בכפתור שליחה
+    function validateInput(input) {
+        const isValid = input.checkValidity();
+        const formGroup = input.closest('.form-group');
+        
+        if (formGroup) {
+            if (isValid) {
+                formGroup.classList.remove('has-error');
+                formGroup.classList.add('is-valid');
+            } else {
+                formGroup.classList.add('has-error');
+                formGroup.classList.remove('is-valid');
+            }
+        }
+
+        updateSubmitButton();
+    }
+
+    function validateForm() {
+        let isValid = true;
+        const requiredInputs = document.querySelectorAll('input[required], select[required]');
+        
+        requiredInputs.forEach(input => {
+            if (!input.checkValidity()) {
+                isValid = false;
+                const formGroup = input.closest('.form-group');
+                if (formGroup) {
+                    formGroup.classList.add('has-error');
+                }
+            }
+        });
+
+        return isValid;
+    }
+
+    function updateSubmitButton() {
+        const submitButton = document.getElementById('finalSubmit');
+        const form = document.getElementById('section4-form');
+        
+        if (submitButton && form) {
+            submitButton.disabled = !validateForm();
+        }
+    }
+
     document.getElementById('finalSubmit').addEventListener('click', async function(e) {
         e.preventDefault();
         console.log('Submit button clicked');
 
-        // בדיקת חתימה
         const signatureData = document.getElementById('signatureCanvas4-data').value;
-        console.log('Checking signature data:', !!signatureData);
-
         if (!signatureData) {
             alert('נא להוסיף חתימה דיגיטלית');
             const signatureContainer = document.querySelector('.signature-container');
@@ -79,7 +137,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // בדיקת תיבות סימון
         const allChecked = ['riskAcknowledgement', 'independentDecision', 'updateCommitment', 'finalConfirmation']
             .every(name => {
                 const checked = document.querySelector(`input[name="${name}"]`).checked;
@@ -95,7 +152,10 @@ document.addEventListener('DOMContentLoaded', function() {
         await submitForm();
     });
 
-    // שליחת הטופס
+    document.getElementById('btnBack').addEventListener('click', function() {
+        window.location.href = 'section3.html';
+    });
+
     async function submitForm() {
         try {
             const form = document.getElementById('section4-form');
@@ -119,6 +179,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (result.success) {
+                // שמירת הנתונים ב-localStorage
+                Object.entries(data).forEach(([key, value]) => {
+                    localStorage.setItem(`section4_${key}`, value);
+                });
+                
                 alert('הטופס נשלח בהצלחה!');
                 window.location.href = '/thank-you.html';
             } else {
@@ -129,4 +194,25 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('אירעה שגיאה בשליחת הטופס: ' + error.message);
         }
     }
+
+    // טעינת נתונים מ-localStorage בטעינת הדף
+    function loadSavedData() {
+        const form = document.getElementById('section4-form');
+        if (form) {
+            const formElements = form.elements;
+            for (let element of formElements) {
+                const savedValue = localStorage.getItem(`section4_${element.name}`);
+                if (savedValue) {
+                    if (element.type === 'checkbox') {
+                        element.checked = savedValue === 'true';
+                    } else {
+                        element.value = savedValue;
+                    }
+                }
+            }
+        }
+    }
+
+    // טעינת נתונים בטעינת הדף
+    loadSavedData();
 });
