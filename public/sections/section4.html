@@ -49,9 +49,101 @@
 
     <!-- Form Content -->
     <main class="form-content">
-        <!-- Form Content and Signature Section -->
+        <div class="declarations-header">
+            <h2>הצהרות והסכמות</h2>
+            <p class="legal-notice">
+                נא לקרוא בעיון את ההצהרות הבאות. פתיחה וקריאה של כל נושא תיחשב כהסכמה לתוכנו.
+                יש לקרוא את כל ההצהרות על מנת להמשיך לשלב החתימה.
+            </p>
+            <div class="declarations-progress">
+                <div class="progress-marker" data-declaration="declaration1">
+                    <div class="marker-circle"></div>
+                    <div class="marker-label">הצהרת סיכונים</div>
+                </div>
+                <div class="progress-marker" data-declaration="declaration2">
+                    <div class="marker-circle"></div>
+                    <div class="marker-label">החלטה עצמאית</div>
+                </div>
+                <div class="progress-marker" data-declaration="declaration3">
+                    <div class="marker-circle"></div>
+                    <div class="marker-label">עדכון פרטים</div>
+                </div>
+            </div>
+        </div>
+
         <form id="section4-form" class="form-section">
-            <!-- Declarations and Signature -->
+            <!-- Declarations Accordion -->
+            <div class="accordion-container">
+                <div class="accordion-item" data-declaration="declaration1">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">הצהרת הבנת סיכונים</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="mb-4">
+                            אני מצהיר/ה בזאת כי הובהר לי שההשקעה במוצרים מובנים כרוכה בסיכונים מיוחדים, לרבות:
+                        </p>
+                        <ul class="declaration-list">
+                            <li>סיכון לאובדן חלק או כל הקרן המושקעת</li>
+                            <li>סיכוני שוק ותנודתיות</li>
+                            <li>סיכוני נזילות ואפשרות מוגבלת למכירה לפני מועד הפירעון</li>
+                            <li>סיכוני מטבע ושערי חליפין במידה ורלוונטי</li>
+                            <li>תלות בחוסנם הפיננסי של מנפיקי המוצרים המובנים</li>
+                            <li>מורכבות המוצרים והקושי בהערכת שווים</li>
+                        </ul>
+                        <label class="checkbox-container mt-4">
+                            <input type="checkbox" name="riskAcknowledgement" required>
+                            <span class="checkmark"></span>
+                            קראתי והבנתי את כל הסיכונים המפורטים לעיל
+                        </label>
+                    </div>
+                </div>
+
+                <div class="accordion-item" data-declaration="declaration2">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">הצהרת אי הסתמכות והחלטה עצמאית</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="mb-4">אני מצהיר/ה בזאת כי:</p>
+                        <ul class="declaration-list">
+                            <li>ההחלטה להשקיע במוצרים מובנים התקבלה על פי שיקול דעתי העצמאי בלבד</li>
+                            <li>איני מסתמך/ת על עצות או המלצות של החברה או מי מטעמה</li>
+                            <li>הובהר לי שהחברה אינה משמשת כיועץ השקעות ואינה מספקת ייעוץ אישי</li>
+                            <li>בדקתי את התאמת ההשקעה לצרכיי ולמטרותיי הפיננסיות</li>
+                            <li>אני מבין/ה שביצועי עבר אינם מעידים על ביצועים עתידיים</li>
+                        </ul>
+                        <label class="checkbox-container mt-4">
+                            <input type="checkbox" name="independentDecision" required>
+                            <span class="checkmark"></span>
+                            אני מאשר/ת את כל ההצהרות הנ"ל
+                        </label>
+                    </div>
+                </div>
+
+                <div class="accordion-item" data-declaration="declaration3">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">התחייבות לעדכון פרטים</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="mb-4">אני מתחייב/ת בזאת:</p>
+                        <ul class="declaration-list">
+                            <li>לעדכן את החברה בכתב על כל שינוי מהותי בפרטים שמסרתי בטופס זה</li>
+                            <li>להודיע מיידית על כל שינוי במצבי הפיננסי שעשוי להשפיע על השקעותיי</li>
+                            <li>לעדכן על שינויים בנסיבות האישיות שעשויים להשפיע על פרופיל הסיכון שלי</li>
+                            <li>להודיע על שינויים במטרות ההשקעה או באופק ההשקעה המתוכנן</li>
+                        </ul>
+                        <label class="checkbox-container mt-4">
+                            <input type="checkbox" name="updateCommitment" required>
+                            <span class="checkmark"></span>
+                            אני מתחייב/ת לעדכן על כל שינוי מהותי כמפורט לעיל
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signature Section -->
             <div class="signature-section mt-6">
                 <h3>חתימה דיגיטלית</h3>
                 <div class="signature-container">
@@ -62,6 +154,17 @@
                     </div>
                 </div>
                 <input type="hidden" id="signatureData" name="signature" required>
+            </div>
+
+            <!-- Final Confirmation -->
+            <div class="final-confirmation mt-6">
+                <label class="checkbox-container">
+                    <input type="checkbox" name="finalConfirmation" required>
+                    <span class="checkmark"></span>
+                    <span class="text-bold">
+                        אני מאשר/ת שקראתי והבנתי את כל ההצהרות לעיל, ומסכים/ה להן באופן מלא ובלתי חוזר
+                    </span>
+                </label>
             </div>
         </form>
     </main>
@@ -75,12 +178,10 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="/js/accordion.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
     <script src="/js/signatureHandler.js"></script>
-    <script src="/js/formSubmission.js"></script>
-    <script src="/js/validation.js"></script>
+    <script src="/js/accordion.js"></script>
+    <script src="/js/storage.js"></script>
     <script src="/js/navigation.js"></script>
 </body>
 </html>
