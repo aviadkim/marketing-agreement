@@ -37,12 +37,10 @@ class SignatureHandler {
         window.addEventListener('resize', () => this.resizeCanvas());
 
         // Try to load previous signature
-        if (!window.location.pathname.includes('section1')) {
-            const previousSignature = localStorage.getItem('lastSignature');
-            if (previousSignature) {
-                this.signaturePad.fromDataURL(previousSignature);
-                this.updateSignatureInput(previousSignature);
-            }
+        const previousSignature = localStorage.getItem('lastSignature');
+        if (previousSignature) {
+            this.signaturePad.fromDataURL(previousSignature);
+            this.updateSignatureInput(previousSignature);
         }
     }
 
