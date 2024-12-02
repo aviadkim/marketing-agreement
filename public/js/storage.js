@@ -1,91 +1,79 @@
-// storage.js
+// public/js/storage.js
 
-// Define saveFormData in the global scope
-function saveFormData() {
-    const form = document.querySelector('form');
-    if (!form) return;
-    
-    const formData = {};
-    const formElements = form.elements;
-    
-    for (let element of formElements) {
-        if (element.name) {
-            if (element.type === 'checkbox') {
-                formData[element.name] = element.checked;
-            } else if (element.type === 'radio') {
-                if (element.checked) {
-                    formData[element.name] = element.value;
-                }
-            } else {
-                formData[element.name] = element.value;
+class StorageHandler {
+    constructor() {
+        this.initialize();
+    }
+
+    initialize() {
+        // מחיקת כל הנתונים אם נמצאים בסקשן 1
+        if (window.location.pathname.includes('section1')) {
+            this.clearAllData();
+            return;
+        }
+
+        // טעינת נתונים שמורים אם קיימים
+        this.loadSavedData();
+        
+        // הגדרת שמירה אוטומטית
+        this.setupAutoSave();
+    }
+
+    clearAllData() {
+        localStorage.clear();
+    }
+
+    loadSavedData() {
+        const form = document.querySelector('form');
+        if (!form) return;
+
+        const savedData = localStorage.getItem('formData');
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                Object.entries(data).forEach(([name, value]) => {
+                    const input = form.querySelector(`[name="${name}"]`);
+                    if (input) {
+                        if (input.type === 'checkbox' || input.type === 'radio') {
+                            input.checked = value === true || value === 'true';
+                        } else {
+                            input.value = value;
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading saved data:', error);
             }
         }
     }
-    
-    const currentPage = window.location.pathname.split('/').pop();
-    let savedData = JSON.parse(localStorage.getItem('formData') || '{}');
-    savedData[currentPage] = formData;
-    localStorage.setItem('formData', JSON.stringify(savedData));
-}
 
-function loadSavedData() {
-    const savedData = localStorage.getItem('formData');
-    if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        const currentPage = window.location.pathname.split('/').pop();
-        const pageData = parsedData[currentPage];
+    setupAutoSave() {
         const form = document.querySelector('form');
-        
-        if (pageData && form) {
-            Object.keys(pageData).forEach(key => {
-                const element = form.elements[key];
-                if (element) {
-                    if (element.type === 'checkbox') {
-                        element.checked = pageData[key];
-                    } else if (element.type === 'radio') {
-                        const radio = form.querySelector(`input[name="${key}"][value="${pageData[key]}"]`);
-                        if (radio) radio.checked = true;
-                    } else {
-                        element.value = pageData[key];
+        if (!form) return;
+
+        const saveFormData = () => {
+            const formData = {};
+            const inputs = form.querySelectorAll('input, select, textarea');
+            
+            inputs.forEach(input => {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    if (input.checked) {
+                        formData[input.name] = input.checked;
                     }
+                } else {
+                    formData[input.name] = input.value;
                 }
             });
-        }
+
+            localStorage.setItem('formData', JSON.stringify(formData));
+        };
+
+        form.addEventListener('change', saveFormData);
+        form.addEventListener('input', saveFormData);
     }
 }
 
-function showSaveMessage() {
-    const existingMessage = document.querySelector('.save-message');
-    if (existingMessage) {
-        existingMessage.remove();
-    }
-    
-    const message = document.createElement('div');
-    message.className = 'save-message';
-    message.textContent = 'הנתונים נשמרו';
-    message.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        background: #2558e5;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
-        animation: fadeIn 0.3s, fadeOut 0.3s 2s forwards;
-        z-index: 1000;
-    `;
-    
-    document.body.appendChild(message);
-    setTimeout(() => {
-        message.remove();
-    }, 2300);
-}
-
-// Event listener for DOMContentLoaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Load saved data on page load only
-    loadSavedData();
-    
-    // Remove the auto-save on form change
-    // Let navigation.js handle the saving when clicking the next button
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.storageHandler = new StorageHandler();
 });
