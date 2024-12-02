@@ -8,50 +8,49 @@ class AccordionHandler {
             'declaration3': false
         };
         this.initialize();
+        this.setupCheckboxListeners();
     }
 
     initialize() {
-        // הוספת מאזינים לאקורדיון
         document.querySelectorAll('.accordion-header').forEach(header => {
             header.addEventListener('click', () => this.handleAccordion(header));
         });
-
-        // הוספת מאזינים לצ'קבוקסים
-        document.querySelectorAll('input[type="checkbox"][required]').forEach(checkbox => {
-            checkbox.addEventListener('change', (e) => {
-                const declarationId = e.target.closest('.accordion-item').dataset.declaration;
-                this.updateDeclarationStatus(declarationId, e.target.checked);
-            });
-        });
-
         this.updateAllMarkers();
     }
 
     handleAccordion(header) {
         const content = header.nextElementSibling;
+        const icon = header.querySelector('.accordion-icon');
         const parent = header.parentElement;
         const isOpen = content.style.maxHeight;
 
-        // סגירת כל שאר האקורדיונים
+        // סגירת כל האקורדיונים האחרים
         document.querySelectorAll('.accordion-content').forEach(item => {
             item.style.maxHeight = null;
-            item.parentElement.classList.remove('active');
         });
-
         document.querySelectorAll('.accordion-icon').forEach(icon => {
             icon.textContent = '▼';
+        });
+        document.querySelectorAll('.accordion-item').forEach(item => {
+            item.classList.remove('active');
         });
 
         // פתיחה/סגירה של האקורדיון הנוכחי
         if (!isOpen) {
-            content.style.maxHeight = content.scrollHeight + "px";
+            const height = content.scrollHeight;
+            content.style.maxHeight = height + "px";
+            icon.textContent = '▲';
             parent.classList.add('active');
-            header.querySelector('.accordion-icon').textContent = '▲';
-        } else {
-            content.style.maxHeight = null;
-            parent.classList.remove('active');
-            header.querySelector('.accordion-icon').textContent = '▼';
         }
+    }
+
+    setupCheckboxListeners() {
+        document.querySelectorAll('.accordion-content input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const declarationId = e.target.closest('.accordion-item').dataset.declaration;
+                this.updateDeclarationStatus(declarationId, e.target.checked);
+            });
+        });
     }
 
     updateDeclarationStatus(declarationId, isChecked) {
@@ -84,7 +83,6 @@ class AccordionHandler {
     updateFinalConfirmation() {
         const finalCheckbox = document.querySelector('input[name="finalConfirmation"]');
         const submitButton = document.getElementById('finalSubmit');
-        
         const allChecked = Object.values(this.declarations).every(status => status);
         
         if (finalCheckbox) {
@@ -99,9 +97,12 @@ class AccordionHandler {
             submitButton.disabled = !(allChecked && hasSignature && finalConfirmationChecked);
         }
     }
+
+    isAllDeclartionsChecked() {
+        return Object.values(this.declarations).every(status => status);
+    }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.accordionHandler = new AccordionHandler();
 });
