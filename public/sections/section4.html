@@ -55,20 +55,6 @@
                 נא לקרוא בעיון את ההצהרות הבאות. פתיחה וקריאה של כל נושא תיחשב כהסכמה לתוכנו.
                 יש לקרוא את כל ההצהרות על מנת להמשיך לשלב החתימה.
             </p>
-            <div class="progress-markers">
-                <div class="progress-marker" data-declaration="declaration1">
-                    <div class="marker-circle"></div>
-                    <div class="marker-label">הצהרת סיכונים</div>
-                </div>
-                <div class="progress-marker" data-declaration="declaration2">
-                    <div class="marker-circle"></div>
-                    <div class="marker-label">החלטה עצמאית</div>
-                </div>
-                <div class="progress-marker" data-declaration="declaration3">
-                    <div class="marker-circle"></div>
-                    <div class="marker-label">עדכון פרטים</div>
-                </div>
-            </div>
         </div>
 
         <form id="section4-form" class="form-section">
@@ -149,13 +135,13 @@
                 <div class="text-sm text-gray-600 mb-4">נא לחתום להסכמה על כל ההצהרות הנ"ל</div>
                 
                 <div class="signature-container">
-                    <canvas id="signatureCanvas4" class="signature-canvas"></canvas>
+                    <canvas id="signatureCanvas" class="signature-canvas"></canvas>
                     <div class="signature-controls">
-                        <button type="button" id="clearSignature" class="btn-secondary">נקה חתימה</button>
-                        <button type="button" id="copySignature" class="btn-secondary">העתק חתימה קודמת</button>
+                        <button type="button" class="btn-secondary" data-clear-signature>נקה חתימה</button>
+                        <button type="button" class="btn-secondary" data-copy-signature>הדבק חתימה קודמת</button>
                     </div>
                 </div>
-                <input type="hidden" id="signatureData" name="finalSignature" required>
+                <input type="hidden" id="signatureData" name="signature" required>
             </div>
 
             <!-- Final Confirmation -->
@@ -174,4 +160,16 @@
     <!-- Navigation -->
     <footer class="form-navigation">
         <div class="container">
-            <button type="button" id="btnBack" class="
+            <button type="button" id="btnBack" class="btn-prev">חזור</button>
+            <button type="button" id="finalSubmit" class="btn-next" disabled>סיים והגש טופס</button>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
+    <script src="/js/signatureHandler.js"></script>
+    <script src="/js/accordion.js"></script>
+    <script src="/js/validation.js"></script>
+    <script src="/js/navigation.js"></script>
+</body>
+</html>
