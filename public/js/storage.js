@@ -38,8 +38,8 @@ class StorageHandler {
     restoreSignature() {
         const signatureData = localStorage.getItem('signature');
         if (signatureData && window.SignaturePad) {
-            const canvas = document.getElementById('signatureCanvas1');
-            const hiddenInput = document.getElementById('signatureCanvas1-data');
+            const canvas = document.getElementById('signatureCanvas2');
+            const hiddenInput = document.getElementById('signatureCanvas2-data');
             
             if (canvas && hiddenInput) {
                 const signaturePad = new SignaturePad(canvas);
@@ -51,8 +51,8 @@ class StorageHandler {
 
     setupNavigationStorage() {
         // שמירת מידע על ניווט בין דפים
-        if (this.currentSection === 2) {
-            localStorage.setItem('visitedSection2', 'true');
+        if (this.currentSection === 3) {
+            localStorage.setItem('visitedSection3', 'true');
         }
     }
 
