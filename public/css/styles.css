@@ -150,31 +150,24 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.progress-marker {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    text-align: center;
-}
-
-.marker-circle {
+/* הוסף לקובץ ה-CSS */
+.progress-marker .marker-circle {
     width: 24px;
     height: 24px;
-    border: 2px solid var(--border-gray);
+    border: 2px solid #e2e8f0;
     border-radius: 50%;
-    transition: all 0.3s ease;
     position: relative;
+    background: white;
+    transition: all 0.3s ease;
 }
 
 .progress-marker.completed .marker-circle {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+    border-color: #4299e1;
+    background: #4299e1;
 }
 
-.progress-marker.completed .marker-circle::after {
-    content: "✓";
+.progress-marker.completed .marker-circle:after {
+    content: '✓';
     position: absolute;
     color: white;
     font-size: 14px;
