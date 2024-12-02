@@ -175,17 +175,18 @@
                           placeholder="לדוגמה: מגבלות הלכתיות, מגבלות רגולטוריות, וכו'"></textarea>
             </div>
 
-           <div class="signature-section mt-6">
-    <h3>חתימה דיגיטלית</h3>
-    <div class="signature-container">
-        <canvas id="signatureCanvas" class="signature-canvas"></canvas>
-        <div class="signature-controls">
-            <button type="button" class="btn-secondary" data-clear-signature>נקה חתימה</button>
-            <button type="button" class="btn-secondary" data-copy-signature>הדבק חתימה קודמת</button>
-        </div>
-    </div>
-    <input type="hidden" id="signatureData" name="signature" required>
-</div>
+            <!-- Signature Section -->
+            <div class="signature-section mt-6">
+                <h3>חתימה דיגיטלית</h3>
+                <div class="signature-container">
+                    <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                    <div class="signature-controls">
+                        <button type="button" class="btn-secondary" data-clear-signature>נקה חתימה</button>
+                        <button type="button" class="btn-secondary" data-copy-signature>הדבק חתימה קודמת</button>
+                    </div>
+                </div>
+                <input type="hidden" id="signatureData" name="signature" required>
+            </div>
         </form>
     </main>
 
@@ -199,11 +200,10 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script type="module" src="/js/formHandler.js"></script>
+    <script src="/js/signatureHandler.js"></script>
     <script src="/js/validation.js"></script>
     <script src="/js/storage.js"></script>
-    <script type="module" src="/js/navigation.js"></script>
+    <script src="/js/navigation.js"></script>
 
     <script>
         // טיפול בתיבות סימון אקסקלוסיביות
