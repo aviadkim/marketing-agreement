@@ -20,7 +20,7 @@ class StorageHandler {
     }
 
     handleSignatureVisibility() {
-        if (this.currentSection === 1) {
+        if (this.currentSection === 2) {
             const signatureSection = document.querySelector('.signature-section');
             const hasVisitedNext = localStorage.getItem('visitedSection2');
             
