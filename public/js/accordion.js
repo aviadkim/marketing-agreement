@@ -1,125 +1,107 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // מעקב אחר סטטוס קריאה של כל הצהרה
-    const declarations = {
-        'declaration1': false,
-        'declaration2': false,
-        'declaration3': false
-    };
+// public/js/accordion.js
 
-    // יצירת סמני התקדמות בראש הטופס
-    function createProgressMarkers() {
-        const container = document.createElement('div');
-        container.className = 'declarations-progress';
-        container.innerHTML = `
-            <div class="progress-marker" data-declaration="declaration1">
-                <div class="marker-circle"></div>
-                <div class="marker-label">הצהרת סיכונים</div>
-            </div>
-            <div class="progress-marker" data-declaration="declaration2">
-                <div class="marker-circle"></div>
-                <div class="marker-label">החלטה עצמאית</div>
-            </div>
-            <div class="progress-marker" data-declaration="declaration3">
-                <div class="marker-circle"></div>
-                <div class="marker-label">עדכון פרטים</div>
-            </div>
-        `;
-        
-        const form = document.getElementById('section4-form');
-        form.insertBefore(container, form.firstChild);
+class AccordionHandler {
+    constructor() {
+        this.declarations = {
+            'declaration1': false,
+            'declaration2': false,
+            'declaration3': false
+        };
+        this.initialize();
     }
 
-    // עדכון סטטוס קריאה
-    function updateDeclarationStatus(declarationId, isRead) {
-        declarations[declarationId] = isRead;
-        updateProgressMarker(declarationId);
-        updateFinalCheckbox();
+    initialize() {
+        // הוספת מאזינים לאקורדיון
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => this.handleAccordion(header));
+        });
+
+        // הוספת מאזינים לצ'קבוקסים
+        document.querySelectorAll('input[type="checkbox"][required]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const declarationId = e.target.closest('.accordion-item').dataset.declaration;
+                this.updateDeclarationStatus(declarationId, e.target.checked);
+            });
+        });
+
+        this.updateAllMarkers();
     }
 
-    // עדכון סמן ההתקדמות הויזואלי
-    function updateProgressMarker(declarationId) {
-        const marker = document.querySelector(`.progress-marker[data-declaration="${declarationId}"]`);
-        if (declarations[declarationId]) {
-            marker.classList.add('completed');
-        } else {
-            marker.classList.remove('completed');
-        }
-    }
-
-    // בדיקה אם כל ההצהרות נקראו
-    function updateFinalCheckbox() {
-        const allRead = Object.values(declarations).every(status => status);
-        const finalCheckbox = document.querySelector('input[name="finalConfirmation"]');
-        finalCheckbox.disabled = !allRead;
-        
-        if (allRead) {
-            finalCheckbox.closest('.final-confirmation').classList.add('enabled');
-        } else {
-            finalCheckbox.closest('.final-confirmation').classList.remove('enabled');
-        }
-    }
-
-    // טיפול בפתיחה וסגירה של האקורדיון
-    function handleAccordion(header) {
+    handleAccordion(header) {
         const content = header.nextElementSibling;
-        const icon = header.querySelector('.accordion-icon');
-        const isOpen = content.classList.contains('open');
-        const declarationId = header.closest('.accordion-item').dataset.declaration;
+        const parent = header.parentElement;
+        const isOpen = content.style.maxHeight;
 
-        // סגירת כל החלקים האחרים
+        // סגירת כל שאר האקורדיונים
         document.querySelectorAll('.accordion-content').forEach(item => {
-            item.classList.remove('open');
             item.style.maxHeight = null;
-            item.previousElementSibling.querySelector('.accordion-icon').textContent = '▼';
+            item.parentElement.classList.remove('active');
         });
 
-        // פתיחה/סגירה של החלק הנוכחי
+        document.querySelectorAll('.accordion-icon').forEach(icon => {
+            icon.textContent = '▼';
+        });
+
+        // פתיחה/סגירה של האקורדיון הנוכחי
         if (!isOpen) {
-            content.classList.add('open');
-            content.style.maxHeight = content.scrollHeight + 'px';
-            icon.textContent = '▲';
-            
-            // סימון כנקרא אחרי שניה
-            setTimeout(() => {
-                updateDeclarationStatus(declarationId, true);
-            }, 1000);
+            content.style.maxHeight = content.scrollHeight + "px";
+            parent.classList.add('active');
+            header.querySelector('.accordion-icon').textContent = '▲';
+        } else {
+            content.style.maxHeight = null;
+            parent.classList.remove('active');
+            header.querySelector('.accordion-icon').textContent = '▼';
         }
     }
 
-    // אתחול
-    createProgressMarkers();
+    updateDeclarationStatus(declarationId, isChecked) {
+        this.declarations[declarationId] = isChecked;
+        this.updateMarker(declarationId);
+        this.updateFinalConfirmation();
+    }
 
-    // הוספת מאזינים
-    document.querySelectorAll('.accordion-header').forEach(header => {
-        header.addEventListener('click', () => handleAccordion(header));
-    });
-
-    // טיפול בחתימה דיגיטלית
-    const canvas = document.getElementById('signatureCanvas');
-    if (canvas) {
-        const signaturePad = new SignaturePad(canvas, {
-            backgroundColor: 'white',
-            penColor: 'black'
-        });
-
-        document.getElementById('clearSignature').addEventListener('click', () => {
-            signaturePad.clear();
-        });
-
-        document.getElementById('copySignature').addEventListener('click', () => {
-            const previousSignature = localStorage.getItem('signature');
-            if (previousSignature) {
-                signaturePad.fromDataURL(previousSignature);
+    updateMarker(declarationId) {
+        const marker = document.querySelector(`.progress-marker[data-declaration="${declarationId}"]`);
+        if (marker) {
+            if (this.declarations[declarationId]) {
+                marker.classList.add('completed');
+            } else {
+                marker.classList.remove('completed');
             }
-        });
+        }
+    }
 
-        // שמירת החתימה בעת שליחה
-        document.getElementById('finalSubmit').addEventListener('click', () => {
-            if (!signaturePad.isEmpty()) {
-                const signatureData = signaturePad.toDataURL();
-                document.getElementById('signatureData').value = signatureData;
-                localStorage.setItem('signature', signatureData);
+    updateAllMarkers() {
+        Object.keys(this.declarations).forEach(declarationId => {
+            const checkbox = document.querySelector(`[data-declaration="${declarationId}"] input[type="checkbox"]`);
+            if (checkbox) {
+                this.declarations[declarationId] = checkbox.checked;
+                this.updateMarker(declarationId);
             }
         });
     }
+
+    updateFinalConfirmation() {
+        const finalCheckbox = document.querySelector('input[name="finalConfirmation"]');
+        const submitButton = document.getElementById('finalSubmit');
+        
+        const allChecked = Object.values(this.declarations).every(status => status);
+        
+        if (finalCheckbox) {
+            finalCheckbox.disabled = !allChecked;
+        }
+
+        if (submitButton) {
+            const signatureInput = document.getElementById('signatureData');
+            const hasSignature = signatureInput && signatureInput.value;
+            const finalConfirmationChecked = finalCheckbox && finalCheckbox.checked;
+            
+            submitButton.disabled = !(allChecked && hasSignature && finalConfirmationChecked);
+        }
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.accordionHandler = new AccordionHandler();
 });
