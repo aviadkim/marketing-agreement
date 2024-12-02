@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק השקעות - הצהרות</title>
-    <link href="../../css/styles.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body>
     <!-- Header with Logo -->
     <header class="form-header">
-        <img src="../../images/movne-logo.png" alt="מובנה" class="logo">
+        <img src="/images/movne-logo.png" alt="מובנה" class="logo">
         <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
     </header>
 
@@ -49,7 +49,6 @@
 
     <!-- Form Content -->
     <main class="form-content">
-        <!-- Declarations Header -->
         <div class="declarations-header">
             <h2>הצהרות והסכמות</h2>
             <p class="legal-notice">
@@ -106,9 +105,7 @@
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p class="mb-4">
-                            אני מצהיר/ה בזאת כי:
-                        </p>
+                        <p class="mb-4">אני מצהיר/ה בזאת כי:</p>
                         <ul class="declaration-list">
                             <li>ההחלטה להשקיע במוצרים מובנים התקבלה על פי שיקול דעתי העצמאי בלבד</li>
                             <li>איני מסתמך/ת על עצות או המלצות של החברה או מי מטעמה</li>
@@ -130,9 +127,7 @@
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p class="mb-4">
-                            אני מתחייב/ת בזאת:
-                        </p>
+                        <p class="mb-4">אני מתחייב/ת בזאת:</p>
                         <ul class="declaration-list">
                             <li>לעדכן את החברה בכתב על כל שינוי מהותי בפרטים שמסרתי בטופס זה</li>
                             <li>להודיע מיידית על כל שינוי במצבי הפיננסי שעשוי להשפיע על השקעותיי</li>
@@ -153,18 +148,20 @@
                 <h3>חתימה דיגיטלית</h3>
                 <div class="text-sm text-gray-600 mb-4">נא לחתום להסכמה על כל ההצהרות הנ"ל</div>
                 
-                <canvas id="signatureCanvas" class="signature-pad"></canvas>
-                <div class="signature-controls">
-                    <button type="button" id="clearSignature" class="btn-secondary">נקה חתימה</button>
-                    <button type="button" id="copySignature" class="btn-secondary">העתק חתימה קודמת</button>
-                    <input type="hidden" id="signatureData" name="finalSignature">
+                <div class="signature-container">
+                    <canvas id="signatureCanvas4" class="signature-canvas"></canvas>
+                    <div class="signature-controls">
+                        <button type="button" id="clearSignature" class="btn-secondary">נקה חתימה</button>
+                        <button type="button" id="copySignature" class="btn-secondary">העתק חתימה קודמת</button>
+                    </div>
                 </div>
+                <input type="hidden" id="signatureData" name="finalSignature" required>
             </div>
 
             <!-- Final Confirmation -->
             <div class="final-confirmation mt-6">
                 <label class="checkbox-container">
-                    <input type="checkbox" name="finalConfirmation" required disabled>
+                    <input type="checkbox" name="finalConfirmation" required>
                     <span class="checkmark"></span>
                     <span class="text-bold">
                         אני מאשר/ת שקראתי והבנתי את כל ההצהרות לעיל, ומסכים/ה להן באופן מלא ובלתי חוזר
@@ -177,17 +174,4 @@
     <!-- Navigation -->
     <footer class="form-navigation">
         <div class="container">
-            <button type="button" id="btnBack" class="btn-prev">חזור</button>
-            <button type="button" id="finalSubmit" class="btn-next" disabled>סיים והגש טופס</button>
-        </div>
-    </footer>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
-    <script src="../../js/signature.js"></script>
-    <script src="../../js/navigation.js"></script>
-    <script src="../../js/storage.js"></script>
-    <script src="../../js/validation.js"></script>
-    <script src="../../js/accordion.js"></script>
-</body>
-</html>
+            <button type="button" id="btnBack" class="
