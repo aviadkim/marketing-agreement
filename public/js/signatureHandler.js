@@ -1,11 +1,10 @@
+// public/js/signatureHandler.js
+
 class SignatureHandler {
     constructor() {
-        // אל תפעיל את הפאד בעמוד 1
-        if (window.location.pathname.includes('section1.html')) {
-            console.log('Skipping Signature Pad on Section 1');
-            return;
-        }
-
+        // לא לאתחל בסקשן 1
+        if (window.location.pathname.includes('section1')) return;
+        
         this.signaturePad = null;
         this.isDrawing = false;
         this.initialize();
@@ -22,16 +21,9 @@ class SignatureHandler {
             penColor: 'rgb(0, 0, 0)'
         });
 
-        // אתחל גודל הקנבס
+        // רק הגדרת גודל הקנבס
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
-
-        // טען חתימה שמורה אם קיימת
-        const savedSignature = localStorage.getItem('lastSignature');
-        if (savedSignature) {
-            this.signaturePad.fromDataURL(savedSignature);
-            console.log('Loaded saved signature');
-        }
 
         // הגדרת כפתורים
         this.setupButtons();
@@ -49,16 +41,24 @@ class SignatureHandler {
 
     setupButtons() {
         const clearButton = document.querySelector('[data-clear-signature]');
+        const copyButton = document.querySelector('[data-copy-signature]');
+
         if (clearButton) {
             clearButton.addEventListener('click', () => this.clearSignature());
         }
 
+        if (copyButton) {
+            copyButton.addEventListener('click', () => this.copyPreviousSignature());
+        }
+
+        // אירוע שמירה רק בסיום חתימה
         if (this.signaturePad) {
             this.signaturePad.onEnd = () => {
                 if (!this.signaturePad.isEmpty()) {
                     const signatureData = this.signaturePad.toDataURL();
-                    localStorage.setItem('lastSignature', signatureData);
-                    console.log('Saved signature to LocalStorage');
+                    this.updateSignatureInput(signatureData);
+                    // שמירה בזיכרון רק כשלוחצים על כפתור שמירה
+                    // localStorage.setItem('lastSignature', signatureData);
                 }
             };
         }
@@ -67,12 +67,28 @@ class SignatureHandler {
     clearSignature() {
         if (this.signaturePad) {
             this.signaturePad.clear();
-            localStorage.removeItem('lastSignature');
-            console.log('Cleared signature and removed from LocalStorage');
+            this.updateSignatureInput('');
+        }
+    }
+
+    copyPreviousSignature() {
+        const previousSignature = localStorage.getItem('lastSignature');
+        if (previousSignature) {
+            this.signaturePad.fromDataURL(previousSignature);
+            this.updateSignatureInput(previousSignature);
+        } else {
+            alert('לא נמצאה חתימה קודמת');
+        }
+    }
+
+    updateSignatureInput(value) {
+        const input = document.getElementById('signatureData');
+        if (input) {
+            input.value = value;
         }
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new SignatureHandler();
+    window.signatureHandler = new SignatureHandler();
 });
