@@ -65,32 +65,21 @@
                 </div>
                 <div class="input-group">
                     <label>תעודת זהות</label>
-                    <input type="text" name="idNumber" required>
+                    <input type="text" name="idNumber" pattern="\d{9}" minlength="9" maxlength="9" required>
+                    <div class="input-hint">נא להזין 9 ספרות</div>
                 </div>
                 <div class="input-group">
                     <label>דוא"ל</label>
                     <input type="email" name="email" required>
                 </div>
                 <div class="input-group">
-                <label>טלפון נייד</label>
-                <input type="tel" name="phone" required>
-            </div>
-        </div>
-
-        <!-- Signature Section -->
-        <div class="form-group mt-6">
-            <label>חתימה דיגיטלית</label>
-            <div class="signature-container">
-                <canvas id="signatureCanvas1" class="signature-canvas"></canvas>
-                <div class="signature-controls">
-                    <button type="button" class="btn-secondary" data-clear-for="signatureCanvas1">נקה חתימה</button>
-                    <button type="button" class="btn-secondary" data-copy-for="signatureCanvas1">העתק חתימה קודמת</button>
+                    <label>טלפון נייד</label>
+                    <input type="tel" name="phone" pattern="[0-9]{10}" minlength="10" maxlength="10" required>
+                    <div class="input-hint">נא להזין 10 ספרות</div>
                 </div>
             </div>
-            <input type="hidden" id="signatureCanvas1-data" name="signature" required>
-        </div>
-    </form>
-</main>
+        </form>
+    </main>
 
     <!-- Navigation -->
     <footer class="form-navigation">
@@ -100,9 +89,6 @@
     </footer>
 
     <!-- Scripts -->
-    <!-- בכל הקבצים -->
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.min.js"></script>
-    <script src="/js/signatureHandler.js"></script>
     <script src="/js/formHandler.js"></script>
     <script src="/js/validation.js"></script>
     <script src="/js/storage.js"></script>
