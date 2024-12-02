@@ -1,5 +1,3 @@
-// public/js/signatureHandler.js
-
 class SignatureHandler {
     constructor() {
         if (window.location.pathname.includes('section1')) return;
