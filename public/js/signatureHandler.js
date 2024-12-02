@@ -2,40 +2,23 @@
 
 class SignatureHandler {
     constructor() {
-        // בדיקה האם אנחנו בסקשן 1
         if (window.location.pathname.includes('section1')) return;
-        
         this.signaturePad = null;
         this.initialize();
-        this.initializeValidation();
     }
 
     initialize() {
         const canvas = document.getElementById('signatureCanvas');
         if (!canvas) return;
 
-        // Set canvas size
-        canvas.width = canvas.offsetWidth;
-        canvas.height = 200;
-
         this.signaturePad = new SignaturePad(canvas, {
-            minWidth: 1,
-            maxWidth: 2.5,
             backgroundColor: 'rgb(255, 255, 255)',
-            penColor: 'rgb(0, 0, 0)'
+            penColor: 'rgb(0, 0, 0)',
+            minWidth: 1,
+            maxWidth: 2.5
         });
 
-        // Set up event listeners
-        this.setupListeners();
-        
-        // Set up resize handling
-        this.handleResize();
-
-        // Check for previous signature
-        this.loadPreviousSignature();
-    }
-
-    setupListeners() {
+        // Set up buttons
         const clearButton = document.querySelector('[data-clear-signature]');
         const copyButton = document.querySelector('[data-copy-signature]');
 
@@ -47,91 +30,81 @@ class SignatureHandler {
             copyButton.addEventListener('click', () => this.loadPreviousSignature());
         }
 
-        if (this.signaturePad) {
-            this.signaturePad.onEnd = () => {
-                const data = this.signaturePad.toDataURL();
-                this.saveSignature(data);
-                this.updateFinalSubmit();
-            };
+        // Set up auto-save
+        canvas.addEventListener('mouseup', () => this.saveSignature());
+        canvas.addEventListener('touchend', () => this.saveSignature());
+
+        // Set up canvas resize
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+
+        // Try to load previous signature
+        if (!window.location.pathname.includes('section1')) {
+            const previousSignature = localStorage.getItem('lastSignature');
+            if (previousSignature) {
+                this.signaturePad.fromDataURL(previousSignature);
+                this.updateSignatureInput(previousSignature);
+            }
         }
     }
 
-    handleResize() {
-        const resizeCanvas = () => {
-            const canvas = document.getElementById('signatureCanvas');
-            if (!canvas) return;
+    resizeCanvas() {
+        const canvas = document.getElementById('signatureCanvas');
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const context = canvas.getContext('2d');
 
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = 200 * ratio;
-            const context = canvas.getContext('2d');
-            context.scale(ratio, ratio);
-            
-            // Redraw previous signature if exists
-            const previousData = this.signaturePad.toDataURL();
-            this.signaturePad.clear();
-            if (previousData && !this.signaturePad.isEmpty()) {
-                this.signaturePad.fromDataURL(previousData);
-            }
-        };
+        // Store current signature data
+        const data = this.signaturePad.toData();
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        // Resize canvas
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = 200 * ratio;
+        context.scale(ratio, ratio);
+
+        // Restore signature data
+        this.signaturePad.clear();
+        if (data) {
+            this.signaturePad.fromData(data);
+        }
     }
 
     clearSignature() {
         if (this.signaturePad) {
             this.signaturePad.clear();
-            this.saveSignature('');
-            this.updateFinalSubmit();
+            this.updateSignatureInput('');
         }
     }
 
     loadPreviousSignature() {
         const previousSignature = localStorage.getItem('lastSignature');
-        if (previousSignature && this.signaturePad) {
+        if (previousSignature) {
             this.signaturePad.fromDataURL(previousSignature);
-            this.saveSignature(previousSignature);
-            this.updateFinalSubmit();
+            this.updateSignatureInput(previousSignature);
         } else {
             alert('לא נמצאה חתימה קודמת');
         }
     }
 
-    saveSignature(data) {
-        if (data) {
-            localStorage.setItem('lastSignature', data);
+    saveSignature() {
+        if (this.signaturePad && !this.signaturePad.isEmpty()) {
+            const signatureData = this.signaturePad.toDataURL();
+            localStorage.setItem('lastSignature', signatureData);
+            this.updateSignatureInput(signatureData);
         }
+    }
+
+    updateSignatureInput(value) {
         const input = document.getElementById('signatureData');
         if (input) {
-            input.value = data;
-        }
-    }
-
-    updateFinalSubmit() {
-        if (window.location.pathname.includes('section4')) {
-            const submitButton = document.getElementById('finalSubmit');
-            const checkboxes = document.querySelectorAll('input[type="checkbox"][required]');
-            const hasSignature = !this.signaturePad.isEmpty();
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-
-            if (submitButton) {
-                submitButton.disabled = !(hasSignature && allChecked);
-            }
-        }
-    }
-
-    initializeValidation() {
-        if (window.location.pathname.includes('section4')) {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"][required]');
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', () => this.updateFinalSubmit());
-            });
+            input.value = value;
+            // Trigger change event for form validation
+            const event = new Event('change', { bubbles: true });
+            input.dispatchEvent(event);
         }
     }
 }
 
-// Initialize only after DOM is fully loaded
+// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     window.signatureHandler = new SignatureHandler();
 });
