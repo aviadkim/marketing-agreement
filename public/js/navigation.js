@@ -2,8 +2,8 @@
 let currentSection = parseInt(window.location.pathname.match(/section(\d+)/)?.[1] || 1);
 
 // Debug logging
-function logDebug(message, data) {
-    console.log(`[DEBUG] ${message}`, data || '');
+function logDebug(message, data = '') {
+    console.log(`[DEBUG] ${message}`, data);
 }
 
 // Load saved data from localStorage
@@ -36,12 +36,16 @@ function populateFormFields(data) {
                     if (input) input.checked = true;
                 });
             } else {
-                field.checked = value === 'on' || value === true;
+                if (typeof value === 'boolean') {
+                    field.checked = value;
+                } else {
+                    field.checked = value === 'on' || value === true;
+                }
             }
         } else if (field.type === 'select-one' || field.type === 'select-multiple') {
             if (value) field.value = value;
         } else {
-            field.value = value;
+            field.value = value || '';
         }
     });
 
@@ -128,7 +132,6 @@ function validateSection2() {
         errors.push('נא לבחור לפחות מטרת השקעה אחת');
     }
 
-    // Show errors if any
     if (!isValid) {
         errors.forEach(error => showMessage(error, 'error'));
     }
@@ -169,7 +172,6 @@ function validateSection3() {
         errors.push('יש לבחור לפחות סוג השקעה אחד');
     }
 
-    // Show errors if any
     if (!isValid) {
         errors.forEach(error => showMessage(error, 'error'));
     }
@@ -178,7 +180,7 @@ function validateSection3() {
 }
 
 // Show message (success/error)
-function showMessage(message, type = 'success') {
+function showMessage(message, type = 'error') {
     const div = document.createElement('div');
     div.className = `message ${type}`;
     div.textContent = message;
@@ -256,3 +258,10 @@ document.addEventListener('DOMContentLoaded', function() {
         nextButton.addEventListener('click', navigateNext);
     }
 });
+
+// Export necessary functions
+window.loadSavedData = loadSavedData;
+window.saveFormData = saveFormData;
+window.navigateNext = navigateNext;
+window.navigateBack = navigateBack;
+window.showMessage = showMessage;
