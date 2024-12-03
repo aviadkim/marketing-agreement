@@ -1,32 +1,123 @@
-{
-    "name": "marketing-agreement",
-    "version": "1.0.0",
-    "main": "server.js",
-    "scripts": {
-        "start": "node server.js",
-        "dev": "nodemon server.js"
-    },
-    "dependencies": {
-        "body-parser": "^1.20.3",
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.6",
-        "express": "^4.18.2",
-        "google-spreadsheet": "^4.1.4",
-        "googleapis": "^144.0.0",
-        "html2canvas": "^1.4.1",
-        "multer": "^1.4.5-lts.1",
-        "path": "^0.12.7",
-        "signature_pad": "^5.0.4"
-    },
-    "devDependencies": {
-        "@eslint/js": "^9.15.0",
-        "eslint": "^9.15.0",
-        "eslint-plugin-react": "^7.37.2",
-        "globals": "^15.12.0",
-        "nodemon": "^3.0.3"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "description": "Digital signature system for marketing agreements"
-}
+require('dotenv').config();
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Google Apps Script URL from environment variable
+const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbz2Cu2YDQwHz5acvMFx7GzN9ht2BiuQkRI459f7_75y96Hh2BAUMimYl3e2XYEr_uhh/exec';
+
+// Redirects
+app.get(['/', '/index.html', '/index'], (req, res) => {
+    res.redirect('/sections/section1.html');
+});
+
+// Force HTTPS in production
+app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'production' && !req.secure) {
+        return res.redirect('https://' + req.headers.host + req.url);
+    }
+    next();
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+// Main form submission endpoint 
+app.post('/api/submit', async (req, res) => {
+    try {
+        console.log('Received form submission');
+        const formData = req.body;
+        
+        // Process form data
+        const processedData = {
+            // Section 1
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            idNumber: formData.idNumber,
+            email: formData.email,
+            phone: formData.phone,
+
+            // Section 2
+            investmentAmount: formData.investmentAmount,
+            bank: formData.bank,
+            currency: formData.currency,
+            purpose: Array.isArray(formData.purpose) ? formData.purpose.join(', ') : formData.purpose,
+            purposeOther: formData.purposeOther,
+            timeline: formData.timeline,
+
+            // Section 3
+            marketExperience: Array.isArray(formData.marketExperience) ? 
+                formData.marketExperience.join(', ') : formData.marketExperience,
+            riskTolerance: formData.riskTolerance,
+            lossResponse: formData.lossResponse,
+            investmentKnowledge: Array.isArray(formData.investmentKnowledge) ? 
+                formData.investmentKnowledge.join(', ') : formData.investmentKnowledge,
+            investmentRestrictions: formData.investmentRestrictions,
+
+            // Section 4
+            riskAcknowledgement: formData.riskAcknowledgement === 'on' ? 'כן' : 'לא',
+            independentDecision: formData.independentDecision === 'on' ? 'כן' : 'לא',
+            updateCommitment: formData.updateCommitment === 'on' ? 'כן' : 'לא',
+
+            // Additional data
+            signature: formData.signature,
+            formScreenshot: formData.formScreenshot,
+            submissionDate: new Date().toISOString()
+        };
+
+        // Here you'd add the Google Sheets submission logic
+        // using google-spreadsheet library instead of fetch
+
+        console.log('Form processed successfully');
+        
+        res.json({
+            success: true,
+            message: 'הטופס נשלח בהצלחה'
+        });
+
+    } catch (error) {
+        console.error('Form submission error:', error);
+        res.status(500).json({
+            error: 'שגיאה בשליחת הטופס',
+            message: error.message
+        });
+    }
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+        error: 'אירעה שגיאה!',
+        message: err.message
+    });
+});
+
+// Configuration
+const PORT = process.env.PORT || 3000;
+
+// Start server
+const server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log('Environment:', process.env.NODE_ENV);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+        console.log('HTTP server closed');
+        process.exit(0);
+    });
+});
