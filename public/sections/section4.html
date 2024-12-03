@@ -155,11 +155,11 @@
                 </div>
                 <input type="hidden" id="signatureData" name="signature" required>
             </div>
-
             <!-- Final Confirmation -->
             <div class="final-confirmation mt-6">
                 <label class="checkbox-container">
-                    <input type="checkbox" name="finalConfirmation" required>
+                    <input type="checkbox" name="finalConfirmation" required 
+                           onchange="document.getElementById('finalSubmit').disabled = !this.checked">
                     <span class="checkmark"></span>
                     <span class="text-bold">
                         אני מאשר/ת שקראתי והבנתי את כל ההצהרות לעיל, ומסכים/ה להן באופן מלא ובלתי חוזר
@@ -168,7 +168,6 @@
             </div>
         </form>
     </main>
-
     <!-- Navigation -->
     <footer class="form-navigation">
         <div class="container">
@@ -176,12 +175,56 @@
             <button type="button" id="finalSubmit" class="btn-next" disabled>סיים והגש טופס</button>
         </div>
     </footer>
-
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
     <script src="/js/signatureHandler.js"></script>
     <script src="/js/accordion.js"></script>
     <script src="/js/storage.js"></script>
     <script src="/js/navigation.js"></script>
+    <script>
+        // Enable/disable submit button based on form validity
+        document.querySelector('form').addEventListener('change', function() {
+            const form = this;
+            const submitButton = document.getElementById('finalSubmit');
+            const isValid = form.checkValidity() && 
+                           document.querySelector('input[name="finalConfirmation"]').checked &&
+                           !document.querySelector('#signatureCanvas').isEmpty();
+            
+            submitButton.disabled = !isValid;
+        });
+
+        // Handle final form submission
+        document.getElementById('finalSubmit').addEventListener('click', async function(e) {
+            e.preventDefault();
+            const form = document.querySelector('form');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Clear stored data
+                    localStorage.removeItem('formData');
+                    localStorage.removeItem('lastSignature');
+                    
+                    // Redirect to thank you page
+                    window.location.href = '/sections/preview.html';
+                } else {
+                    throw new Error('Failed to submit form');
+                }
+            } catch (error) {
+                alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
+                console.error('Submission error:', error);
+            }
+        });
+    </script>
 </body>
 </html>
