@@ -7,13 +7,11 @@
     <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Header with Logo -->
     <header class="form-header">
         <img src="/images/movne-logo.png" alt="מובנה" class="logo">
         <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
     </header>
 
-    <!-- Progress Bar -->
     <div class="progress-container">
         <div class="progress-steps">
             <div class="step completed" data-step="1">
@@ -51,13 +49,10 @@
         </div>
     </div>
 
-    <!-- Form Content -->
     <main class="form-content">
         <form id="section3-form" class="form-section">
-            <!-- Market Experience -->
             <div class="form-group">
                 <div class="question-title">רמת הידע והניסיון בשוק ההון</div>
-                <div class="error-message" style="display: none;">יש לבחור לפחות אפשרות אחת</div>
                 <div class="checkbox-grid">
                     <label class="checkbox-container">
                         <input type="checkbox" name="marketExperience" value="none" required data-exclusive="true">
@@ -82,7 +77,6 @@
                 </div>
             </div>
 
-            <!-- Risk Tolerance -->
             <div class="form-group mt-6">
                 <div class="question-title">מהי רמת הסיכון שאת/ה מוכן/ה לקחת בהשקעותיך?</div>
                 <div class="radio-grid">
@@ -104,7 +98,6 @@
                 </div>
             </div>
 
-            <!-- Loss Response -->
             <div class="form-group mt-6">
                 <div class="question-title">כיצד היית מגיב/ה להפסד של 20% בתיק ההשקעות?</div>
                 <div class="radio-grid">
@@ -131,7 +124,6 @@
                 </div>
             </div>
 
-            <!-- Investment Knowledge -->
             <div class="form-group mt-6">
                 <div class="question-title">באילו מכשירי השקעה יש לך ניסיון?</div>
                 <div class="checkbox-grid">
@@ -168,14 +160,12 @@
                 </div>
             </div>
 
-            <!-- Investment Restrictions -->
             <div class="form-group mt-6">
                 <div class="question-title">האם קיימות מגבלות מיוחדות על השקעותיך?</div>
                 <textarea name="investmentRestrictions" rows="4" class="form-control" 
                           placeholder="לדוגמה: מגבלות הלכתיות, מגבלות רגולטוריות, וכו'"></textarea>
             </div>
 
-            <!-- Signature Section -->
             <div class="signature-section mt-6">
                 <h3>חתימה דיגיטלית</h3>
                 <div class="signature-container">
@@ -189,7 +179,7 @@
             </div>
         </form>
     </main>
-    <!-- Navigation -->
+
     <footer class="form-navigation">
         <div class="container">
             <button type="button" id="btnBack" class="btn-prev">חזור</button>
@@ -197,89 +187,9 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
     <script src="/js/signatureHandler.js"></script>
-    <script src="/js/validation.js"></script>
-    <script src="/js/storage.js"></script>
     <script src="/js/navigation.js"></script>
-    <script>
-        // Handle exclusive checkboxes
-        document.querySelectorAll('input[data-exclusive="true"]').forEach(exclusive => {
-            exclusive.addEventListener('change', function() {
-                const name = this.name;
-                const otherCheckboxes = document.querySelectorAll(`input[name="${name}"]:not([data-exclusive="true"])`);
-                if (this.checked) {
-                    otherCheckboxes.forEach(cb => {
-                        cb.checked = false;
-                        cb.disabled = true;
-                    });
-                } else {
-                    otherCheckboxes.forEach(cb => {
-                        cb.disabled = false;
-                    });
-                }
-            });
-        });
 
-        // When selecting other options, uncheck the exclusive one
-        document.querySelectorAll('input[type="checkbox"]:not([data-exclusive="true"])').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    const exclusive = document.querySelector(`input[name="${this.name}"][data-exclusive="true"]`);
-                    if (exclusive) {
-                        exclusive.checked = false;
-                    }
-                }
-            });
-        });
-
-        // Handle risk assessment questions
-        document.querySelectorAll('input[type="radio"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const questionGroup = this.closest('.question-group');
-                if (questionGroup) {
-                    questionGroup.classList.add('answered');
-                }
-            });
-        });
-
-        // Show warning if trying to proceed without answering all questions
-        document.getElementById('saveAndContinue').addEventListener('click', function(e) {
-            const unansweredQuestions = document.querySelectorAll('.question-group:not(.answered)');
-            if (unansweredQuestions.length > 0) {
-                e.preventDefault();
-                alert('נא לענות על כל השאלות לפני המשך');
-                unansweredQuestions[0].scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-
-        // Save answers to localStorage when changed
-        document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
-            input.addEventListener('change', function() {
-                const formData = new FormData(document.querySelector('form'));
-                const data = Object.fromEntries(formData);
-                localStorage.setItem('riskAssessment', JSON.stringify(data));
-            });
-        });
-
-        // Load saved answers on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedData = localStorage.getItem('riskAssessment');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                Object.entries(data).forEach(([name, value]) => {
-                    const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
-                    if (input) {
-                        input.checked = true;
-                        const questionGroup = input.closest('.question-group');
-                        if (questionGroup) {
-                            questionGroup.classList.add('answered');
-                        }
-                    }
-                });
-            }
-        });
-    </script>
 </body>
 </html>
