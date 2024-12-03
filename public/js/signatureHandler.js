@@ -1,13 +1,20 @@
-// public/js/signatureHandler.js
-
 class SignatureHandler {
     constructor() {
-        // לא לאתחל בסקשן 1
-        if (window.location.pathname.includes('section1')) return;
-        
         this.signaturePad = null;
         this.isDrawing = false;
-        this.initialize();
+        
+        // Check if we should initialize signature pad
+        if (this.shouldInitializeSignature()) {
+            this.initialize();
+        }
+    }
+
+    shouldInitializeSignature() {
+        // Only initialize for sections 2, 3, and 4
+        const currentSection = window.location.pathname;
+        return currentSection.includes('section2') || 
+               currentSection.includes('section3') || 
+               currentSection.includes('section4');
     }
 
     initialize() {
@@ -21,15 +28,14 @@ class SignatureHandler {
             penColor: 'rgb(0, 0, 0)'
         });
 
-        // רק הגדרת גודל הקנבס
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
-
-        // הגדרת כפתורים
         this.setupButtons();
     }
 
     resizeCanvas() {
+        if (!this.signaturePad) return;
+        
         const canvas = document.getElementById('signatureCanvas');
         if (!canvas) return;
 
@@ -42,23 +48,23 @@ class SignatureHandler {
     setupButtons() {
         const clearButton = document.querySelector('[data-clear-signature]');
         const copyButton = document.querySelector('[data-copy-signature]');
+        const saveButton = document.querySelector('[data-save-signature]');
 
         if (clearButton) {
             clearButton.addEventListener('click', () => this.clearSignature());
         }
-
         if (copyButton) {
             copyButton.addEventListener('click', () => this.copyPreviousSignature());
         }
+        if (saveButton) {
+            saveButton.addEventListener('click', () => this.saveCurrentSignature());
+        }
 
-        // אירוע שמירה רק בסיום חתימה
         if (this.signaturePad) {
             this.signaturePad.onEnd = () => {
                 if (!this.signaturePad.isEmpty()) {
                     const signatureData = this.signaturePad.toDataURL();
                     this.updateSignatureInput(signatureData);
-                    // שמירה בזיכרון רק כשלוחצים על כפתור שמירה
-                    // localStorage.setItem('lastSignature', signatureData);
                 }
             };
         }
@@ -71,9 +77,17 @@ class SignatureHandler {
         }
     }
 
+    saveCurrentSignature() {
+        if (this.signaturePad && !this.signaturePad.isEmpty()) {
+            const signatureData = this.signaturePad.toDataURL();
+            localStorage.setItem('lastSignature', signatureData);
+            this.updateSignatureInput(signatureData);
+        }
+    }
+
     copyPreviousSignature() {
         const previousSignature = localStorage.getItem('lastSignature');
-        if (previousSignature) {
+        if (previousSignature && this.signaturePad) {
             this.signaturePad.fromDataURL(previousSignature);
             this.updateSignatureInput(previousSignature);
         } else {
@@ -89,6 +103,7 @@ class SignatureHandler {
     }
 }
 
+// Initialize the handler only after DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.signatureHandler = new SignatureHandler();
 });
