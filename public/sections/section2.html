@@ -57,8 +57,14 @@
             <div class="grid-2">
                 <div class="input-group">
                     <label>סכום מתוכנן להשקעה במוצרים מובנים</label>
-                    <input type="number" name="investmentAmount" required min="0" placeholder="הכנס סכום">
-                    <div class="input-hint">יש להזין סכום בש"ח ללא נקודה עשרונית</div>
+                    <input type="text" 
+                           name="investmentAmount" 
+                           required 
+                           inputmode="numeric" 
+                           pattern="[0-9]*"
+                           placeholder="הכנס סכום"
+                           data-type="currency">
+                    <div class="input-hint">יש להזין סכום מינימלי של 50,000 ש"ח ללא נקודה עשרונית</div>
                 </div>
                 <div class="input-group">
                     <label>בנק</label>
@@ -173,6 +179,7 @@
             </div>
         </form>
     </main>
+
     <!-- Navigation -->
     <footer class="form-navigation">
         <div class="container">
@@ -180,9 +187,11 @@
             <button type="button" id="saveAndContinue" class="btn-next">המשך לשלב הבא</button>
         </div>
     </footer>
+
     <!-- Scripts -->
     <script src="/js/signature_pad.umd.min.js"></script>
     <script src="/js/signatureHandler.js"></script>
+    <script src="/js/currency-formatter.js"></script>
     <script src="/js/validation.js"></script>
     <script src="/js/storage.js"></script>
     <script src="/js/navigation.js"></script>
