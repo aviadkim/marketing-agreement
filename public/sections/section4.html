@@ -185,51 +185,54 @@
     <script src="/js/navigation.js"></script>
     <script src="/js/googleSheetsSubmit.js"></script>
     <script>
-        // Enable/disable submit button based on form validity
-        document.querySelector('form').addEventListener('change', function() {
-            const form = this;
-            const submitButton = document.getElementById('finalSubmit');
-            const signaturePad = window.signatureHandler;
-            
-            const isValid = form.checkValidity() && 
-                           document.querySelector('input[name="finalConfirmation"]').checked &&
-                           (signaturePad && !signaturePad.isEmpty());
-            
-            submitButton.disabled = !isValid;
-        });
+    // Enable/disable submit button based on form validity
+    document.querySelector('form').addEventListener('change', function() {
+        const form = this;
+        const submitButton = document.getElementById('finalSubmit');
+        const signaturePad = window.signatureHandler;
+        
+        const isValid = form.checkValidity() && 
+                       document.querySelector('input[name="finalConfirmation"]').checked &&
+                       document.querySelectorAll('input[type="checkbox"]:checked').length >= 3 &&
+                       (signaturePad && !signaturePad.isEmpty());
+        
+        submitButton.disabled = !isValid;
+    });
 
-        // Handle final form submission
-        document.getElementById('finalSubmit').addEventListener('click', async function(e) {
-   e.preventDefault();
-   const form = document.querySelector('form');
-   const submitButton = this;
-   const buttonText = "סיים והגש טופס";
-   
-   if (!form.checkValidity()) {
-       form.reportValidity();
-       return;
-   }
-
-   // Disable button and show loading
-   submitButton.disabled = true;
-   submitButton.innerHTML = '<span class="spinner"></span>';
-
-   try {
-       const formData = new FormData(form);
-       const success = await submitFormToGoogleSheets(formData);
-
-       if (success) {
-           localStorage.removeItem('formData');
-           localStorage.removeItem('lastSignature');
-           window.location.href = '/sections/preview.html';
-       } else {
-           throw new Error('Failed to submit form');
+    // Handle final form submission
+    document.getElementById('finalSubmit').addEventListener('click', async function(e) {
+       e.preventDefault();
+       const form = document.querySelector('form');
+       const submitButton = this;
+       const buttonText = "סיים והגש טופס";
+       
+       if (!form.checkValidity()) {
+           form.reportValidity();
+           return;
        }
-   } catch (error) {
-       alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
-       console.error('Submission error:', error);
-       // Re-enable button and restore text
-       submitButton.disabled = false; 
-       submitButton.innerHTML = buttonText;
-   }
-});
+
+       // Disable button and show loading
+       submitButton.disabled = true;
+       submitButton.innerHTML = '<span class="spinner"></span>';
+
+       try {
+           const formData = new FormData(form);
+           const success = await submitFormToGoogleSheets();
+
+           if (success) {
+               localStorage.removeItem('formData');
+               localStorage.removeItem('lastSignature');
+               window.location.href = '/sections/preview.html';
+           } else {
+               throw new Error('Failed to submit form');
+           }
+       } catch (error) {
+           alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
+           console.error('Submission error:', error);
+           submitButton.disabled = false;
+           submitButton.innerHTML = buttonText;
+       }
+    });
+</script>
+</body>
+</html>
