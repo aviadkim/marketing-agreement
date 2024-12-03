@@ -10,19 +10,20 @@ class SignatureHandler {
         this.signaturePad = null;
         this.isDrawing = false;
         this.initialize();
+        this.loadSavedSignature(); // Load saved signature
     }
 
     initialize() {
         const canvas = document.getElementById('signatureCanvas');
         if (!canvas) return;
-
+        
         this.signaturePad = new SignaturePad(canvas, {
             minWidth: 0.5,
             maxWidth: 2.5,
             backgroundColor: 'rgb(255, 255, 255)',
             penColor: 'rgb(0, 0, 0)'
         });
-
+        
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
         this.setupButtons();
@@ -38,12 +39,18 @@ class SignatureHandler {
         canvas.width = canvas.offsetWidth * ratio;
         canvas.height = 200 * ratio;
         canvas.getContext('2d').scale(ratio, ratio);
+        
+        // Restore signature after resize if exists
+        const savedSignature = localStorage.getItem('lastSignature');
+        if (savedSignature) {
+            this.signaturePad.fromDataURL(savedSignature);
+        }
     }
 
     setupButtons() {
         const clearButton = document.querySelector('[data-clear-signature]');
         const copyButton = document.querySelector('[data-copy-signature]');
-
+        
         if (clearButton) {
             clearButton.addEventListener('click', () => this.clearSignature());
         }
@@ -55,15 +62,29 @@ class SignatureHandler {
             this.signaturePad.onEnd = () => {
                 if (!this.signaturePad.isEmpty()) {
                     const signatureData = this.signaturePad.toDataURL();
-                    this.updateSignatureInput(signatureData);
+                    this.saveSignature(signatureData);
                 }
             };
+        }
+    }
+
+    saveSignature(signatureData) {
+        localStorage.setItem('lastSignature', signatureData);
+        this.updateSignatureInput(signatureData);
+    }
+
+    loadSavedSignature() {
+        const savedSignature = localStorage.getItem('lastSignature');
+        if (savedSignature && this.signaturePad) {
+            this.signaturePad.fromDataURL(savedSignature);
+            this.updateSignatureInput(savedSignature);
         }
     }
 
     clearSignature() {
         if (this.signaturePad) {
             this.signaturePad.clear();
+            localStorage.removeItem('lastSignature');
             this.updateSignatureInput('');
         }
     }
@@ -83,6 +104,10 @@ class SignatureHandler {
         if (input) {
             input.value = value;
         }
+    }
+
+    isEmpty() {
+        return this.signaturePad ? this.signaturePad.isEmpty() : true;
     }
 }
 
