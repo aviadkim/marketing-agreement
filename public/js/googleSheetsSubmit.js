@@ -1,53 +1,65 @@
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOmHCbWzHu3mgRarwVPeJGI1jHhYHlRLVq2tTMEG8/dev';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2Cu2YDQwHz5acvMFx7GzN9ht2BiuQkRI459f7_75y96Hh2BAUMimYl3e2XYEr_uhh/exec';
 
-async function submitFormToGoogleSheets(formData) {
+async function processFormData() {
+    const allData = {};
+    for (let i = 1; i <= 4; i++) {
+        const sectionData = localStorage.getItem(`section${i}Data`);
+        if (sectionData) {
+            Object.assign(allData, JSON.parse(sectionData));
+        }
+    }
+    return allData;
+}
+
+async function submitFormToGoogleSheets() {
     try {
-        // Capture form screenshot
-        const formElement = document.querySelector('.form-content');
-        const screenshot = await html2canvas(formElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-        });
-
-        const data = {
-            firstName: localStorage.getItem('firstName'),
-            lastName: localStorage.getItem('lastName'),
-            idNumber: localStorage.getItem('idNumber'),
-            email: localStorage.getItem('email'),
-            phone: localStorage.getItem('phone'),
-            investmentAmount: localStorage.getItem('investmentAmount'),
-            bank: localStorage.getItem('bank'),
-            currency: localStorage.getItem('currency'),
-            purpose: localStorage.getItem('purpose'),
-            timeline: localStorage.getItem('timeline'),
-            marketExperience: localStorage.getItem('marketExperience'),
-            riskTolerance: localStorage.getItem('riskTolerance'),
-            lossResponse: localStorage.getItem('lossResponse'),
-            investmentKnowledge: localStorage.getItem('investmentKnowledge'),
-            investmentRestrictions: localStorage.getItem('investmentRestrictions'),
-            riskAcknowledgement: formData.get('riskAcknowledgement') === 'on',
-            independentDecision: formData.get('independentDecision') === 'on',
-            updateCommitment: formData.get('updateCommitment') === 'on',
-            signature: document.getElementById('signatureData').value,
-            formScreenshot: screenshot.toDataURL('image/png')
-        };
-
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
+        const formData = await processFormData();
+        
+        const response = await fetch('/api/submit', {
             method: 'POST',
-            mode: 'no-cors',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(formData)
         });
 
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'שגיאה בשליחת הנתונים');
+        }
+
+        // Clear local storage
+        for (let i = 1; i <= 4; i++) {
+            localStorage.removeItem(`section${i}Data`);
+        }
+        localStorage.removeItem('lastSignature');
+        
+        window.location.href = '/sections/preview.html';
         return true;
+
     } catch (error) {
-        console.error('Error:', error);
-        throw error;
+        console.error('Submission error:', error);
+        showMessage(error.message || 'שגיאה בשליחת הטופס', 'error');
+        return false;
     }
 }
 
-window.submitFormToGoogleSheets = submitFormToGoogleSheets;
+function showMessage(message, type = 'error') {
+    const div = document.createElement('div');
+    div.className = `message ${type}`;
+    div.textContent = message;
+    div.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 1000;
+        color: white;
+        background: ${type === 'success' ? '#4CAF50' : '#dc3545'};
+        animation: fadeIn 0.3s;
+    `;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+}
