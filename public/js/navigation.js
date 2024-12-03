@@ -1,3 +1,4 @@
+// Get current section number from URL
 let currentSection = parseInt(window.location.pathname.match(/section(\d+)/)?.[1] || 1);
 let formData = {};
 
@@ -17,18 +18,21 @@ function loadSavedData() {
 // Save form data to localStorage
 function saveFormData(form) {
     const data = new FormData(form);
-    let savedData = {};
+    const savedData = {};
+    
+    // Save all form fields
     data.forEach((value, key) => {
         savedData[key] = value;
     });
-
-    // Add signature if exists
-    const signatureData = document.getElementById('signatureData')?.value;
-    if (signatureData) {
-        savedData.signature = signatureData;
-        localStorage.setItem('lastSignature', signatureData);
+    
+    // Save signature if exists
+    if (document.getElementById('signatureData')) {
+        savedData.signature = document.getElementById('signatureData').value;
+        if (savedData.signature) {
+            localStorage.setItem('lastSignature', savedData.signature);
+        }
     }
-
+    
     localStorage.setItem('formData', JSON.stringify(savedData));
     showSaveMessage();
 }
@@ -38,6 +42,7 @@ function populateFormFields() {
     const form = document.querySelector('form');
     if (!form || !formData) return;
 
+    // For each saved field
     Object.entries(formData).forEach(([key, value]) => {
         const field = form.elements[key];
         if (!field) return;
@@ -47,6 +52,8 @@ function populateFormFields() {
         } else if (field.type === 'radio') {
             const radio = form.querySelector(`input[name="${key}"][value="${value}"]`);
             if (radio) radio.checked = true;
+        } else if (field.type === 'select-one' || field.type === 'select-multiple') {
+            if (value) field.value = value;
         } else {
             field.value = value;
         }
@@ -54,9 +61,11 @@ function populateFormFields() {
 
     // Load signature if exists
     const signatureData = localStorage.getItem('lastSignature');
-    if (signatureData && window.signatureHandler) {
-        window.signatureHandler.signaturePad?.fromDataURL(signatureData);
-        document.getElementById('signatureData').value = signatureData;
+    if (signatureData && window.signatureHandler?.signaturePad) {
+        window.signatureHandler.signaturePad.fromDataURL(signatureData);
+        if (document.getElementById('signatureData')) {
+            document.getElementById('signatureData').value = signatureData;
+        }
     }
 }
 
@@ -80,7 +89,60 @@ function showSaveMessage() {
     setTimeout(() => message.remove(), 2000);
 }
 
-// Validate and submit form
+// Navigate to next section
+function navigateNext() {
+    const form = document.querySelector('form');
+    if (!form) return;
+
+    if (form.checkValidity()) {
+        saveFormData(form);
+        window.location.href = `/sections/section${currentSection + 1}.html`;
+    } else {
+        form.reportValidity();
+    }
+}
+
+// Navigate to previous section
+function navigateBack() {
+    if (currentSection > 1) {
+        saveFormData(document.querySelector('form'));
+        window.location.href = `/sections/section${currentSection - 1}.html`;
+    }
+}
+
+// Initialize event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Load saved data
+    loadSavedData();
+
+    // Auto-save on form changes
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('change', function() {
+            saveFormData(this);
+        });
+    }
+
+    // Back button
+    const backButton = document.getElementById('btnBack');
+    if (backButton) {
+        backButton.addEventListener('click', navigateBack);
+    }
+
+    // Next button (for sections 1-3)
+    const nextButton = document.getElementById('saveAndContinue');
+    if (nextButton) {
+        nextButton.addEventListener('click', navigateNext);
+    }
+
+    // Submit button (for section 4)
+    const submitButton = document.getElementById('finalSubmit');
+    if (submitButton) {
+        submitButton.addEventListener('click', submitFinalForm);
+    }
+});
+
+// Submit final form
 async function submitFinalForm(e) {
     e.preventDefault();
     const form = document.querySelector('form');
@@ -90,10 +152,9 @@ async function submitFinalForm(e) {
         const data = Object.fromEntries(formData);
 
         // Add signature
-        data.signature = document.getElementById('signatureData')?.value;
-
-        // Debug log
-        console.log('Submitting data:', data);
+        if (document.getElementById('signatureData')) {
+            data.signature = document.getElementById('signatureData').value;
+        }
 
         const response = await fetch('/api/submit', {
             method: 'POST',
@@ -121,34 +182,3 @@ async function submitFinalForm(e) {
         alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
     }
 }
-
-// Add event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    loadSavedData();
-
-    // Auto-save on form changes
-    document.querySelector('form')?.addEventListener('change', function() {
-        saveFormData(this);
-    });
-
-    // Submit button
-    document.getElementById('finalSubmit')?.addEventListener('click', submitFinalForm);
-
-    // Back button
-    document.getElementById('btnBack')?.addEventListener('click', function() {
-        if (currentSection > 1) {
-            window.location.href = `/sections/section${currentSection - 1}.html`;
-        }
-    });
-
-    // Next button (non-final sections)
-    document.getElementById('saveAndContinue')?.addEventListener('click', function() {
-        const form = document.querySelector('form');
-        if (form.checkValidity()) {
-            saveFormData(form);
-            window.location.href = `/sections/section${currentSection + 1}.html`;
-        } else {
-            form.reportValidity();
-        }
-    });
-});
