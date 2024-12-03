@@ -1,20 +1,15 @@
 class SignatureHandler {
     constructor() {
+        // Check if we're on the first section
+        const isSection1 = window.location.pathname.includes('section1');
+        if (isSection1) {
+            console.log('Section 1 - Skip signature initialization');
+            return;
+        }
+
         this.signaturePad = null;
         this.isDrawing = false;
-        
-        // Check if we should initialize signature pad
-        if (this.shouldInitializeSignature()) {
-            this.initialize();
-        }
-    }
-
-    shouldInitializeSignature() {
-        // Only initialize for sections 2, 3, and 4
-        const currentSection = window.location.pathname;
-        return currentSection.includes('section2') || 
-               currentSection.includes('section3') || 
-               currentSection.includes('section4');
+        this.initialize();
     }
 
     initialize() {
@@ -48,16 +43,12 @@ class SignatureHandler {
     setupButtons() {
         const clearButton = document.querySelector('[data-clear-signature]');
         const copyButton = document.querySelector('[data-copy-signature]');
-        const saveButton = document.querySelector('[data-save-signature]');
 
         if (clearButton) {
             clearButton.addEventListener('click', () => this.clearSignature());
         }
         if (copyButton) {
             copyButton.addEventListener('click', () => this.copyPreviousSignature());
-        }
-        if (saveButton) {
-            saveButton.addEventListener('click', () => this.saveCurrentSignature());
         }
 
         if (this.signaturePad) {
@@ -74,14 +65,6 @@ class SignatureHandler {
         if (this.signaturePad) {
             this.signaturePad.clear();
             this.updateSignatureInput('');
-        }
-    }
-
-    saveCurrentSignature() {
-        if (this.signaturePad && !this.signaturePad.isEmpty()) {
-            const signatureData = this.signaturePad.toDataURL();
-            localStorage.setItem('lastSignature', signatureData);
-            this.updateSignatureInput(signatureData);
         }
     }
 
@@ -103,7 +86,9 @@ class SignatureHandler {
     }
 }
 
-// Initialize the handler only after DOM is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.signatureHandler = new SignatureHandler();
-});
+// Initialize only if not in section1
+if (!window.location.pathname.includes('section1')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.signatureHandler = new SignatureHandler();
+    });
+}
