@@ -186,9 +186,11 @@
         document.querySelector('form').addEventListener('change', function() {
             const form = this;
             const submitButton = document.getElementById('finalSubmit');
+            const signaturePad = window.signatureHandler;
+            
             const isValid = form.checkValidity() && 
                            document.querySelector('input[name="finalConfirmation"]').checked &&
-                           !document.querySelector('#signatureCanvas').isEmpty();
+                           (signaturePad && !signaturePad.isEmpty());
             
             submitButton.disabled = !isValid;
         });
@@ -205,9 +207,14 @@
 
             try {
                 const formData = new FormData(form);
+                const data = Object.fromEntries(formData);
+
                 const response = await fetch('/api/submit', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
 
                 if (response.ok) {
@@ -215,10 +222,11 @@
                     localStorage.removeItem('formData');
                     localStorage.removeItem('lastSignature');
                     
-                    // Redirect to thank you page
+                    // Redirect to preview page
                     window.location.href = '/sections/preview.html';
                 } else {
-                    throw new Error('Failed to submit form');
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to submit form');
                 }
             } catch (error) {
                 alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
