@@ -175,12 +175,15 @@
             <button type="button" id="finalSubmit" class="btn-next" disabled>סיים והגש טופס</button>
         </div>
     </footer>
+    <!-- בסוף הקובץ, לפני </body>, החלף את קטע הסקריפט הקיים בקוד הבא -->
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="/js/signatureHandler.js"></script>
     <script src="/js/accordion.js"></script>
     <script src="/js/storage.js"></script>
     <script src="/js/navigation.js"></script>
+    <script src="/js/googleSheetsSubmit.js"></script>
     <script>
         // Enable/disable submit button based on form validity
         document.querySelector('form').addEventListener('change', function() {
@@ -207,17 +210,9 @@
 
             try {
                 const formData = new FormData(form);
-                const data = Object.fromEntries(formData);
+                const success = await submitFormToGoogleSheets(formData);
 
-                const response = await fetch('/api/submit', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                if (response.ok) {
+                if (success) {
                     // Clear stored data
                     localStorage.removeItem('formData');
                     localStorage.removeItem('lastSignature');
@@ -225,8 +220,7 @@
                     // Redirect to preview page
                     window.location.href = '/sections/preview.html';
                 } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to submit form');
+                    throw new Error('Failed to submit form');
                 }
             } catch (error) {
                 alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
