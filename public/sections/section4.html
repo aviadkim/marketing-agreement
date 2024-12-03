@@ -49,28 +49,6 @@
 
     <!-- Form Content -->
     <main class="form-content">
-        <div class="declarations-header">
-            <h2>הצהרות והסכמות</h2>
-            <p class="legal-notice">
-                נא לקרוא בעיון את ההצהרות הבאות. פתיחה וקריאה של כל נושא תיחשב כהסכמה לתוכנו.
-                יש לקרוא את כל ההצהרות על מנת להמשיך לשלב החתימה.
-            </p>
-            <div class="declarations-progress">
-                <div class="progress-marker" data-declaration="declaration1">
-                    <div class="marker-circle"></div>
-                    <div class="marker-label">הצהרת סיכונים</div>
-                </div>
-                <div class="progress-marker" data-declaration="declaration2">
-                    <div class="marker-circle"></div>
-                    <div class="marker-label">החלטה עצמאית</div>
-                </div>
-                <div class="progress-marker" data-declaration="declaration3">
-                    <div class="marker-circle"></div>
-                    <div class="marker-label">עדכון פרטים</div>
-                </div>
-            </div>
-        </div>
-
         <form id="section4-form" class="form-section">
             <!-- Declarations Accordion -->
             <div class="accordion-container">
@@ -188,60 +166,103 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Enable/disable submit button based on form validity
-            function updateSubmitButton() {
-                const form = document.querySelector('form');
-                const submitButton = document.getElementById('finalSubmit');
-                const signaturePad = window.signatureHandler?.signaturePad;
-                
+            const form = document.querySelector('#section4-form');
+            const submitButton = document.getElementById('finalSubmit');
+
+            // Function to check form validity
+            function checkFormValidity() {
                 const allCheckboxesChecked = 
-                    document.querySelector('input[name="riskAcknowledgement"]')?.checked &&
-                    document.querySelector('input[name="independentDecision"]')?.checked &&
-                    document.querySelector('input[name="updateCommitment"]')?.checked &&
-                    document.querySelector('input[name="finalConfirmation"]')?.checked;
-                
-                const hasSignature = signaturePad && !signaturePad.isEmpty();
-                
+                    form.querySelector('input[name="riskAcknowledgement"]').checked &&
+                    form.querySelector('input[name="independentDecision"]').checked &&
+                    form.querySelector('input[name="updateCommitment"]').checked &&
+                    form.querySelector('input[name="finalConfirmation"]').checked;
+
+                const hasSignature = window.signatureHandler && 
+                                   !window.signatureHandler.signaturePad.isEmpty();
+
                 submitButton.disabled = !(allCheckboxesChecked && hasSignature);
             }
 
-            // Monitor form changes
-            document.querySelector('form').addEventListener('change', updateSubmitButton);
+            // Add event listeners for form changes
+            form.addEventListener('change', checkFormValidity);
+
+            // Monitor signature changes
             if (window.signatureHandler) {
-                window.signatureHandler.signaturePad.addEventListener('endStroke', updateSubmitButton);
+                window.signatureHandler.signaturePad.on('endStroke', checkFormValidity);
             }
 
-            // Handle final form submission
-            document.getElementById('finalSubmit').addEventListener('click', async function(e) {
+            // Handle form submission
+            submitButton.addEventListener('click', async function(e) {
                 e.preventDefault();
-                const submitButton = this;
-                const buttonText = submitButton.innerHTML;
-
-                try {
-                    // Disable button and show loading
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = '<span class="spinner"></span>';
-
-                    const success = await window.submitFormToGoogleSheets();
+                
+                if (form.checkValidity() && window.signatureHandler && 
+                    !window.signatureHandler.signaturePad.isEmpty()) {
                     
-                    if (success) {
-                        window.location.href = '/sections/preview.html';
-                    } else {
-                        throw new Error('Failed to submit form');
+                    const buttonText = this.innerHTML;
+                    this.disabled = true;
+                    this.innerHTML = '<span class="spinner"></span>';
+
+                    try {
+                        // Save current form data
+                        const formData = new FormData(form);
+                        const dataToSave = {};
+                        formData.forEach((value, key) => {
+                            dataToSave[key] = value;
+                        });
+
+                        // Add signature
+                        const signatureData = document.getElementById('signatureData').value;
+                        if (signatureData) {
+                            dataToSave.signature = signatureData;
+                        }
+
+                        // Save to localStorage
+                        localStorage.setItem('section4Data', JSON.stringify(dataToSave));
+
+                        // Submit to Google Sheets
+                        const success = await window.submitFormToGoogleSheets();
+
+                        if (success) {
+                            // Clear all stored data
+                            localStorage.clear();
+                            window.location.href = '/sections/preview.html';
+                        } else {
+                            throw new Error('Failed to submit form');
+                        }
+                    } catch (error) {
+                        console.error('Submission error:', error);
+                        alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
+                        this.disabled = false;
+                        this.innerHTML = buttonText;
                     }
-                } catch (error) {
-                    console.error('Submission error:', error);
-                    alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = buttonText;
+                } else {
+                    if (!window.signatureHandler.signaturePad.isEmpty()) {
+                        alert('נא למלא את כל השדות הנדרשים');
+                    } else {
+                        alert('נא להוסיף חתימה');
+                    }
                 }
             });
 
-            // Back button handler
+            // Handle back button
             document.getElementById('btnBack').addEventListener('click', function() {
                 window.location.href = '/sections/section3.html';
             });
+
+            // Load saved data
+            const savedData = localStorage.getItem('section4Data');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                Object.entries(data).forEach(([key, value]) => {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input && input.type === 'checkbox') {
+                        input.checked = value === 'on';
+                    }
+                });
+            }
+
+            // Initial validity check
+            checkFormValidity();
         });
     </script>
 </body>
