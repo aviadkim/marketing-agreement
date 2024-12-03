@@ -28,6 +28,7 @@ function getErrorMessage(fieldName) {
         'email': 'כתובת דואר אלקטרוני לא תקינה',
         'phone': 'מספר טלפון לא תקין (חייב להתחיל ב-05)',
         'investmentAmount': 'סכום ההשקעה המינימלי הוא 100,000 ש"ח',
+        'investmentAmountTooLow': 'סכום ההשקעה חייב להיות לפחות 100,000 ש"ח',
         'currency': 'נא לבחור מטבע',
         'timeline': 'נא לבחור טווח השקעה',
         'purpose': 'נא לבחור לפחות מטרת השקעה אחת',
@@ -88,7 +89,16 @@ function validateForm() {
                         break;
                     case 'investmentAmount':
                         const cleanAmount = getCleanNumber(field.value);
-                        fieldIsValid = !isNaN(cleanAmount) && cleanAmount >= 50000;
+                        fieldIsValid = !isNaN(cleanAmount);
+                        
+                        // Check minimum amount and show specific error
+                        if (fieldIsValid && cleanAmount < 100000) {
+                            fieldIsValid = false;
+                            showError(getErrorMessage('investmentAmountTooLow'));
+                            field.classList.add('error');
+                            if (!firstError) firstError = field;
+                            return; // Skip the general error message
+                        }
                         break;
                 }
             }
