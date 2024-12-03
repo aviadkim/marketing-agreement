@@ -1,257 +1,199 @@
-// Constants and state
-let currentSection = parseInt(window.location.pathname.match(/section(\d+)/)?.[1] || 1);
-let formData = {};
-
-// Debug logging function
-function logDebug(message, data) {
-    console.log(`[DEBUG] ${message}`, data || '');
-}
-
-// Load saved data from localStorage
-function loadSavedData() {
-    const saved = localStorage.getItem('formData');
-    if (saved) {
-        try {
-            formData = JSON.parse(saved);
-            populateFormFields();
-            logDebug('Loaded saved data:', formData);
-        } catch (e) {
-            console.error('Error loading saved data:', e);
-        }
+class Navigation {
+    constructor() {
+        this.currentSection = parseInt(window.location.pathname.match(/section(\d+)/)?.[1] || 1);
+        this.init();
     }
-}
 
-// Save form data to localStorage
-function saveFormData(form) {
-    const data = new FormData(form);
-    const savedData = {};
-    
-    // Save all form fields
-    data.forEach((value, key) => {
-        savedData[key] = value;
-        logDebug(`Saving field ${key}:`, value);
-    });
-    
-    // Save signature if exists
-    if (document.getElementById('signatureData')) {
-        savedData.signature = document.getElementById('signatureData').value;
-        if (savedData.signature) {
-            localStorage.setItem('lastSignature', savedData.signature);
-            logDebug('Saved signature');
-        }
+    init() {
+        this.form = document.querySelector('form');
+        this.setupEventListeners();
+        this.loadSavedData();
+        this.initializeExclusiveCheckboxes();
     }
-    
-    localStorage.setItem('formData', JSON.stringify(savedData));
-    showSaveMessage();
-}
 
-// Validate section 2 specific fields
-function validateSection2() {
-    const form = document.querySelector('#section2-form');
-    if (!form) return true;
+    setupEventListeners() {
+        if (this.form) {
+            this.form.addEventListener('change', () => this.handleFormChange());
+        }
 
-    let isValid = true;
-    const errors = [];
+        const nextButton = document.getElementById('saveAndContinue');
+        if (nextButton) {
+            nextButton.addEventListener('click', () => this.handleNext());
+        }
 
-    // Check investment amount
-    const amountField = form.elements['investmentAmount'];
-    if (amountField) {
-        const amount = parseInt(amountField.value.replace(/[^\d]/g, ''));
-        if (isNaN(amount) || amount < 100000) {
-            isValid = false;
-            errors.push('סכום ההשקעה המינימלי הוא 100,000 ש"ח');
-            amountField.classList.add('error');
+        const backButton = document.getElementById('btnBack');
+        if (backButton) {
+            backButton.addEventListener('click', () => this.handleBack());
         }
     }
 
-    // Check bank selection
-    const bankField = form.elements['bank'];
-    if (bankField && !bankField.value) {
-        isValid = false;
-        errors.push('נא לבחור בנק');
-        bankField.classList.add('error');
+    handleFormChange() {
+        this.saveFormData();
     }
 
-    // Check currency selection
-    const currencyChecked = form.querySelector('input[name="currency"]:checked');
-    if (!currencyChecked) {
-        isValid = false;
-        errors.push('נא לבחור מטבע');
+    initializeExclusiveCheckboxes() {
+        document.querySelectorAll('input[data-exclusive="true"]').forEach(exclusive => {
+            exclusive.addEventListener('change', (e) => this.handleExclusiveCheckbox(e.target));
+        });
+
+        document.querySelectorAll('input[type="checkbox"]:not([data-exclusive="true"])').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => this.handleNonExclusiveCheckbox(e.target));
+        });
     }
 
-    // Check timeline selection
-    const timelineChecked = form.querySelector('input[name="timeline"]:checked');
-    if (!timelineChecked) {
-        isValid = false;
-        errors.push('נא לבחור טווח השקעה');
-    }
-
-    // Check purpose (at least one must be selected)
-    const purposeChecked = form.querySelectorAll('input[name="purpose"]:checked');
-    if (purposeChecked.length === 0) {
-        isValid = false;
-        errors.push('נא לבחור לפחות מטרת השקעה אחת');
-    }
-
-    // Show errors if any
-    if (!isValid) {
-        errors.forEach(error => showError(error));
-        logDebug('Section 2 validation failed:', errors);
-    } else {
-        logDebug('Section 2 validation passed');
-    }
-
-    return isValid;
-}
-
-// Show error message
-function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    errorDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #dc3545;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
-        z-index: 1000;
-        animation: fadeIn 0.3s;
-    `;
-    document.body.appendChild(errorDiv);
-    setTimeout(() => errorDiv.remove(), 3000);
-}
-
-// Show save message
-function showSaveMessage() {
-    const message = document.createElement('div');
-    message.className = 'save-message';
-    message.textContent = 'נשמר בהצלחה';
-    message.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 4px;
-        z-index: 1000;
-        animation: fadeIn 0.3s;
-    `;
-    document.body.appendChild(message);
-    setTimeout(() => message.remove(), 2000);
-}
-
-// Navigate to next section
-function navigateNext() {
-    const form = document.querySelector('form');
-    if (!form) {
-        logDebug('Form not found');
-        return;
-    }
-
-    logDebug('Validating form...');
-    let isValid = true;
-
-    // Section specific validation
-    if (currentSection === 2) {
-        isValid = validateSection2();
-    } else {
-        isValid = form.checkValidity();
-    }
-
-    if (isValid) {
-        logDebug('Form is valid, saving data...');
-        saveFormData(form);
-        logDebug(`Navigating to section ${currentSection + 1}`);
-        window.location.href = `/sections/section${currentSection + 1}.html`;
-    } else {
-        logDebug('Form validation failed');
-        form.reportValidity();
-    }
-}
-
-// Navigate to previous section
-function navigateBack() {
-    if (currentSection > 1) {
-        const form = document.querySelector('form');
-        if (form) {
-            saveFormData(form);
-        }
-        window.location.href = `/sections/section${currentSection - 1}.html`;
-    }
-}
-
-// Populate form fields with saved data
-function populateFormFields() {
-    const form = document.querySelector('form');
-    if (!form || !formData) return;
-
-    Object.entries(formData).forEach(([key, value]) => {
-        const field = form.elements[key];
-        if (!field) return;
-
-        if (field.type === 'checkbox') {
-            field.checked = value === 'on';
-        } else if (field.type === 'radio') {
-            const radio = form.querySelector(`input[name="${key}"][value="${value}"]`);
-            if (radio) radio.checked = true;
-        } else if (field.type === 'select-one' || field.type === 'select-multiple') {
-            if (value) field.value = value;
+    handleExclusiveCheckbox(checkbox) {
+        const name = checkbox.name;
+        const otherCheckboxes = document.querySelectorAll(`input[name="${name}"]:not([data-exclusive="true"])`);
+        
+        if (checkbox.checked) {
+            otherCheckboxes.forEach(cb => {
+                cb.checked = false;
+                cb.disabled = true;
+            });
         } else {
-            field.value = value;
+            otherCheckboxes.forEach(cb => cb.disabled = false);
+        }
+    }
+
+    handleNonExclusiveCheckbox(checkbox) {
+        if (checkbox.checked) {
+            const exclusive = document.querySelector(`input[name="${checkbox.name}"][data-exclusive="true"]`);
+            if (exclusive) {
+                exclusive.checked = false;
+            }
+        }
+    }
+
+    validateForm() {
+        if (!this.form) return false;
+
+        // Check market experience
+        const marketExperience = this.form.querySelector('input[name="marketExperience"]:checked');
+        if (!marketExperience) {
+            this.showError('יש לבחור רמת ידע וניסיון בשוק ההון');
+            return false;
+        }
+
+        // Check risk tolerance
+        const riskTolerance = this.form.querySelector('input[name="riskTolerance"]:checked');
+        if (!riskTolerance) {
+            this.showError('יש לבחור רמת סיכון');
+            return false;
+        }
+
+        // Check loss response
+        const lossResponse = this.form.querySelector('input[name="lossResponse"]:checked');
+        if (!lossResponse) {
+            this.showError('יש לבחור תגובה להפסד');
+            return false;
+        }
+
+        // Check investment knowledge
+        const investmentKnowledge = this.form.querySelector('input[name="investmentKnowledge"]:checked');
+        if (!investmentKnowledge) {
+            this.showError('יש לבחור לפחות סוג השקעה אחד');
+            return false;
+        }
+
+        // Check signature
+        const signature = document.getElementById('signatureData')?.value;
+        if (!signature) {
+            this.showError('נדרשת חתימה דיגיטלית');
+            return false;
+        }
+
+        return true;
+    }
+
+    saveFormData() {
+        if (!this.form) return;
+
+        const formData = new FormData(this.form);
+        const data = {};
+        formData.forEach((value, key) => {
+            if (data[key]) {
+                if (!Array.isArray(data[key])) {
+                    data[key] = [data[key]];
+                }
+                data[key].push(value);
+            } else {
+                data[key] = value;
+            }
+        });
+
+        const signatureData = document.getElementById('signatureData')?.value;
+        if (signatureData) {
+            data.signature = signatureData;
+            localStorage.setItem('lastSignature', signatureData);
+        }
+
+        localStorage.setItem('section3Data', JSON.stringify(data));
+        this.showSuccessMessage('הנתונים נשמרו בהצלחה');
+    }
+
+    loadSavedData() {
+        const savedData = localStorage.getItem('section3Data');
+        if (savedData && this.form) {
+            try {
+                const data = JSON.parse(savedData);
+                Object.entries(data).forEach(([key, value]) => {
+                    if (Array.isArray(value)) {
+                        value.forEach(v => {
+                            const input = this.form.querySelector(`input[name="${key}"][value="${v}"]`);
+                            if (input) input.checked = true;
+                        });
+                    } else {
+                        const input = this.form.querySelector(`input[name="${key}"][value="${value}"]`);
+                        if (input) {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    input.checked = true;
+                } else {
+                    input.value = value;
+                }
+            }
         }
     });
 
-    // Load signature if exists
-    const signatureData = localStorage.getItem('lastSignature');
-    if (signatureData && window.signatureHandler?.signaturePad) {
-        window.signatureHandler.signaturePad.fromDataURL(signatureData);
-        if (document.getElementById('signatureData')) {
-            document.getElementById('signatureData').value = signatureData;
+    if (data.signature && window.signatureHandler) {
+        window.signatureHandler.signaturePad.fromDataURL(data.signature);
+        document.getElementById('signatureData').value = data.signature;
+    }
+} catch (error) {
+    console.error('Error loading saved data:', error);
+}
         }
+    }
+
+    showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        errorDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #dc3545; color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000; animation: fadeIn 0.3s;';
+        document.body.appendChild(errorDiv);
+        setTimeout(() => errorDiv.remove(), 3000);
+    }
+
+    showSuccessMessage(message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'success-message';
+        messageDiv.textContent = message;
+        messageDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000; animation: fadeIn 0.3s;';
+        document.body.appendChild(messageDiv);
+        setTimeout(() => messageDiv.remove(), 2000);
+    }
+
+    handleNext() {
+        if (this.validateForm()) {
+            this.saveFormData();
+            window.location.href = `/sections/section${this.currentSection + 1}.html`;
+        }
+    }
+
+    handleBack() {
+        this.saveFormData();
+        window.location.href = `/sections/section${this.currentSection - 1}.html`;
     }
 }
 
-// Initialize event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    logDebug('Initializing page', `Section ${currentSection}`);
-    
-    // Load saved data
-    loadSavedData();
-
-    // Auto-save on form changes
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('change', function() {
-            logDebug('Form changed, saving...');
-            saveFormData(this);
-        });
-    }
-
-    // Back button
-    const backButton = document.getElementById('btnBack');
-    if (backButton) {
-        backButton.addEventListener('click', function() {
-            logDebug('Back button clicked');
-            navigateBack();
-        });
-    }
-
-    // Next button (for sections 1-3)
-    const nextButton = document.getElementById('saveAndContinue');
-    if (nextButton) {
-        nextButton.addEventListener('click', function() {
-            logDebug('Next button clicked');
-            navigateNext();
-        });
-    }
-
-    // Submit button (for section 4)
-    const submitButton = document.getElementById('finalSubmit');
-    if (submitButton) {
-        submitButton.addEventListener('click', submitFinalForm);
-    }
-});
+// Initialize navigation on page load
+document.addEventListener('DOMContentLoaded', () => new Navigation());
