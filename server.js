@@ -9,8 +9,8 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Google Apps Script URL
-const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL;
+// Google Apps Script URL from environment variable
+const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbz2Cu2YDQwHz5acvMFx7GzN9ht2BiuQkRI459f7_75y96Hh2BAUMimYl3e2XYEr_uhh/exec';
 
 // Redirects
 app.get(['/', '/index.html', '/index'], (req, res) => {
@@ -35,33 +35,74 @@ app.post('/api/submit', async (req, res) => {
     try {
         console.log('Received form submission');
         const formData = req.body;
+        console.log('Form data:', formData);
 
-        // Basic validation
-        if (!formData.firstName || !formData.lastName || !formData.idNumber || !formData.email || !formData.phone) {
-            throw new Error('נא למלא את כל שדות החובה');
+        // Validate all required fields
+        const requiredFields = {
+            firstName: 'שם פרטי',
+            lastName: 'שם משפחה',
+            idNumber: 'תעודת זהות',
+            email: 'אימייל',
+            phone: 'טלפון'
+        };
+
+        for (const [field, label] of Object.entries(requiredFields)) {
+            if (!formData[field]) {
+                console.log(`Missing required field: ${field}`);
+                throw new Error(`נא למלא ${label}`);
+            }
         }
 
-        // Send to Google Apps Script
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
+        // Send to Google Sheets
+        const sheetResponse = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(formData)
+            body: JSON.stringify({
+                // Section 1
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                idNumber: formData.idNumber,
+                email: formData.email,
+                phone: formData.phone,
+
+                // Section 2
+                investmentAmount: formData.investmentAmount,
+                bank: formData.bank,
+                currency: formData.currency,
+                purpose: formData.purpose,
+                timeline: formData.timeline,
+
+                // Section 3
+                marketExperience: formData.marketExperience,
+                riskTolerance: formData.riskTolerance,
+                lossResponse: formData.lossResponse,
+
+                // Section 4
+                riskAcknowledgement: formData.riskAcknowledgement,
+                independentDecision: formData.independentDecision,
+                updateCommitment: formData.updateCommitment,
+
+                // Signature
+                signature: formData.signature,
+
+                // Metadata
+                submissionDate: new Date().toISOString()
+            })
         });
 
-        if (!response.ok) {
+        if (!sheetResponse.ok) {
             throw new Error('Failed to submit to Google Sheets');
         }
 
-        // Log success
         console.log('Form processed successfully');
-        console.log('Email:', formData.email);
-
+        
         res.json({
             success: true,
             message: 'הטופס נשלח בהצלחה'
         });
+
     } catch (error) {
         console.error('Form submission error:', error);
         res.status(500).json({
