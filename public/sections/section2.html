@@ -163,13 +163,16 @@
                     <div class="signature-controls">
                         <button type="button" class="btn-secondary" data-clear-signature>נקה חתימה</button>
                         <button type="button" class="btn-secondary" data-copy-signature>הדבק חתימה קודמת</button>
+                        <button type="button" class="btn-secondary" data-save-signature>שמור חתימה</button>
                     </div>
+                </div>
+                <div class="signature-guide">
+                    <p>נא לחתום בתוך המסגרת המסומנת</p>
                 </div>
                 <input type="hidden" id="signatureData" name="signature" required>
             </div>
         </form>
     </main>
-
     <!-- Navigation -->
     <footer class="form-navigation">
         <div class="container">
@@ -177,9 +180,8 @@
             <button type="button" id="saveAndContinue" class="btn-next">המשך לשלב הבא</button>
         </div>
     </footer>
-
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
+    <script src="/js/signature_pad.umd.min.js"></script>
     <script src="/js/signatureHandler.js"></script>
     <script src="/js/validation.js"></script>
     <script src="/js/storage.js"></script>
