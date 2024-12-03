@@ -67,7 +67,6 @@
                            data-min="100000">
                     <div class="input-hint">יש להזין סכום מינימלי של 100,000 ש"ח ללא נקודה עשרונית</div>
                 </div>
-                
                 <div class="input-group">
                     <label>בנק</label>
                     <select name="bank" required>
@@ -113,7 +112,7 @@
                 <label>ייעוד הכסף (ניתן לבחור יותר מתשובה אחת)</label>
                 <div class="checkbox-options">
                     <label class="checkbox-container">
-                        <input type="checkbox" name="purpose" value="property" required>
+                        <input type="checkbox" name="purpose" value="property">
                         <span class="checkmark"></span>
                         רכישת נכס
                     </label>
@@ -162,6 +161,23 @@
                     </label>
                 </div>
             </div>
+
+            <!-- Signature Section -->
+            <div class="signature-section mt-6">
+                <h3>חתימה דיגיטלית</h3>
+                <div class="signature-container">
+                    <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                    <div class="signature-controls">
+                        <button type="button" class="btn-secondary" data-clear-signature>נקה חתימה</button>
+                        <button type="button" class="btn-secondary" data-copy-signature>הדבק חתימה קודמת</button>
+                        <button type="button" class="btn-secondary" data-save-signature>שמור חתימה</button>
+                    </div>
+                </div>
+                <div class="signature-guide">
+                    <p>נא לחתום בתוך המסגרת המסומנת</p>
+                </div>
+                <input type="hidden" id="signatureData" name="signature" required>
+            </div>
         </form>
     </main>
 
@@ -174,10 +190,12 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="/js/signature_pad.umd.min.js"></script>
+    <script src="/js/signatureHandler.js"></script>
     <script src="/js/currency-formatter.js"></script>
     <script src="/js/validation.js"></script>
     <script src="/js/storage.js"></script>
     <script src="/js/navigation.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </body>
 </html>
