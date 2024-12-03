@@ -189,7 +189,6 @@
             </div>
         </form>
     </main>
-
     <!-- Navigation -->
     <footer class="form-navigation">
         <div class="container">
@@ -204,9 +203,8 @@
     <script src="/js/validation.js"></script>
     <script src="/js/storage.js"></script>
     <script src="/js/navigation.js"></script>
-
     <script>
-        // טיפול בתיבות סימון אקסקלוסיביות
+        // Handle exclusive checkboxes
         document.querySelectorAll('input[data-exclusive="true"]').forEach(exclusive => {
             exclusive.addEventListener('change', function() {
                 const name = this.name;
@@ -224,7 +222,7 @@
             });
         });
 
-        // כשבוחרים אופציה אחרת, לבטל את האקסקלוסיבית
+        // When selecting other options, uncheck the exclusive one
         document.querySelectorAll('input[type="checkbox"]:not([data-exclusive="true"])').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 if (this.checked) {
@@ -234,6 +232,53 @@
                     }
                 }
             });
+        });
+
+        // Handle risk assessment questions
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const questionGroup = this.closest('.question-group');
+                if (questionGroup) {
+                    questionGroup.classList.add('answered');
+                }
+            });
+        });
+
+        // Show warning if trying to proceed without answering all questions
+        document.getElementById('saveAndContinue').addEventListener('click', function(e) {
+            const unansweredQuestions = document.querySelectorAll('.question-group:not(.answered)');
+            if (unansweredQuestions.length > 0) {
+                e.preventDefault();
+                alert('נא לענות על כל השאלות לפני המשך');
+                unansweredQuestions[0].scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        // Save answers to localStorage when changed
+        document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
+            input.addEventListener('change', function() {
+                const formData = new FormData(document.querySelector('form'));
+                const data = Object.fromEntries(formData);
+                localStorage.setItem('riskAssessment', JSON.stringify(data));
+            });
+        });
+
+        // Load saved answers on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedData = localStorage.getItem('riskAssessment');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                Object.entries(data).forEach(([name, value]) => {
+                    const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
+                    if (input) {
+                        input.checked = true;
+                        const questionGroup = input.closest('.question-group');
+                        if (questionGroup) {
+                            questionGroup.classList.add('answered');
+                        }
+                    }
+                });
+            }
         });
     </script>
 </body>
