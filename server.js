@@ -53,47 +53,69 @@ app.post('/api/submit', async (req, res) => {
             }
         }
 
+        // Process arrays before sending
+        const processedFormData = {
+            // Section 1
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            idNumber: formData.idNumber,
+            email: formData.email,
+            phone: formData.phone,
+
+            // Section 2
+            investmentAmount: formData.investmentAmount,
+            bank: formData.bank,
+            currency: formData.currency,
+            purpose: Array.isArray(formData.purpose) ? formData.purpose.join(', ') : formData.purpose,
+            purposeOther: formData.purposeOther,
+            timeline: formData.timeline,
+
+            // Section 3
+            marketExperience: Array.isArray(formData.marketExperience) ? 
+                formData.marketExperience.join(', ') : formData.marketExperience,
+            riskTolerance: formData.riskTolerance,
+            lossResponse: formData.lossResponse,
+            investmentKnowledge: Array.isArray(formData.investmentKnowledge) ? 
+                formData.investmentKnowledge.join(', ') : formData.investmentKnowledge,
+            investmentRestrictions: formData.investmentRestrictions,
+
+            // Section 4
+            riskAcknowledgement: formData.riskAcknowledgement === 'on' ? 'כן' : 'לא',
+            independentDecision: formData.independentDecision === 'on' ? 'כן' : 'לא',
+            updateCommitment: formData.updateCommitment === 'on' ? 'כן' : 'לא',
+
+            // Signature and Screenshot
+            signature: formData.signature,
+            formScreenshot: formData.formScreenshot,
+
+            // Metadata
+            submissionDate: new Date().toISOString()
+        };
+
+        console.log('Processed data:', processedFormData);
+
         // Send to Google Sheets
         const sheetResponse = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                // Section 1
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                idNumber: formData.idNumber,
-                email: formData.email,
-                phone: formData.phone,
-
-                // Section 2
-                investmentAmount: formData.investmentAmount,
-                bank: formData.bank,
-                currency: formData.currency,
-                purpose: formData.purpose,
-                timeline: formData.timeline,
-
-                // Section 3
-                marketExperience: formData.marketExperience,
-                riskTolerance: formData.riskTolerance,
-                lossResponse: formData.lossResponse,
-
-                // Section 4
-                riskAcknowledgement: formData.riskAcknowledgement,
-                independentDecision: formData.independentDecision,
-                updateCommitment: formData.updateCommitment,
-
-                // Signature
-                signature: formData.signature,
-
-                // Metadata
-                submissionDate: new Date().toISOString()
-            })
+            body: JSON.stringify(processedFormData)
         });
 
-        if (!sheetResponse.ok) {
-            throw new Error('Failed to submit to Google Sheets');
+        const responseText = await sheetResponse.text();
+        console.log('Google Sheets response:', responseText);
+
+        let responseData;
+        try {
+            responseData = JSON.parse(responseText);
+        } catch (e) {
+            console.error('Failed to parse Google Sheets response:', e);
+            throw new Error('Invalid response from Google Sheets');
+        }
+
+        if (!sheetResponse.ok || responseData.result === 'error') {
+            throw new Error(responseData.error || 'Failed to submit to Google Sheets');
         }
 
         console.log('Form processed successfully');
@@ -128,6 +150,7 @@ const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log('Environment:', process.env.NODE_ENV);
+    console.log('Google Script URL:', GOOGLE_SCRIPT_URL);
 });
 
 // Graceful shutdown
