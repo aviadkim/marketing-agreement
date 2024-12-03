@@ -1,6 +1,5 @@
 // Get current section number from URL
 let currentSection = parseInt(window.location.pathname.match(/section(\d+)/)?.[1] || 1);
-let formData = {};
 
 // Debug logging
 function logDebug(message, data) {
@@ -37,8 +36,7 @@ function populateFormFields(data) {
                     if (input) input.checked = true;
                 });
             } else {
-                const input = form.querySelector(`input[name="${key}"][value="${value}"]`);
-                if (input) input.checked = true;
+                field.checked = value === 'on' || value === true;
             }
         } else if (field.type === 'select-one' || field.type === 'select-multiple') {
             if (value) field.value = value;
@@ -61,30 +59,31 @@ function saveFormData() {
     const form = document.querySelector('form');
     if (!form) return;
 
-    const formData = new FormData(form);
-    const data = {};
+    const formData = {};
+    const data = new FormData(form);
 
-    formData.forEach((value, key) => {
-        if (data[key]) {
-            if (!Array.isArray(data[key])) {
-                data[key] = [data[key]];
+    data.forEach((value, key) => {
+        // Handle multiple checkboxes with same name
+        if (key in formData) {
+            if (!Array.isArray(formData[key])) {
+                formData[key] = [formData[key]];
             }
-            data[key].push(value);
+            formData[key].push(value);
         } else {
-            data[key] = value;
+            formData[key] = value;
         }
     });
 
     // Save signature if exists
     const signatureData = document.getElementById('signatureData')?.value;
     if (signatureData) {
-        data.signature = signatureData;
+        formData.signature = signatureData;
         localStorage.setItem('lastSignature', signatureData);
     }
 
-    localStorage.setItem(`section${currentSection}Data`, JSON.stringify(data));
+    localStorage.setItem(`section${currentSection}Data`, JSON.stringify(formData));
     showMessage('נשמר בהצלחה', 'success');
-    logDebug('Saved form data:', data);
+    logDebug('Saved form data:', formData);
 }
 
 // Validate section 2
@@ -141,32 +140,41 @@ function validateSection2() {
 // Validate section 3
 function validateSection3() {
     const form = document.querySelector('form');
-    
-    const marketExperience = form.querySelector('input[name="marketExperience"]:checked');
-    if (!marketExperience) {
-        showMessage('יש לבחור רמת ידע וניסיון בשוק ההון', 'error');
-        return false;
+    if (!form) return false;
+
+    let isValid = true;
+    const errors = [];
+
+    // Check market experience
+    if (!form.querySelector('input[name="marketExperience"]:checked')) {
+        isValid = false;
+        errors.push('יש לבחור רמת ידע וניסיון בשוק ההון');
     }
 
-    const riskTolerance = form.querySelector('input[name="riskTolerance"]:checked');
-    if (!riskTolerance) {
-        showMessage('יש לבחור רמת סיכון', 'error');
-        return false;
+    // Check risk tolerance
+    if (!form.querySelector('input[name="riskTolerance"]:checked')) {
+        isValid = false;
+        errors.push('יש לבחור רמת סיכון');
     }
 
-    const lossResponse = form.querySelector('input[name="lossResponse"]:checked');
-    if (!lossResponse) {
-        showMessage('יש לבחור תגובה להפסד', 'error');
-        return false;
+    // Check loss response
+    if (!form.querySelector('input[name="lossResponse"]:checked')) {
+        isValid = false;
+        errors.push('יש לבחור תגובה להפסד');
     }
 
-    const investmentKnowledge = form.querySelector('input[name="investmentKnowledge"]:checked');
-    if (!investmentKnowledge) {
-        showMessage('יש לבחור לפחות סוג השקעה אחד', 'error');
-        return false;
+    // Check investment knowledge
+    if (!form.querySelector('input[name="investmentKnowledge"]:checked')) {
+        isValid = false;
+        errors.push('יש לבחור לפחות סוג השקעה אחד');
     }
 
-    return true;
+    // Show errors if any
+    if (!isValid) {
+        errors.forEach(error => showMessage(error, 'error'));
+    }
+
+    return isValid;
 }
 
 // Show message (success/error)
@@ -225,43 +233,6 @@ function navigateBack() {
     }
 }
 
-// Submit form to Google Sheets
-async function submitToGoogleSheets() {
-    const allData = {};
-    
-    // Collect data from all sections
-    for (let i = 1; i <= 4; i++) {
-        const sectionData = localStorage.getItem(`section${i}Data`);
-        if (sectionData) {
-            Object.assign(allData, JSON.parse(sectionData));
-        }
-    }
-
-    try {
-        const response = await fetch('/api/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(allData)
-        });
-
-        if (!response.ok) throw new Error('שגיאה בשליחת הנתונים');
-
-        // Clear local storage after successful submission
-        for (let i = 1; i <= 4; i++) {
-            localStorage.removeItem(`section${i}Data`);
-        }
-        localStorage.removeItem('lastSignature');
-
-        return true;
-    } catch (error) {
-        console.error('Submission error:', error);
-        showMessage('שגיאה בשליחת הטופס', 'error');
-        return false;
-    }
-}
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     logDebug('Initializing page', `Section ${currentSection}`);
@@ -275,9 +246,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Setup navigation buttons
-    document.getElementById('btnBack')?.addEventListener('click', navigateBack);
-    document.getElementById('saveAndContinue')?.addEventListener('click', navigateNext);
-    
-    // Setup final submit
-    document.getElementById('finalSubmit')?.addEventListener('click', submitToGoogleSheets);
+    const backButton = document.getElementById('btnBack');
+    if (backButton) {
+        backButton.addEventListener('click', navigateBack);
+    }
+
+    const nextButton = document.getElementById('saveAndContinue');
+    if (nextButton) {
+        nextButton.addEventListener('click', navigateNext);
+    }
 });
