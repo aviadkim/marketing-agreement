@@ -155,11 +155,11 @@
                 </div>
                 <input type="hidden" id="signatureData" name="signature" required>
             </div>
+
             <!-- Final Confirmation -->
             <div class="final-confirmation mt-6">
                 <label class="checkbox-container">
-                    <input type="checkbox" name="finalConfirmation" required 
-                           onchange="document.getElementById('finalSubmit').disabled = !this.checked">
+                    <input type="checkbox" name="finalConfirmation" required>
                     <span class="checkmark"></span>
                     <span class="text-bold">
                         אני מאשר/ת שקראתי והבנתי את כל ההצהרות לעיל, ומסכים/ה להן באופן מלא ובלתי חוזר
@@ -168,6 +168,7 @@
             </div>
         </form>
     </main>
+
     <!-- Navigation -->
     <footer class="form-navigation">
         <div class="container">
@@ -175,7 +176,7 @@
             <button type="button" id="finalSubmit" class="btn-next" disabled>סיים והגש טופס</button>
         </div>
     </footer>
-    <!-- בסוף הקובץ, לפני </body>, החלף את קטע הסקריפט הקיים בקוד הבא -->
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -184,55 +185,64 @@
     <script src="/js/storage.js"></script>
     <script src="/js/navigation.js"></script>
     <script src="/js/googleSheetsSubmit.js"></script>
+
     <script>
-    // Enable/disable submit button based on form validity
-    document.querySelector('form').addEventListener('change', function() {
-        const form = this;
-        const submitButton = document.getElementById('finalSubmit');
-        const signaturePad = window.signatureHandler;
-        
-        const isValid = form.checkValidity() && 
-                       document.querySelector('input[name="finalConfirmation"]').checked &&
-                       document.querySelectorAll('input[type="checkbox"]:checked').length >= 3 &&
-                       (signaturePad && !signaturePad.isEmpty());
-        
-        submitButton.disabled = !isValid;
-    });
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enable/disable submit button based on form validity
+            function updateSubmitButton() {
+                const form = document.querySelector('form');
+                const submitButton = document.getElementById('finalSubmit');
+                const signaturePad = window.signatureHandler?.signaturePad;
+                
+                const allCheckboxesChecked = 
+                    document.querySelector('input[name="riskAcknowledgement"]')?.checked &&
+                    document.querySelector('input[name="independentDecision"]')?.checked &&
+                    document.querySelector('input[name="updateCommitment"]')?.checked &&
+                    document.querySelector('input[name="finalConfirmation"]')?.checked;
+                
+                const hasSignature = signaturePad && !signaturePad.isEmpty();
+                
+                submitButton.disabled = !(allCheckboxesChecked && hasSignature);
+            }
 
-    // Handle final form submission
-    document.getElementById('finalSubmit').addEventListener('click', async function(e) {
-       e.preventDefault();
-       const form = document.querySelector('form');
-       const submitButton = this;
-       const buttonText = "סיים והגש טופס";
-       
-       if (!form.checkValidity()) {
-           form.reportValidity();
-           return;
-       }
+            // Monitor form changes
+            document.querySelector('form').addEventListener('change', updateSubmitButton);
+            if (window.signatureHandler) {
+                window.signatureHandler.signaturePad.addEventListener('endStroke', updateSubmitButton);
+            }
 
-       // Disable button and show loading
-       submitButton.disabled = true;
-       submitButton.innerHTML = '<span class="spinner"></span>';
+            // Handle final form submission
+            document.getElementById('finalSubmit').addEventListener('click', async function(e) {
+                e.preventDefault();
+                const submitButton = this;
+                const buttonText = submitButton.innerHTML;
 
-       try {
-           const formData = new FormData(form);
-           const success = await submitFormToGoogleSheets();
+                try {
+                    // Disable button and show loading
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<span class="spinner"></span>';
 
-           if (success) {
-               localStorage.removeItem('formData');
-               localStorage.removeItem('lastSignature');
-               window.location.href = '/sections/preview.html';
-           } else {
-               throw new Error('Failed to submit form');
-           }
-       } catch (error) {
-           alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
-           console.error('Submission error:', error);
-           submitButton.disabled = false;
-           submitButton.innerHTML = buttonText;
-       }
-    });
-</script>
+                    const success = await window.submitFormToGoogleSheets();
+                    
+                    if (success) {
+                        window.location.href = '/sections/preview.html';
+                    } else {
+                        throw new Error('Failed to submit form');
+                    }
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    alert('אירעה שגיאה בשליחת הטופס. נא לנסות שוב.');
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = buttonText;
+                }
+            });
+
+            // Back button handler
+            document.getElementById('btnBack').addEventListener('click', function() {
+                window.location.href = '/sections/section3.html';
+            });
+        });
+    </script>
 </body>
 </html>
