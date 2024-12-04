@@ -1,16 +1,15 @@
 class SignatureHandler {
     constructor() {
-        // Check if we're on the first section
-        const isSection1 = window.location.pathname.includes('section1');
-        if (isSection1) {
-            console.log('Section 1 - Skip signature initialization');
-            return;
-        }
-
         this.signaturePad = null;
         this.isDrawing = false;
+        this.currentSection = this.getCurrentSection();
         this.initialize();
-        this.loadSavedSignature(); // Load saved signature
+    }
+
+    getCurrentSection() {
+        const path = window.location.pathname;
+        const match = path.match(/section(\d+)/);
+        return match ? parseInt(match[1]) : null;
     }
 
     initialize() {
@@ -27,6 +26,13 @@ class SignatureHandler {
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
         this.setupButtons();
+
+        // Clear signature in section 4
+        if (this.currentSection === 4) {
+            this.clearSignature();
+        } else {
+            this.loadSavedSignature();
+        }
     }
 
     resizeCanvas() {
@@ -34,16 +40,18 @@ class SignatureHandler {
         
         const canvas = document.getElementById('signatureCanvas');
         if (!canvas) return;
-
+        
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         canvas.width = canvas.offsetWidth * ratio;
         canvas.height = 200 * ratio;
         canvas.getContext('2d').scale(ratio, ratio);
         
-        // Restore signature after resize if exists
-        const savedSignature = localStorage.getItem('lastSignature');
-        if (savedSignature) {
-            this.signaturePad.fromDataURL(savedSignature);
+        // Restore signature after resize if exists and not in section 4
+        if (this.currentSection !== 4) {
+            const savedSignature = localStorage.getItem('lastSignature');
+            if (savedSignature) {
+                this.signaturePad.fromDataURL(savedSignature);
+            }
         }
     }
 
@@ -54,6 +62,7 @@ class SignatureHandler {
         if (clearButton) {
             clearButton.addEventListener('click', () => this.clearSignature());
         }
+        
         if (copyButton) {
             copyButton.addEventListener('click', () => this.copyPreviousSignature());
         }
@@ -62,40 +71,47 @@ class SignatureHandler {
             this.signaturePad.onEnd = () => {
                 if (!this.signaturePad.isEmpty()) {
                     const signatureData = this.signaturePad.toDataURL();
-                    this.saveSignature(signatureData);
+                    this.updateSignatureInput(signatureData);
+                    // Save signature only if not in section 4
+                    if (this.currentSection !== 4) {
+                        localStorage.setItem('lastSignature', signatureData);
+                    }
+                    // Trigger form validation if exists
+                    if (window.checkFormValidity) {
+                        window.checkFormValidity();
+                    }
                 }
             };
-        }
-    }
-
-    saveSignature(signatureData) {
-        localStorage.setItem('lastSignature', signatureData);
-        this.updateSignatureInput(signatureData);
-    }
-
-    loadSavedSignature() {
-        const savedSignature = localStorage.getItem('lastSignature');
-        if (savedSignature && this.signaturePad) {
-            this.signaturePad.fromDataURL(savedSignature);
-            this.updateSignatureInput(savedSignature);
         }
     }
 
     clearSignature() {
         if (this.signaturePad) {
             this.signaturePad.clear();
-            localStorage.removeItem('lastSignature');
             this.updateSignatureInput('');
+            if (this.currentSection !== 4) {
+                localStorage.removeItem('lastSignature');
+            }
+            // Trigger form validation if exists
+            if (window.checkFormValidity) {
+                window.checkFormValidity();
+            }
         }
     }
 
     copyPreviousSignature() {
-        const previousSignature = localStorage.getItem('lastSignature');
-        if (previousSignature && this.signaturePad) {
-            this.signaturePad.fromDataURL(previousSignature);
-            this.updateSignatureInput(previousSignature);
-        } else {
-            alert('לא נמצאה חתימה קודמת');
+        if (this.signaturePad) {
+            const previousSignature = localStorage.getItem('lastSignature');
+            if (previousSignature) {
+                this.signaturePad.fromDataURL(previousSignature);
+                this.updateSignatureInput(previousSignature);
+                // Trigger form validation if exists
+                if (window.checkFormValidity) {
+                    window.checkFormValidity();
+                }
+            } else {
+                window.showMessage('לא נמצאה חתימה קודמת', 'error');
+            }
         }
     }
 
@@ -111,9 +127,7 @@ class SignatureHandler {
     }
 }
 
-// Initialize only if not in section1
-if (!window.location.pathname.includes('section1')) {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.signatureHandler = new SignatureHandler();
-    });
-}
+// Initialize the signature handler
+document.addEventListener('DOMContentLoaded', () => {
+    window.signatureHandler = new SignatureHandler();
+});
