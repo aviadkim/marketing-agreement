@@ -1,12 +1,36 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKIS5nbJFMOCgLNZEsIFm0eWuGqkWb8v-1CqjAqHiM8iZ3VTrnKakaOg3PPjCiwOAM/exec';
 
+async function compressImage(dataUrl, maxWidth = 800, quality = 0.7) {
+    const img = new Image();
+    return new Promise((resolve) => {
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+                height = (maxWidth * height) / width;
+                width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = dataUrl;
+    });
+}
+
 async function capturePageScreenshot() {
     try {
         const formElement = document.querySelector('.form-content');
         if (!formElement) return null;
         
         const canvas = await html2canvas(formElement, {
-            scale: 2,
+            scale: 1.5,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
@@ -14,7 +38,7 @@ async function capturePageScreenshot() {
             width: formElement.offsetWidth,
             height: formElement.offsetHeight * 1.5
         });
-        return canvas.toDataURL('image/png', 1.0);
+        return await compressImage(canvas.toDataURL());
     } catch (error) {
         console.error('Error capturing page:', error);
         return null;
@@ -36,7 +60,7 @@ async function captureAllPages() {
             const formContent = tempDiv.querySelector('.form-content');
             if (formContent) {
                 const canvas = await html2canvas(formContent, {
-                    scale: 2,
+                    scale: 1.5,
                     useCORS: true,
                     allowTaint: true,
                     backgroundColor: '#ffffff',
@@ -44,7 +68,8 @@ async function captureAllPages() {
                     width: formContent.offsetWidth,
                     height: formContent.offsetHeight * 1.5
                 });
-                pages.push(canvas.toDataURL('image/png', 1.0));
+                const compressedPage = await compressImage(canvas.toDataURL());
+                pages.push(compressedPage);
             }
             
             document.body.removeChild(tempDiv);
@@ -66,7 +91,12 @@ async function createPDF(pages) {
     
     try {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
+        const doc = new jsPDF({
+            orientation: 'p',
+            unit: 'mm',
+            format: 'a4',
+            compress: true
+        });
         
         for (let i = 0; i < pages.length; i++) {
             if (i > 0) {
@@ -76,10 +106,10 @@ async function createPDF(pages) {
             const imgProps = doc.getImageProperties(pages[i]);
             const pdfWidth = doc.internal.pageSize.getWidth();
             const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            doc.addImage(pages[i], 'PNG', 0, 0, pdfWidth, pdfHeight);
+            doc.addImage(pages[i], 'JPEG', 0, 0, pdfWidth, pdfHeight, null, 'FAST');
         }
         
-        return doc.output('datauristring');
+        return doc.output('datauristring', { compress: true });
     } catch (error) {
         console.error('Error creating PDF:', error);
         return null;
@@ -104,7 +134,10 @@ async function processFormData() {
         formData[field] = formData[field] === 'on' || formData[field] === true ? 'כן' : 'לא';
     });
 
-    const signatureData = document.getElementById('signatureData')?.value || formData.signature || '';
+    let signatureData = document.getElementById('signatureData')?.value || formData.signature || '';
+    if (signatureData) {
+        signatureData = await compressImage(signatureData, 400, 0.6);
+    }
 
     console.log('Capturing current page...');
     const currentPageScreenshot = await capturePageScreenshot();
@@ -173,7 +206,6 @@ async function submitFormToGoogleSheets() {
         });
 
         validateFormData(formData);
-
         showMessage('שולח את הטופס...', 'info');
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
