@@ -39,17 +39,25 @@ const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'aviad@kimfo-fs.com', // החלף במייל שלך
-        pass: process.env.EMAIL_PASSWORD // הוסף סיסמה ב-.env
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
     }
 });
+
+// Function to format currency
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('he-IL', {
+        style: 'currency',
+        currency: 'ILS'
+    }).format(amount);
+}
 
 // Function to create PDF
 function createInvestmentAgreementPDF(data) {
     return new Promise((resolve, reject) => {
         try {
             const doc = new PDFDocument({ size: 'A4', margin: 50, rtl: true });
-            const fileName = `agreement_${data.idNumber}_${Date.now()}.pdf`;
+            const fileName = `הסכם_שיווק_השקעות_${data.firstName}_${data.lastName}_${Date.now()}.pdf`;
             const pdfPath = path.join(__dirname, fileName);
             const writeStream = fs.createWriteStream(pdfPath);
 
@@ -64,7 +72,7 @@ function createInvestmentAgreementPDF(data) {
 
             // Personal Details
             doc.fontSize(16)
-                .text('פרטים אישיים', { align: 'right' })
+                .text('פרטים אישיים', { align: 'right', underline: true })
                 .moveDown(1)
                 .fontSize(12)
                 .text(`שם מלא: ${data.firstName} ${data.lastName}`, { align: 'right' })
@@ -75,10 +83,10 @@ function createInvestmentAgreementPDF(data) {
 
             // Investment Details
             doc.fontSize(16)
-                .text('פרטי השקעה', { align: 'right' })
+                .text('פרטי השקעה', { align: 'right', underline: true })
                 .moveDown(1)
                 .fontSize(12)
-                .text(`סכום השקעה: ${data.investmentAmount}`, { align: 'right' })
+                .text(`סכום השקעה: ${formatCurrency(data.investmentAmount)}`, { align: 'right' })
                 .text(`בנק: ${data.bank}`, { align: 'right' })
                 .text(`מטבע: ${data.currency}`, { align: 'right' })
                 .text(`מטרת השקעה: ${data.purpose}`, { align: 'right' })
@@ -87,7 +95,7 @@ function createInvestmentAgreementPDF(data) {
 
             // Risk Assessment
             doc.fontSize(16)
-                .text('שאלון סיכון', { align: 'right' })
+                .text('שאלון סיכון', { align: 'right', underline: true })
                 .moveDown(1)
                 .fontSize(12)
                 .text(`ניסיון בשוק: ${data.marketExperience}`, { align: 'right' })
@@ -99,7 +107,7 @@ function createInvestmentAgreementPDF(data) {
 
             // Declarations
             doc.fontSize(16)
-                .text('הצהרות', { align: 'right' })
+                .text('הצהרות', { align: 'right', underline: true })
                 .moveDown(1)
                 .fontSize(12)
                 .text(`הצהרת סיכון: ${data.riskAcknowledgement}`, { align: 'right' })
@@ -111,14 +119,23 @@ function createInvestmentAgreementPDF(data) {
             if (data.signature) {
                 doc.addPage()
                     .fontSize(14)
-                    .text('חתימת הלקוח:', { align: 'right' });
+                    .text('חתימת הלקוח:', { align: 'right' })
+                    .moveDown(1);
 
-                const signatureData = data.signature.split(',')[1];
-                if (signatureData) {
-                    const imgBuffer = Buffer.from(signatureData, 'base64');
-                    doc.image(imgBuffer, { fit: [200, 100], align: 'right' });
+                try {
+                    const signatureData = data.signature.split(',')[1];
+                    if (signatureData) {
+                        const imgBuffer = Buffer.from(signatureData, 'base64');
+                        doc.image(imgBuffer, { fit: [200, 100], align: 'right' });
+                    }
+                } catch (error) {
+                    console.error('Error processing signature:', error);
                 }
             }
+
+            // Footer
+            doc.fontSize(10)
+                .text('מסמך זה נוצר אוטומטית על ידי מערכת מובנה', { align: 'center' });
 
             doc.end();
 
@@ -133,11 +150,19 @@ function createInvestmentAgreementPDF(data) {
 // Function to send email with PDF
 async function sendPDFEmail(pdfPath, data) {
     const mailOptions = {
-        from: 'aviad@kimfo-fs.com',
+        from: {
+            name: 'מובנה',
+            address: process.env.EMAIL_USER
+        },
         to: data.email,
-        cc: 'info@kimfo-fs.com',
+        cc: 'info@movne.co.il',
         subject: 'הסכם שיווק השקעות - מובנה',
-        text: `${data.firstName} שלום,\n\nמצורף העתק של הסכם שיווק ההשקעות שמילאת.\n\nבברכה,\nצוות מובנה`,
+        text: `${data.firstName} שלום,
+
+מצורף העתק של הסכם שיווק ההשקעות שמילאת.
+
+בברכה,
+צוות מובנה`,
         attachments: [{
             filename: path.basename(pdfPath),
             path: pdfPath
@@ -186,8 +211,8 @@ async function appendToSheet(data) {
             'הצהרת סיכון': data.riskAcknowledgement,
             'החלטה עצמאית': data.independentDecision,
             'התחייבות לעדכון': data.updateCommitment,
-            'חתימה': data.signature || '',
-            'צילום טופס': data.formScreenshot || ''
+            'חתימה': 'נחתם',
+            'צילום טופס': data.formScreenshot ? 'קיים' : ''
         });
         
         console.log('Row added successfully');
