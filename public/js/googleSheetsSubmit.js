@@ -1,24 +1,8 @@
+// Import form capture functionality
+import { captureFormAsImage } from './formCapture.js';
+
 // Constants
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKIS5nbJFMOCgLNZEsIFm0eWuGqkWb8v-1CqjAqHiM8iZ3VTrnKakaOg3PPjCiwOAM/exec';
-
-// Helper function to capture form screenshot
-async function captureFormScreenshot() {
-    try {
-        const formElement = document.querySelector('.form-content');
-        if (!formElement) return null;
-        
-        const canvas = await html2canvas(formElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-        });
-        return canvas.toDataURL('image/png');
-    } catch (error) {
-        console.error('Error capturing form:', error);
-        return null;
-    }
-}
 
 // Process and format form data
 async function processFormData() {
@@ -43,24 +27,23 @@ async function processFormData() {
 
     // Get signature data
     const signatureData = document.getElementById('signatureData')?.value || formData.signature || '';
+    
+    // Capture form screenshot
+    const screenshot = await captureFormAsImage();
+    console.log('Form screenshot captured:', screenshot ? 'success' : 'failed');
 
     return {
-        // Section 1
         firstName: formData.firstName || '',
         lastName: formData.lastName || '',
         idNumber: formData.idNumber || '',
         email: formData.email || '',
         phone: formData.phone || '',
-
-        // Section 2
         investmentAmount: formData.investmentAmount || '',
         bank: formData.bank || '',
         currency: formData.currency || '',
         purpose: Array.isArray(formData.purpose) ? formData.purpose.join(', ') : formData.purpose || '',
         purposeOther: formData.purposeOther || '',
         timeline: formData.timeline || '',
-
-        // Section 3
         marketExperience: Array.isArray(formData.marketExperience) ? 
             formData.marketExperience.join(', ') : formData.marketExperience || '',
         riskTolerance: formData.riskTolerance || '',
@@ -68,60 +51,39 @@ async function processFormData() {
         investmentKnowledge: Array.isArray(formData.investmentKnowledge) ? 
             formData.investmentKnowledge.join(', ') : formData.investmentKnowledge || '',
         investmentRestrictions: formData.investmentRestrictions || '',
-
-        // Section 4
         riskAcknowledgement: formData.riskAcknowledgement || 'לא',
         independentDecision: formData.independentDecision || 'לא',
         updateCommitment: formData.updateCommitment || 'לא',
-
-        // Additional data
         signature: signatureData,
-        formScreenshot: await captureFormScreenshot(),
+        formScreenshot: screenshot,
         submissionDate: new Date().toISOString()
     };
-}
-
-// Validate form data
-function validateFormData(formData) {
-    const requiredFields = ['firstName', 'lastName', 'idNumber', 'email', 'phone'];
-    const missingFields = requiredFields.filter(field => !formData[field]);
-    
-    if (missingFields.length > 0) {
-        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-    }
-    
-    if (!formData.signature) {
-        throw new Error('חתימה נדרשת');
-    }
-
-    return true;
 }
 
 // Main submit function
 async function submitFormToGoogleSheets() {
     try {
-        // Process form data
         const formData = await processFormData();
         console.log('Processing form data:', formData);
 
-        // Validate form data
-        validateFormData(formData);
-
-        // Submit directly to Google Script
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
+        // Submit to server
+        const response = await fetch('/api/submit', {
             method: 'POST',
-            mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(formData)
         });
 
-        // Since mode is no-cors, we can't access the response
-        // We'll assume success if we get here without an error
-        console.log('Form submitted successfully');
-        return true;
-
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('Form submitted successfully');
+            showMessage('הטופס נשלח בהצלחה', 'success');
+            return true;
+        } else {
+            throw new Error(result.message || 'שגיאה בשליחת הטופס');
+        }
     } catch (error) {
         console.error('Form submission error:', error);
         showMessage(error.message || 'שגיאה בשליחת הטופס', 'error');
