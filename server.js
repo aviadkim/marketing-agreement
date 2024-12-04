@@ -46,28 +46,55 @@ const transporter = nodemailer.createTransport({
 
 // Function to format currency
 function formatCurrency(amount) {
+    if (!amount) return '0 ₪';
     return new Intl.NumberFormat('he-IL', {
         style: 'currency',
-        currency: 'ILS'
+        currency: 'ILS',
+        maximumFractionDigits: 0
     }).format(amount);
 }
 
 // Function to create PDF
-function createInvestmentAgreementPDF(data) {
+async function createInvestmentAgreementPDF(data) {
     return new Promise((resolve, reject) => {
         try {
-            const doc = new PDFDocument({ size: 'A4', margin: 50, rtl: true });
-            const fileName = `הסכם_שיווק_השקעות_${data.firstName}_${data.lastName}_${Date.now()}.pdf`;
-            const pdfPath = path.join(__dirname, fileName);
+            // Create temp directory if it doesn't exist
+            const tempDir = path.join(__dirname, 'temp');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir);
+            }
+
+            const doc = new PDFDocument({ 
+                size: 'A4', 
+                margin: 50, 
+                rtl: true,
+                info: {
+                    Title: 'הסכם שיווק השקעות - מובנה',
+                    Author: 'מובנה',
+                    Subject: `הסכם שיווק השקעות - ${data.firstName} ${data.lastName}`
+                }
+            });
+
+            const fileName = `מובנה_הסכם_שיווק_השקעות_${data.firstName}_${data.lastName}.pdf`;
+            const pdfPath = path.join(tempDir, fileName);
             const writeStream = fs.createWriteStream(pdfPath);
 
             doc.pipe(writeStream);
+
+            // Logo
+            const logoPath = path.join(__dirname, 'public', 'images', 'movne-logo.png');
+            if (fs.existsSync(logoPath)) {
+                doc.image(logoPath, {
+                    fit: [200, 100],
+                    align: 'center'
+                }).moveDown(2);
+            }
 
             // Header
             doc.fontSize(20)
                 .text('הסכם שיווק השקעות - מובנה', { align: 'center' })
                 .fontSize(14)
-                .text(`העתק מהטופס שמולא בתאריך ${new Date().toLocaleDateString('he-IL')}`, { align: 'center' })
+                .text(`תאריך: ${new Date().toLocaleDateString('he-IL')}`, { align: 'center' })
                 .moveDown(2);
 
             // Personal Details
@@ -89,7 +116,7 @@ function createInvestmentAgreementPDF(data) {
                 .text(`סכום השקעה: ${formatCurrency(data.investmentAmount)}`, { align: 'right' })
                 .text(`בנק: ${data.bank}`, { align: 'right' })
                 .text(`מטבע: ${data.currency}`, { align: 'right' })
-                .text(`מטרת השקעה: ${data.purpose}`, { align: 'right' })
+                .text(`מטרת השקעה: ${Array.isArray(data.purpose) ? data.purpose.join(', ') : data.purpose}`, { align: 'right' })
                 .text(`טווח זמן: ${data.timeline}`, { align: 'right' })
                 .moveDown(2);
 
@@ -101,7 +128,7 @@ function createInvestmentAgreementPDF(data) {
                 .text(`ניסיון בשוק: ${data.marketExperience}`, { align: 'right' })
                 .text(`סובלנות לסיכון: ${data.riskTolerance}`, { align: 'right' })
                 .text(`תגובה להפסד: ${data.lossResponse}`, { align: 'right' })
-                .text(`ידע בהשקעות: ${data.investmentKnowledge}`, { align: 'right' })
+                .text(`ידע בהשקעות: ${Array.isArray(data.investmentKnowledge) ? data.investmentKnowledge.join(', ') : data.investmentKnowledge}`, { align: 'right' })
                 .text(`מגבלות: ${data.investmentRestrictions || 'אין'}`, { align: 'right' })
                 .moveDown(2);
 
@@ -110,9 +137,9 @@ function createInvestmentAgreementPDF(data) {
                 .text('הצהרות', { align: 'right', underline: true })
                 .moveDown(1)
                 .fontSize(12)
-                .text(`הצהרת סיכון: ${data.riskAcknowledgement}`, { align: 'right' })
-                .text(`החלטה עצמאית: ${data.independentDecision}`, { align: 'right' })
-                .text(`התחייבות לעדכון: ${data.updateCommitment}`, { align: 'right' })
+                .text(`הצהרת הבנת סיכונים: ${data.riskAcknowledgement === 'on' || data.riskAcknowledgement === true ? 'כן' : 'לא'}`, { align: 'right' })
+                .text(`החלטה עצמאית: ${data.independentDecision === 'on' || data.independentDecision === true ? 'כן' : 'לא'}`, { align: 'right' })
+                .text(`התחייבות לעדכון: ${data.updateCommitment === 'on' || data.updateCommitment === true ? 'כן' : 'לא'}`, { align: 'right' })
                 .moveDown(2);
 
             // Signature
@@ -135,12 +162,14 @@ function createInvestmentAgreementPDF(data) {
 
             // Footer
             doc.fontSize(10)
-                .text('מסמך זה נוצר אוטומטית על ידי מערכת מובנה', { align: 'center' });
+                .moveDown(4)
+                .text('מסמך זה הופק אוטומטית על ידי מערכת מובנה', { align: 'center' });
 
             doc.end();
 
             writeStream.on('finish', () => resolve(pdfPath));
             writeStream.on('error', reject);
+
         } catch (error) {
             reject(error);
         }
@@ -149,6 +178,31 @@ function createInvestmentAgreementPDF(data) {
 
 // Function to send email with PDF
 async function sendPDFEmail(pdfPath, data) {
+    const emailTemplate = `
+    <div style="direction: rtl; font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <img src="cid:logo" alt="מובנה" style="display: block; margin: 20px auto; max-width: 200px;">
+        <h2 style="text-align: center; color: #333;">הסכם שיווק השקעות - מובנה</h2>
+        <p style="font-size: 16px; line-height: 1.5;">
+            שלום ${data.firstName},
+        </p>
+        <p style="font-size: 16px; line-height: 1.5;">
+            תודה על מילוי הסכם שיווק ההשקעות.
+            מצורף העתק של ההסכם שמילאת בתאריך ${new Date().toLocaleDateString('he-IL')}.
+        </p>
+        <p style="font-size: 16px; line-height: 1.5;">
+            במידה ויש לך שאלות נוספות, אנחנו כאן לשירותך.
+        </p>
+        <p style="font-size: 16px; line-height: 1.5;">
+            בברכה,<br>
+            צוות מובנה
+        </p>
+        <hr style="border: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #666; text-align: center;">
+            מסמך זה נשלח באופן אוטומטי, אין להשיב למייל זה
+        </p>
+    </div>
+    `;
+
     const mailOptions = {
         from: {
             name: 'מובנה',
@@ -156,17 +210,20 @@ async function sendPDFEmail(pdfPath, data) {
         },
         to: data.email,
         cc: 'info@movne.co.il',
-        subject: 'הסכם שיווק השקעות - מובנה',
-        text: `${data.firstName} שלום,
-
-מצורף העתק של הסכם שיווק ההשקעות שמילאת.
-
-בברכה,
-צוות מובנה`,
-        attachments: [{
-            filename: path.basename(pdfPath),
-            path: pdfPath
-        }]
+        subject: `הסכם שיווק השקעות - ${data.firstName} ${data.lastName}`,
+        html: emailTemplate,
+        attachments: [
+            {
+                filename: path.basename(pdfPath),
+                path: pdfPath,
+                contentType: 'application/pdf'
+            },
+            {
+                filename: 'logo.png',
+                path: path.join(__dirname, 'public', 'images', 'movne-logo.png'),
+                cid: 'logo'
+            }
+        ]
     };
 
     return transporter.sendMail(mailOptions);
@@ -189,7 +246,7 @@ async function appendToSheet(data) {
         console.log('Accessing first sheet...');
         const sheet = doc.sheetsByIndex[0];
         
-        console.log('Adding row to sheet with data:', { ...data, signature: 'HIDDEN', formScreenshot: 'HIDDEN' });
+        console.log('Adding row to sheet with data:', { ...data, signature: 'HIDDEN' });
         await sheet.addRow({
             Timestamp: new Date().toISOString(),
             'שם פרטי': data.firstName,
@@ -197,22 +254,21 @@ async function appendToSheet(data) {
             'תעודת זהות': data.idNumber,
             'אימייל': data.email,
             'טלפון': data.phone,
-            'סכום השקעה': data.investmentAmount,
+            'סכום השקעה': formatCurrency(data.investmentAmount),
             'בנק': data.bank,
             'מטבע': data.currency,
-            'מטרת השקעה': data.purpose,
+            'מטרת השקעה': Array.isArray(data.purpose) ? data.purpose.join(', ') : data.purpose,
             'מטרה אחרת': data.purposeOther,
             'טווח זמן': data.timeline,
             'ניסיון בשוק': data.marketExperience,
             'רמת סיכון': data.riskTolerance,
             'תגובה להפסד': data.lossResponse,
-            'ידע בהשקעות': data.investmentKnowledge,
+            'ידע בהשקעות': Array.isArray(data.investmentKnowledge) ? data.investmentKnowledge.join(', ') : data.investmentKnowledge,
             'מגבלות': data.investmentRestrictions,
-            'הצהרת סיכון': data.riskAcknowledgement,
-            'החלטה עצמאית': data.independentDecision,
-            'התחייבות לעדכון': data.updateCommitment,
+            'הצהרת סיכון': data.riskAcknowledgement === 'on' || data.riskAcknowledgement === true ? 'כן' : 'לא',
+            'החלטה עצמאית': data.independentDecision === 'on' || data.independentDecision === true ? 'כן' : 'לא',
+            'התחייבות לעדכון': data.updateCommitment === 'on' || data.updateCommitment === true ? 'כן' : 'לא',
             'חתימה': 'נחתם',
-            'צילום טופס': data.formScreenshot ? 'קיים' : ''
         });
         
         console.log('Row added successfully');
@@ -253,7 +309,7 @@ app.post('/api/submit', async (req, res) => {
 
         // Create and save PDF
         const pdfPath = await createInvestmentAgreementPDF(formData);
-        console.log('PDF created successfully');
+        console.log('PDF created successfully at:', pdfPath);
 
         // Send email with PDF
         await sendPDFEmail(pdfPath, formData);
