@@ -1,154 +1,96 @@
-const PDFDocument = require('pdfkit');
-const path = require('path');
-const fs = require('fs');
-const sharp = require('sharp'); // Add sharp for image compression
-
-async function compressImage(imageBuffer, maxWidth = 800) {
-    return sharp(imageBuffer)
-        .resize(maxWidth, null, {
-            withoutEnlargement: true,
-            fit: 'inside'
-        })
-        .jpeg({
-            quality: 70,
-            progressive: true
-        })
-        .toBuffer();
+async function createPDF(pages) {
+    // Try browser-side PDF generation first
+    const browserPDF = await createBrowserPDF(pages);
+    if (browserPDF && browserPDF.size < 10000000) { // Less than 10MB
+        return browserPDF;
+    }
+    
+    // Fallback to server-side generation
+    return await createServerPDF(pages);
 }
 
-async function createInvestmentAgreementPDF(data) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const doc = new PDFDocument({ 
-                size: 'A4', 
-                margin: 50, 
-                rtl: true,
-                compress: true, // Enable PDF compression
-                info: {
-                    Title: 'הסכם שיווק השקעות - מובנה',
-                    Author: 'מובנה'
-                }
-            });
-
-            const fileName = `מובנה_הסכם_שיווק_השקעות_${data.firstName}_${data.lastName}.pdf`;
-            const tempDir = path.join(__dirname, '..', '..', 'temp');
-            if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+async function createBrowserPDF(pages) {
+    if (!window.jspdf) {
+        console.error('jsPDF library not loaded');
+        return null;
+    }
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'p',
+            unit: 'mm',
+            format: 'a4',
+            compress: true,
+            putOnlyUsedFonts: true
+        });
+        
+        for (let i = 0; i < pages.length; i++) {
+            if (i > 0) doc.addPage();
             
-            const pdfPath = path.join(tempDir, fileName);
-            const writeStream = fs.createWriteStream(pdfPath);
-            doc.pipe(writeStream);
-
-            // Compress and add logo
-            const logoPath = path.join(__dirname, '..', 'images', 'movne-logo.png');
-            const logoBuffer = fs.readFileSync(logoPath);
-            const compressedLogo = await compressImage(logoBuffer);
+            // Compress image before adding to PDF
+            const compressedImage = await compressImage(pages[i]);
+            const imgProps = doc.getImageProperties(compressedImage);
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
             
-            doc.image(compressedLogo, {
-                fit: [200, 100],
-                align: 'center'
-            }).moveDown(2);
-
-            // Add document content
-            doc.fontSize(20)
-                .text('הסכם שיווק השקעות - מובנה', { align: 'center' })
-                .fontSize(14)
-                .text(`תאריך: ${new Date().toLocaleDateString('he-IL')}`, { align: 'center' })
-                .moveDown(2);
-
-            // Add sections with optimized layout
-            addSection(doc, 'פרטים אישיים', {
-                'שם מלא': `${data.firstName} ${data.lastName}`,
-                'תעודת זהות': data.idNumber,
-                'אימייל': data.email,
-                'טלפון': data.phone
-            });
-
-            addSection(doc, 'פרטי השקעה', {
-                'סכום השקעה': formatCurrency(data.investmentAmount),
-                'בנק': data.bank,
-                'מטבע': data.currency,
-                'מטרת השקעה': data.purpose,
-                'טווח זמן': data.timeline
-            });
-
-            addSection(doc, 'שאלון סיכון', {
-                'ניסיון בשוק': data.marketExperience,
-                'סובלנות לסיכון': data.riskTolerance,
-                'תגובה להפסד': data.lossResponse,
-                'ידע בהשקעות': data.investmentKnowledge
-            });
-
-            addSection(doc, 'הצהרות', {
-                'הצהרת הבנת סיכונים': data.riskAcknowledgement === 'true' ? 'כן' : 'לא',
-                'החלטה עצמאית': data.independentDecision === 'true' ? 'כן' : 'לא',
-                'התחייבות לעדכון': data.updateCommitment === 'true' ? 'כן' : 'לא'
-            });
-
-            // Handle signature
-            if (data.signature) {
-                doc.addPage()
-                    .fontSize(14)
-                    .text('חתימת הלקוח:', { align: 'right' });
-
-                try {
-                    const signatureData = data.signature.split(',')[1];
-                    if (signatureData) {
-                        const signatureBuffer = Buffer.from(signatureData, 'base64');
-                        const compressedSignature = await compressImage(signatureBuffer);
-                        doc.image(compressedSignature, { 
-                            fit: [200, 100], 
-                            align: 'right' 
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error processing signature:', error);
-                }
-            }
-
-            // Footer
-            doc.fontSize(10)
-                .moveDown(4)
-                .text('מסמך זה הופק אוטומטית על ידי מערכת מובנה', { align: 'center' });
-
-            doc.end();
-
-            writeStream.on('finish', () => {
-                // Cleanup temp file after reading
-                fs.readFile(pdfPath, (err, data) => {
-                    if (!err) {
-                        resolve(data);
-                        fs.unlink(pdfPath, () => {});
-                    } else {
-                        reject(err);
-                    }
-                });
-            });
-            writeStream.on('error', reject);
-
-        } catch (error) {
-            reject(error);
+            doc.addImage(compressedImage, 'JPEG', 0, 0, pdfWidth, pdfHeight, null, 'FAST');
         }
+        
+        return doc.output('datauristring', { compress: true });
+    } catch (error) {
+        console.error('Browser PDF creation error:', error);
+        return null;
+    }
+}
+
+async function createServerPDF(pages) {
+    try {
+        const response = await fetch('/api/create-pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ pages })
+        });
+        
+        if (!response.ok) throw new Error('Server PDF creation failed');
+        
+        const pdfBlob = await response.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(pdfBlob);
+        });
+    } catch (error) {
+        console.error('Server PDF creation error:', error);
+        return null;
+    }
+}
+
+async function compressImage(dataUrl, maxWidth = 800, quality = 0.5) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+                height = (maxWidth * height) / width;
+                width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = dataUrl;
     });
 }
-
-function addSection(doc, title, data) {
-    doc.fontSize(16)
-        .text(title, { align: 'right', underline: true })
-        .moveDown(1)
-        .fontSize(12);
-    
-    Object.entries(data).forEach(([key, value]) => {
-        doc.text(`${key}: ${value}`, { align: 'right' });
-    });
-    
-    doc.moveDown(2);
-}
-
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('he-IL', {
-        style: 'currency',
-        currency: 'ILS'
-    }).format(amount);
-}
-
-module.exports = { createInvestmentAgreementPDF };
