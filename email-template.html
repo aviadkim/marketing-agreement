@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .email-container {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .logo {
+            display: block;
+            margin: 20px auto;
+            max-width: 200px;
+        }
+        .content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <img src="cid:logo" alt="מובנה" class="logo">
+        
+        <div class="content">
+            <h2 style="color: #333; text-align: center;">הסכם שיווק השקעות - מובנה</h2>
+            
+            <p>שלום ${data.firstName},</p>
+            
+            <p>תודה על מילוי הסכם שיווק ההשקעות.</p>
+            <p>מצורף העתק של ההסכם שמילאת בתאריך ${new Date().toLocaleDateString('he-IL')}.</p>
+            
+            <p>פרטי ההסכם:</p>
+            <ul>
+                <li>סכום השקעה: ${formatCurrency(data.investmentAmount)}</li>
+                <li>בנק: ${data.bank}</li>
+                <li>מטבע: ${data.currency}</li>
+                <li>מטרת השקעה: ${Array.isArray(data.purpose) ? data.purpose.join(', ') : data.purpose}</li>
+            </ul>
+
+            <p>במידה ויש לך שאלות נוספות, אנחנו כאן לשירותך.</p>
+            
+            <p>בברכה,<br>צוות מובנה</p>
+        </div>
+
+        <div class="footer">
+            <p>מסמך זה נשלח באופן אוטומטי, אין להשיב למייל זה</p>
+            <p>© מובנה ${new Date().getFullYear()}</p>
+        </div>
+    </div>
+</body>
+</html>
