@@ -1,6 +1,5 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKIS5nbJFMOCgLNZEsIFm0eWuGqkWb8v-1CqjAqHiM8iZ3VTrnKakaOg3PPjCiwOAM/exec';
 
-// Helper function to capture single page screenshot
 async function capturePageScreenshot() {
     try {
         const formElement = document.querySelector('.form-content');
@@ -22,7 +21,6 @@ async function capturePageScreenshot() {
     }
 }
 
-// Helper function to capture all pages
 async function captureAllPages() {
     const pages = [];
     
@@ -50,8 +48,6 @@ async function captureAllPages() {
             }
             
             document.body.removeChild(tempDiv);
-            
-            // Add delay between captures
             await new Promise(resolve => setTimeout(resolve, 500));
             
         } catch (error) {
@@ -62,7 +58,6 @@ async function captureAllPages() {
     return pages;
 }
 
-// Create PDF from captured pages
 async function createPDF(pages) {
     if (!window.jspdf) {
         console.error('jsPDF library not loaded');
@@ -91,11 +86,9 @@ async function createPDF(pages) {
     }
 }
 
-// Process and format form data
 async function processFormData() {
     const formData = {};
     
-    // Collect data from all sections
     for (let i = 1; i <= 4; i++) {
         const sectionData = localStorage.getItem(`section${i}Data`);
         if (sectionData) {
@@ -107,19 +100,15 @@ async function processFormData() {
         }
     }
 
-    // Process checkbox values
     ['riskAcknowledgement', 'independentDecision', 'updateCommitment'].forEach(field => {
         formData[field] = formData[field] === 'on' || formData[field] === true ? 'כן' : 'לא';
     });
 
-    // Get signature data
     const signatureData = document.getElementById('signatureData')?.value || formData.signature || '';
 
-    // Capture current page screenshot
     console.log('Capturing current page...');
     const currentPageScreenshot = await capturePageScreenshot();
 
-    // Capture all pages and create PDF
     console.log('Capturing all pages...');
     const pages = await captureAllPages();
     console.log('Pages captured:', pages.length);
@@ -128,22 +117,17 @@ async function processFormData() {
     console.log('PDF created:', pdfData ? 'success' : 'failed');
 
     return {
-        // Section 1
         firstName: formData.firstName || '',
         lastName: formData.lastName || '',
         idNumber: formData.idNumber || '',
         email: formData.email || '',
         phone: formData.phone || '',
-
-        // Section 2
         investmentAmount: formData.investmentAmount || '',
         bank: formData.bank || '',
         currency: formData.currency || '',
         purpose: Array.isArray(formData.purpose) ? formData.purpose.join(', ') : formData.purpose || '',
         purposeOther: formData.purposeOther || '',
         timeline: formData.timeline || '',
-
-        // Section 3
         marketExperience: Array.isArray(formData.marketExperience) ? 
             formData.marketExperience.join(', ') : formData.marketExperience || '',
         riskTolerance: formData.riskTolerance || '',
@@ -151,13 +135,9 @@ async function processFormData() {
         investmentKnowledge: Array.isArray(formData.investmentKnowledge) ? 
             formData.investmentKnowledge.join(', ') : formData.investmentKnowledge || '',
         investmentRestrictions: formData.investmentRestrictions || '',
-
-        // Section 4
         riskAcknowledgement: formData.riskAcknowledgement || 'לא',
         independentDecision: formData.independentDecision || 'לא',
         updateCommitment: formData.updateCommitment || 'לא',
-
-        // Additional data
         signature: signatureData,
         currentPageScreenshot: currentPageScreenshot,
         formPDF: pdfData,
@@ -165,7 +145,6 @@ async function processFormData() {
     };
 }
 
-// Validate form data
 function validateFormData(formData) {
     const requiredFields = ['firstName', 'lastName', 'idNumber', 'email', 'phone'];
     const missingFields = requiredFields.filter(field => !formData[field]);
@@ -181,13 +160,10 @@ function validateFormData(formData) {
     return true;
 }
 
-// Main submit function
 async function submitFormToGoogleSheets() {
     try {
-        // Show loading message
         showMessage('מעבד את הטופס...', 'info');
         
-        // Process form data
         const formData = await processFormData();
         console.log('Processing form data:', { 
             ...formData, 
@@ -196,13 +172,10 @@ async function submitFormToGoogleSheets() {
             formPDF: formData.formPDF ? '[PDF DATA]' : 'null' 
         });
 
-        // Validate form data
         validateFormData(formData);
 
-        // Show sending message
         showMessage('שולח את הטופס...', 'info');
 
-        // Submit to server
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -222,9 +195,7 @@ async function submitFormToGoogleSheets() {
     }
 }
 
-// Show message utility
 function showMessage(message, type = 'error') {
-    // Remove existing messages
     const existingMessages = document.querySelectorAll('.message');
     existingMessages.forEach(msg => msg.remove());
     
@@ -253,7 +224,6 @@ function showMessage(message, type = 'error') {
     }
 }
 
-// Clear form data
 function clearFormData() {
     for (let i = 1; i <= 4; i++) {
         localStorage.removeItem(`section${i}Data`);
@@ -261,20 +231,10 @@ function clearFormData() {
     localStorage.removeItem('lastSignature');
 }
 
-// Make functions available globally
 window.submitFormToGoogleSheets = submitFormToGoogleSheets;
 window.showMessage = showMessage;
 window.clearFormData = clearFormData;
 
-// Initialize html2canvas
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.html2canvas) {
-        html2canvas.init({
-            logging: true,
-            useCORS: true,
-            allowTaint: true,
-            scale: 2,
-            backgroundColor: '#ffffff'
-        });
-    }
+    // html2canvas is automatically initialized when loaded
 });
