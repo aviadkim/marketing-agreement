@@ -1,40 +1,96 @@
 const nodemailer = require('nodemailer');
 const path = require('path');
+const fs = require('fs');
 
-// Email Configuration
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-    }
-});
-
-async function sendPDFEmail(pdfPath, data) {
-    const emailTemplate = `
-    <div style="direction: rtl; font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <img src="cid:logo" alt="מובנה" style="display: block; margin: 20px auto; max-width: 200px;">
-        <h2 style="text-align: center; color: #333;">הסכם שיווק השקעות - מובנה</h2>
-        <p style="font-size: 16px; line-height: 1.5;">
-            שלום ${data.firstName},
-        </p>
-        <p style="font-size: 16px; line-height: 1.5;">
-            תודה על מילוי הסכם שיווק ההשקעות.
-            מצורף העתק של ההסכם שמילאת בתאריך ${new Date().toLocaleDateString('he-IL')}.
-        </p>
-        <p style="font-size: 16px; line-height: 1.5;">
-            במידה ויש לך שאלות נוספות, אנחנו כאן לשירותך.
-        </p>
-        <p style="font-size: 16px; line-height: 1.5;">
-            בברכה,<br>
-            צוות מובנה
-        </p>
-        <hr style="border: 1px solid #eee; margin: 20px 0;">
-        <p style="font-size: 12px; color: #666; text-align: center;">
-            מסמך זה נשלח באופן אוטומטי, אין להשיב למייל זה
-        </p>
-    </div>
+function createEmailTemplate(data) {
+    return `
+    <!DOCTYPE html>
+    <html dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                line-height: 1.6;
+                color: #333;
+                margin: 0;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .logo {
+                display: block;
+                margin: 20px auto;
+                max-width: 200px;
+            }
+            .details {
+                margin: 20px 0;
+                padding: 15px;
+                background: #f8f9fa;
+                border-radius: 4px;
+            }
+            .footer {
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+                text-align: center;
+                font-size: 0.9em;
+                color: #666;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <img src="cid:logo" alt="מובנה" class="logo">
+            
+            <h2 style="text-align: center;">הסכם שיווק השקעות - מובנה</h2>
+            
+            <p>שלום ${data.firstName},</p>
+            
+            <p>תודה על מילוי הסכם שיווק ההשקעות.</p>
+            <p>מצורף העתק של ההסכם שמילאת בתאריך ${new Date().toLocaleDateString('he-IL')}</p>
+            
+            <div class="details">
+                <h3>פרטי ההסכם:</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    <li>סכום השקעה: ${data.investmentAmount}</li>
+                    <li>בנק: ${data.bank}</li>
+                    <li>מטבע: ${data.currency}</li>
+                    <li>מטרת השקעה: ${data.purpose}</li>
+                </ul>
+            </div>
+            
+            <p>צוות מובנה ייצור איתך קשר בהקדם לגבי המשך התהליך.</p>
+            
+            <p>במידה ויש לך שאלות נוספות, ניתן ליצור קשר בטלפון: 03-XXXXXXX</p>
+            
+            <div class="footer">
+                <p>בברכה,<br>צוות מובנה</p>
+                <p style="font-size: 0.8em; color: #999;">
+                    מסמך זה נשלח באופן אוטומטי, אין להשיב למייל זה
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
     `;
+}
+
+async function sendEmail(data, pdfPath) {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD
+        }
+    });
 
     const mailOptions = {
         from: {
@@ -44,10 +100,10 @@ async function sendPDFEmail(pdfPath, data) {
         to: data.email,
         cc: 'info@movne.co.il',
         subject: `הסכם שיווק השקעות - ${data.firstName} ${data.lastName}`,
-        html: emailTemplate,
+        html: createEmailTemplate(data),
         attachments: [
             {
-                filename: path.basename(pdfPath),
+                filename: `הסכם_שיווק_השקעות_${data.firstName}_${data.lastName}.pdf`,
                 path: pdfPath,
                 contentType: 'application/pdf'
             },
@@ -69,4 +125,4 @@ async function sendPDFEmail(pdfPath, data) {
     }
 }
 
-module.exports = { sendPDFEmail };
+module.exports = { sendEmail };
