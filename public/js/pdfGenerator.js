@@ -1,21 +1,29 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp'); // Add sharp for image compression
 
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('he-IL', {
-        style: 'currency',
-        currency: 'ILS'
-    }).format(amount);
+async function compressImage(imageBuffer, maxWidth = 800) {
+    return sharp(imageBuffer)
+        .resize(maxWidth, null, {
+            withoutEnlargement: true,
+            fit: 'inside'
+        })
+        .jpeg({
+            quality: 70,
+            progressive: true
+        })
+        .toBuffer();
 }
 
 async function createInvestmentAgreementPDF(data) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         try {
             const doc = new PDFDocument({ 
                 size: 'A4', 
                 margin: 50, 
                 rtl: true,
+                compress: true, // Enable PDF compression
                 info: {
                     Title: 'הסכם שיווק השקעות - מובנה',
                     Author: 'מובנה'
@@ -23,75 +31,60 @@ async function createInvestmentAgreementPDF(data) {
             });
 
             const fileName = `מובנה_הסכם_שיווק_השקעות_${data.firstName}_${data.lastName}.pdf`;
-            const pdfPath = path.join(__dirname, '..', '..', 'temp', fileName);
-            
-            // Create temp directory if it doesn't exist
             const tempDir = path.join(__dirname, '..', '..', 'temp');
-            if (!fs.existsSync(tempDir)) {
-                fs.mkdirSync(tempDir);
-            }
-
+            if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+            
+            const pdfPath = path.join(tempDir, fileName);
             const writeStream = fs.createWriteStream(pdfPath);
             doc.pipe(writeStream);
 
-            // Logo
-            doc.image(path.join(__dirname, '..', 'images', 'movne-logo.png'), {
+            // Compress and add logo
+            const logoPath = path.join(__dirname, '..', 'images', 'movne-logo.png');
+            const logoBuffer = fs.readFileSync(logoPath);
+            const compressedLogo = await compressImage(logoBuffer);
+            
+            doc.image(compressedLogo, {
                 fit: [200, 100],
                 align: 'center'
             }).moveDown(2);
 
-            // Header
+            // Add document content
             doc.fontSize(20)
                 .text('הסכם שיווק השקעות - מובנה', { align: 'center' })
                 .fontSize(14)
                 .text(`תאריך: ${new Date().toLocaleDateString('he-IL')}`, { align: 'center' })
                 .moveDown(2);
 
-            // Personal Details
-            doc.fontSize(16)
-                .text('פרטים אישיים', { align: 'right', underline: true })
-                .moveDown(1)
-                .fontSize(12)
-                .text(`שם מלא: ${data.firstName} ${data.lastName}`, { align: 'right' })
-                .text(`תעודת זהות: ${data.idNumber}`, { align: 'right' })
-                .text(`אימייל: ${data.email}`, { align: 'right' })
-                .text(`טלפון: ${data.phone}`, { align: 'right' })
-                .moveDown(2);
+            // Add sections with optimized layout
+            addSection(doc, 'פרטים אישיים', {
+                'שם מלא': `${data.firstName} ${data.lastName}`,
+                'תעודת זהות': data.idNumber,
+                'אימייל': data.email,
+                'טלפון': data.phone
+            });
 
-            // Investment Details
-            doc.fontSize(16)
-                .text('פרטי השקעה', { align: 'right', underline: true })
-                .moveDown(1)
-                .fontSize(12)
-                .text(`סכום השקעה: ${formatCurrency(data.investmentAmount)}`, { align: 'right' })
-                .text(`בנק: ${data.bank}`, { align: 'right' })
-                .text(`מטבע: ${data.currency}`, { align: 'right' })
-                .text(`מטרת השקעה: ${data.purpose}`, { align: 'right' })
-                .text(`טווח זמן: ${data.timeline}`, { align: 'right' })
-                .moveDown(2);
+            addSection(doc, 'פרטי השקעה', {
+                'סכום השקעה': formatCurrency(data.investmentAmount),
+                'בנק': data.bank,
+                'מטבע': data.currency,
+                'מטרת השקעה': data.purpose,
+                'טווח זמן': data.timeline
+            });
 
-            // Risk Assessment
-            doc.fontSize(16)
-                .text('שאלון סיכון', { align: 'right', underline: true })
-                .moveDown(1)
-                .fontSize(12)
-                .text(`ניסיון בשוק: ${data.marketExperience}`, { align: 'right' })
-                .text(`סובלנות לסיכון: ${data.riskTolerance}`, { align: 'right' })
-                .text(`תגובה להפסד: ${data.lossResponse}`, { align: 'right' })
-                .text(`ידע בהשקעות: ${data.investmentKnowledge}`, { align: 'right' })
-                .moveDown(2);
+            addSection(doc, 'שאלון סיכון', {
+                'ניסיון בשוק': data.marketExperience,
+                'סובלנות לסיכון': data.riskTolerance,
+                'תגובה להפסד': data.lossResponse,
+                'ידע בהשקעות': data.investmentKnowledge
+            });
 
-            // Declarations
-            doc.fontSize(16)
-                .text('הצהרות', { align: 'right', underline: true })
-                .moveDown(1)
-                .fontSize(12)
-                .text(`הצהרת הבנת סיכונים: ${data.riskAcknowledgement === 'true' ? 'כן' : 'לא'}`, { align: 'right' })
-                .text(`החלטה עצמאית: ${data.independentDecision === 'true' ? 'כן' : 'לא'}`, { align: 'right' })
-                .text(`התחייבות לעדכון: ${data.updateCommitment === 'true' ? 'כן' : 'לא'}`, { align: 'right' })
-                .moveDown(2);
+            addSection(doc, 'הצהרות', {
+                'הצהרת הבנת סיכונים': data.riskAcknowledgement === 'true' ? 'כן' : 'לא',
+                'החלטה עצמאית': data.independentDecision === 'true' ? 'כן' : 'לא',
+                'התחייבות לעדכון': data.updateCommitment === 'true' ? 'כן' : 'לא'
+            });
 
-            // Signature
+            // Handle signature
             if (data.signature) {
                 doc.addPage()
                     .fontSize(14)
@@ -100,8 +93,12 @@ async function createInvestmentAgreementPDF(data) {
                 try {
                     const signatureData = data.signature.split(',')[1];
                     if (signatureData) {
-                        const imgBuffer = Buffer.from(signatureData, 'base64');
-                        doc.image(imgBuffer, { fit: [200, 100], align: 'right' });
+                        const signatureBuffer = Buffer.from(signatureData, 'base64');
+                        const compressedSignature = await compressImage(signatureBuffer);
+                        doc.image(compressedSignature, { 
+                            fit: [200, 100], 
+                            align: 'right' 
+                        });
                     }
                 } catch (error) {
                     console.error('Error processing signature:', error);
@@ -115,13 +112,43 @@ async function createInvestmentAgreementPDF(data) {
 
             doc.end();
 
-            writeStream.on('finish', () => resolve(pdfPath));
+            writeStream.on('finish', () => {
+                // Cleanup temp file after reading
+                fs.readFile(pdfPath, (err, data) => {
+                    if (!err) {
+                        resolve(data);
+                        fs.unlink(pdfPath, () => {});
+                    } else {
+                        reject(err);
+                    }
+                });
+            });
             writeStream.on('error', reject);
 
         } catch (error) {
             reject(error);
         }
     });
+}
+
+function addSection(doc, title, data) {
+    doc.fontSize(16)
+        .text(title, { align: 'right', underline: true })
+        .moveDown(1)
+        .fontSize(12);
+    
+    Object.entries(data).forEach(([key, value]) => {
+        doc.text(`${key}: ${value}`, { align: 'right' });
+    });
+    
+    doc.moveDown(2);
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('he-IL', {
+        style: 'currency',
+        currency: 'ILS'
+    }).format(amount);
 }
 
 module.exports = { createInvestmentAgreementPDF };
