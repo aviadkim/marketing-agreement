@@ -4,41 +4,36 @@ const path = require('path');
 const cors = require('cors');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const PDFDocument = require('pdfkit');
-const nodemailer = require('nodemailer');
+const { sendEmail } = require('./email');
 const fs = require('fs');
 const app = express();
 
-// בדיקת משתני סביבה
+// Environment checks
 if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SPREADSHEET_ID || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
     console.error('Missing required environment variables');
     process.exit(1);
 }
 
-// Middleware
-app.use(cors());
+// Middleware setup
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://marketing-agreement-production.up.railway.app'],
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// קונפיגורציה
+// Config variables
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID;
 const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 const TEMP_DIR = path.join(__dirname, 'temp');
 
-// יצירת תיקיית temp אם לא קיימת
+// Create temp directory if doesn't exist
 if (!fs.existsSync(TEMP_DIR)) {
     fs.mkdirSync(TEMP_DIR);
 }
-
-// קונפיגורציית אימייל
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-    }
-});
 
 function formatCurrency(amount) {
     if (!amount) return '0 ₪';
@@ -49,7 +44,7 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
-async function createInvestmentAgreementPDF(data, formImages) {
+async function createInvestmentAgreementPDF(data, formImages = []) {
     return new Promise((resolve, reject) => {
         try {
             const doc = new PDFDocument({ 
@@ -69,8 +64,8 @@ async function createInvestmentAgreementPDF(data, formImages) {
 
             doc.pipe(writeStream);
 
-            // Add form images if available
-            if (formImages && formImages.length) {
+            // Add captured form images
+            if (formImages.length > 0) {
                 formImages.forEach((imgData, index) => {
                     if (index > 0) doc.addPage();
                     try {
@@ -86,10 +81,10 @@ async function createInvestmentAgreementPDF(data, formImages) {
                 });
             }
 
-            // Add generated content
+            // Add generated PDF content
             doc.addPage();
 
-            // Logo
+            // Add logo
             const logoPath = path.join(__dirname, 'public', 'images', 'movne-logo.png');
             if (fs.existsSync(logoPath)) {
                 doc.image(logoPath, {
@@ -98,7 +93,7 @@ async function createInvestmentAgreementPDF(data, formImages) {
                 }).moveDown(2);
             }
 
-            // Content sections
+            // Add content sections
             addHeader(doc, data);
             addPersonalDetails(doc, data);
             addInvestmentDetails(doc, data);
@@ -118,7 +113,7 @@ async function createInvestmentAgreementPDF(data, formImages) {
     });
 }
 
-// Helper functions for PDF sections
+// PDF Section Helpers
 function addHeader(doc, data) {
     doc.fontSize(20)
         .text('הסכם שיווק השקעות - מובנה', { align: 'center' })
@@ -201,38 +196,10 @@ function addFooter(doc) {
         .text('מסמך זה הופק אוטומטית על ידי מערכת מובנה', { align: 'center' });
 }
 
-async function sendPDFEmail(pdfPath, data) {
-    const emailTemplate = fs.readFileSync(path.join(__dirname, 'templates', 'email.html'), 'utf8');
-    const compiledTemplate = eval('`' + emailTemplate + '`');
-
-    const mailOptions = {
-        from: {
-            name: 'מובנה',
-            address: process.env.EMAIL_USER
-        },
-        to: data.email,
-        cc: 'info@movne.co.il',
-        subject: `הסכם שיווק השקעות - ${data.firstName} ${data.lastName}`,
-        html: compiledTemplate,
-        attachments: [
-            {
-                filename: `הסכם_שיווק_השקעות_${data.firstName}_${data.lastName}.pdf`,
-                path: pdfPath
-            },
-            {
-                filename: 'logo.png',
-                path: path.join(__dirname, 'public', 'images', 'movne-logo.png'),
-                cid: 'logo'
-            }
-        ]
-    };
-
-    return transporter.sendMail(mailOptions);
-}
-
 async function appendToSheet(data) {
     try {
         const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
+        
         await doc.useServiceAccountAuth({
             client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
             private_key: GOOGLE_PRIVATE_KEY,
@@ -263,9 +230,10 @@ async function appendToSheet(data) {
             'החלטה עצמאית': data.independentDecision === 'on' || data.independentDecision === true ? 'כן' : 'לא',
             'התחייבות לעדכון': data.updateCommitment === 'on' || data.updateCommitment === true ? 'כן' : 'לא',
         });
+
     } catch (error) {
         console.error('Error in appendToSheet:', error);
-        throw new Error(`Failed to append to sheet: ${error.message}`);
+        throw error;
     }
 }
 
@@ -298,21 +266,21 @@ app.post('/api/submit', async (req, res) => {
             }
         }
 
-        // Create PDF with form images
-        const pdfPath = await createInvestmentAgreementPDF(formData, formData.formImages);
+        // Create PDF with captured form images
+        const pdfPath = await createInvestmentAgreementPDF(formData, formData.formImages || []);
         console.log('PDF created successfully');
 
-        // Send email
-        await sendPDFEmail(pdfPath, formData);
+        // Send email with PDF
+        await sendEmail(formData, pdfPath);
         console.log('Email sent successfully');
 
-        // Add to sheet
+        // Add to Google Sheet
         await appendToSheet(formData);
         console.log('Data added to sheet successfully');
 
-        // Cleanup
+        // Cleanup temp PDF
         fs.unlink(pdfPath, err => {
-            if (err) console.error('Error deleting PDF:', err);
+            if (err) console.error('Error deleting temp PDF:', err);
         });
 
         res.json({
@@ -329,16 +297,16 @@ app.post('/api/submit', async (req, res) => {
     }
 });
 
-// Error handling
+// Error handler
 app.use((err, req, res, next) => {
-    console.error('Global error handler:', err);
+    console.error('Global error:', err);
     res.status(500).json({
-        error: 'אירעה שגיאה!',
+        error: 'שגיאה!',
         message: err.message
     });
 });
 
-// Server startup
+// Start server
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
@@ -346,11 +314,7 @@ const server = app.listen(PORT, () => {
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Closing server...');
-    server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-    });
+    server.close(() => process.exit(0));
 });
 
 process.on('unhandledRejection', (reason, promise) => {
