@@ -237,52 +237,67 @@
             });
 
             // Handle form submission
-            submitButton.addEventListener('click', async function(e) {
-                e.preventDefault();
-                
-                if (form.checkValidity() && !signaturePad.isEmpty()) {
-                    const buttonText = this.innerHTML;
-                    this.disabled = true;
-                    this.innerHTML = '<span class="spinner"></span>';
+            // Handle form submission (חלק הsubmit בתוך הDOMContentLoaded)
+submitButton.addEventListener('click', async function(e) {
+    e.preventDefault();
+    
+    if (form.checkValidity() && !signaturePad.isEmpty()) {
+        const buttonText = this.innerHTML;
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner"></span>';
 
-                    try {
-                        // Save signature
-                        const signatureData = signaturePad.toDataURL();
-                        document.getElementById('signatureData').value = signatureData;
-                        localStorage.setItem('lastSignature', signatureData);
+        try {
+            // Save signature
+            const signatureData = signaturePad.toDataURL();
+            document.getElementById('signatureData').value = signatureData;
+            localStorage.setItem('lastSignature', signatureData);
 
-                        // Save form data
-                        const formData = new FormData(form);
-                        const dataToSave = {};
-                        formData.forEach((value, key) => {
-                            dataToSave[key] = value;
-                        });
-                        dataToSave.signature = signatureData;
-                        localStorage.setItem('section4Data', JSON.stringify(dataToSave));
-
-                        // Submit form
-                        const success = await window.submitFormToGoogleSheets();
-
-                        if (success) {
-                            window.showMessage('הטופס נשלח בהצלחה', 'success');
-                            window.clearFormData();
-                            window.location.href = '/sections/preview.html';
-                        }
-                    } catch (error) {
-                        console.error('Submission error:', error);
-                        window.showMessage(error.message || 'אירעה שגיאה בשליחת הטופס. נא לנסות שוב.', 'error');
-                    } finally {
-                        this.disabled = false;
-                        this.innerHTML = buttonText;
-                    }
-                } else {
-                    if (signaturePad.isEmpty()) {
-                        window.showMessage('נא להוסיף חתימה', 'error');
-                    } else {
-                        window.showMessage('נא למלא את כל השדות הנדרשים', 'error');
-                    }
-                }
+            // Save form data
+            const formData = new FormData(form);
+            const dataToSave = {};
+            formData.forEach((value, key) => {
+                dataToSave[key] = value;
             });
+            dataToSave.signature = signatureData;
+
+            // צילום הטופס
+            const formElement = document.querySelector('.form-content');
+            const canvas = await html2canvas(formElement, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: true,
+                width: formElement.offsetWidth,
+                height: formElement.offsetHeight
+            });
+            dataToSave.formScreenshot = canvas.toDataURL('image/png', 1.0);
+
+            localStorage.setItem('section4Data', JSON.stringify(dataToSave));
+
+            // Submit form
+            const success = await window.submitFormToGoogleSheets();
+
+            if (success) {
+                window.showMessage('הטופס נשלח בהצלחה', 'success');
+                window.clearFormData();
+                window.location.href = '/sections/preview.html';
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            window.showMessage(error.message || 'אירעה שגיאה בשליחת הטופס. נא לנסות שוב.', 'error');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = buttonText;
+        }
+    } else {
+        if (signaturePad.isEmpty()) {
+            window.showMessage('נא להוסיף חתימה', 'error');
+        } else {
+            window.showMessage('נא למלא את כל השדות הנדרשים', 'error');
+        }
+    }
+});
 
             // Handle back button
             document.getElementById('btnBack').addEventListener('click', function() {
