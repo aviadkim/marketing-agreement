@@ -28,9 +28,21 @@ async function processFormData() {
     for (let i = 1; i <= 4; i++) {
         const sectionData = localStorage.getItem(`section${i}Data`);
         if (sectionData) {
-            Object.assign(formData, JSON.parse(sectionData));
+            try {
+                Object.assign(formData, JSON.parse(sectionData));
+            } catch (error) {
+                console.error(`Error parsing section ${i} data:`, error);
+            }
         }
     }
+
+    // Process checkbox values
+    ['riskAcknowledgement', 'independentDecision', 'updateCommitment'].forEach(field => {
+        formData[field] = formData[field] === 'on' || formData[field] === true ? 'כן' : 'לא';
+    });
+
+    // Get signature data
+    const signatureData = document.getElementById('signatureData')?.value || formData.signature || '';
 
     return {
         // Section 1
@@ -58,12 +70,12 @@ async function processFormData() {
         investmentRestrictions: formData.investmentRestrictions || '',
 
         // Section 4
-        riskAcknowledgement: formData.riskAcknowledgement === 'on' ? 'כן' : 'לא',
-        independentDecision: formData.independentDecision === 'on' ? 'כן' : 'לא',
-        updateCommitment: formData.updateCommitment === 'on' ? 'כן' : 'לא',
+        riskAcknowledgement: formData.riskAcknowledgement || 'לא',
+        independentDecision: formData.independentDecision || 'לא',
+        updateCommitment: formData.updateCommitment || 'לא',
 
         // Additional data
-        signature: formData.signature || '',
+        signature: signatureData,
         formScreenshot: await captureFormScreenshot(),
         submissionDate: new Date().toISOString()
     };
@@ -95,26 +107,24 @@ async function submitFormToGoogleSheets() {
         // Validate form data
         validateFormData(formData);
 
-        // Submit to server
-        const response = await fetch('/api/submit', {
+        // Submit directly to Google Script
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
+            mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(formData)
         });
 
-        const data = await response.json();
-        console.log('Server response:', data);
-
-        if (!response.ok || data.error) {
-            throw new Error(data.message || 'שגיאה בשליחת הנתונים');
-        }
-
+        // Since mode is no-cors, we can't access the response
+        // We'll assume success if we get here without an error
+        console.log('Form submitted successfully');
         return true;
 
     } catch (error) {
         console.error('Form submission error:', error);
+        showMessage(error.message || 'שגיאה בשליחת הטופס', 'error');
         throw error;
     }
 }
