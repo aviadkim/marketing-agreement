@@ -2,3 +2,6 @@ GOOGLE_SCRIPT_URL=https://script.google.com/macros/s/AKfycbz2Cu2YDQwHz5acvMFx7Gz
 GOOGLE_SPREADSHEET_ID=11z5zIfLN8ViVPQUGfjfxC9vJp4P_Dsu9CpcLuiq2u5s
 GOOGLE_SERVICE_ACCOUNT_EMAIL=aviadmovne@service-accounts-443621.iam.gserviceaccount.com
 GOOGLE_PRIVATE_KEY=71d95247e4c53ee864f116af4b9709551979ced6
+EMAIL_USER=aviad@kimfo-fs.com
+EMAIL_PASSWORD=kimfo210
+EMAIL_CC=info@movne.co.il
