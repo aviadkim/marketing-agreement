@@ -1,61 +1,72 @@
-// config/email.js
-const RESEND_API_KEY = process.env.RESEND_API_KEY; // נוסיף אחר כך ב-Railway
+const nodemailer = require('nodemailer');
+const path = require('path');
 
-async function sendFormEmail(formData) {
-    try {
-        const response = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${RESEND_API_KEY}`,
-                'Content-Type': 'application/json'
+// Email Configuration
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+    }
+});
+
+async function sendPDFEmail(pdfPath, data) {
+    const emailTemplate = `
+    <div style="direction: rtl; font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <img src="cid:logo" alt="מובנה" style="display: block; margin: 20px auto; max-width: 200px;">
+        <h2 style="text-align: center; color: #333;">הסכם שיווק השקעות - מובנה</h2>
+        <p style="font-size: 16px; line-height: 1.5;">
+            שלום ${data.firstName},
+        </p>
+        <p style="font-size: 16px; line-height: 1.5;">
+            תודה על מילוי הסכם שיווק ההשקעות.
+            מצורף העתק של ההסכם שמילאת בתאריך ${new Date().toLocaleDateString('he-IL')}.
+        </p>
+        <p style="font-size: 16px; line-height: 1.5;">
+            במידה ויש לך שאלות נוספות, אנחנו כאן לשירותך.
+        </p>
+        <p style="font-size: 16px; line-height: 1.5;">
+            בברכה,<br>
+            צוות מובנה
+        </p>
+        <hr style="border: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #666; text-align: center;">
+            מסמך זה נשלח באופן אוטומטי, אין להשיב למייל זה
+        </p>
+    </div>
+    `;
+
+    const mailOptions = {
+        from: {
+            name: 'מובנה',
+            address: process.env.EMAIL_USER
+        },
+        to: data.email,
+        cc: 'info@movne.co.il',
+        subject: `הסכם שיווק השקעות - ${data.firstName} ${data.lastName}`,
+        html: emailTemplate,
+        attachments: [
+            {
+                filename: path.basename(pdfPath),
+                path: pdfPath,
+                contentType: 'application/pdf'
             },
-            body: JSON.stringify({
-                from: 'מובנה גלובל <info@movne.co.il>',
-                to: 'aviad@movne.co.il',
-                bcc: formData.email, // העתק ללקוח
-                subject: 'הסכם שיווק חדש התקבל - מובנה גלובל',
-                html: getEmailTemplate(formData)
-            })
-        });
+            {
+                filename: 'logo.png',
+                path: path.join(__dirname, 'public', 'images', 'movne-logo.png'),
+                cid: 'logo'
+            }
+        ]
+    };
 
-        return response.ok;
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully');
+        return true;
     } catch (error) {
         console.error('Error sending email:', error);
-        return false;
+        throw error;
     }
 }
 
-function getEmailTemplate(data) {
-    return `
-    <div dir="rtl" style="font-family: Arial, sans-serif;">
-        <h2 style="color: #0066cc;">הסכם שיווק חדש התקבל</h2>
-        
-        <div style="background: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-            <h3>פרטי לקוח:</h3>
-            <ul>
-                <li>שם מלא: ${data.fullName}</li>
-                <li>טלפון: ${data.phone}</li>
-                <li>דוא"ל: ${data.email}</li>
-                <li>ת.ז: ${data.id}</li>
-            </ul>
-        </div>
-
-        <div style="margin: 20px 0;">
-            <h3>פרטי השאלון:</h3>
-            <ul>
-                ${Object.entries(data.riskProfile || {}).map(([key, value]) => 
-                    `<li>${key}: ${value}</li>`
-                ).join('')}
-            </ul>
-        </div>
-
-        <div style="margin-top: 30px; border-top: 2px solid #ddd; padding-top: 20px;">
-            <p style="color: #666;">
-                הודעה זו נשלחה באופן אוטומטי ממערכת הטפסים של מובנה גלובל.
-            </p>
-        </div>
-    </div>
-    `;
-}
-
-module.exports = { sendFormEmail };
+module.exports = { sendPDFEmail };
