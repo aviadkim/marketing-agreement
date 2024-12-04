@@ -3,6 +3,7 @@ class SignatureHandler {
         this.signaturePad = null;
         this.isDrawing = false;
         this.currentSection = this.getCurrentSection();
+        this.loadSavedSignature = this.loadSavedSignature.bind(this);
         this.initialize();
     }
 
@@ -10,6 +11,16 @@ class SignatureHandler {
         const path = window.location.pathname;
         const match = path.match(/section(\d+)/);
         return match ? parseInt(match[1]) : null;
+    }
+
+    loadSavedSignature() {
+        if (!this.signaturePad || this.currentSection === 4) return;
+        
+        const savedSignature = localStorage.getItem('lastSignature');
+        if (savedSignature) {
+            this.signaturePad.fromDataURL(savedSignature);
+            this.updateSignatureInput(savedSignature);
+        }
     }
 
     initialize() {
@@ -27,7 +38,6 @@ class SignatureHandler {
         window.addEventListener('resize', () => this.resizeCanvas());
         this.setupButtons();
 
-        // Clear signature in section 4
         if (this.currentSection === 4) {
             this.clearSignature();
         } else {
@@ -46,7 +56,6 @@ class SignatureHandler {
         canvas.height = 200 * ratio;
         canvas.getContext('2d').scale(ratio, ratio);
         
-        // Restore signature after resize if exists and not in section 4
         if (this.currentSection !== 4) {
             const savedSignature = localStorage.getItem('lastSignature');
             if (savedSignature) {
@@ -72,11 +81,9 @@ class SignatureHandler {
                 if (!this.signaturePad.isEmpty()) {
                     const signatureData = this.signaturePad.toDataURL();
                     this.updateSignatureInput(signatureData);
-                    // Save signature only if not in section 4
                     if (this.currentSection !== 4) {
                         localStorage.setItem('lastSignature', signatureData);
                     }
-                    // Trigger form validation if exists
                     if (window.checkFormValidity) {
                         window.checkFormValidity();
                     }
@@ -92,7 +99,6 @@ class SignatureHandler {
             if (this.currentSection !== 4) {
                 localStorage.removeItem('lastSignature');
             }
-            // Trigger form validation if exists
             if (window.checkFormValidity) {
                 window.checkFormValidity();
             }
@@ -105,7 +111,6 @@ class SignatureHandler {
             if (previousSignature) {
                 this.signaturePad.fromDataURL(previousSignature);
                 this.updateSignatureInput(previousSignature);
-                // Trigger form validation if exists
                 if (window.checkFormValidity) {
                     window.checkFormValidity();
                 }
@@ -127,7 +132,6 @@ class SignatureHandler {
     }
 }
 
-// Initialize the signature handler
 document.addEventListener('DOMContentLoaded', () => {
     window.signatureHandler = new SignatureHandler();
 });
