@@ -3,6 +3,9 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
+const PDFDocument = require('pdfkit');
+const nodemailer = require('nodemailer');
+const fs = require('fs');
 const app = express();
 
 // Environment variable checks
@@ -31,6 +34,118 @@ app.use(express.static(path.join(__dirname, 'public')));
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID;
 const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
+
+// Email Configuration
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'aviad@kimfo-fs.com', // החלף במייל שלך
+        pass: process.env.EMAIL_PASSWORD // הוסף סיסמה ב-.env
+    }
+});
+
+// Function to create PDF
+function createInvestmentAgreementPDF(data) {
+    return new Promise((resolve, reject) => {
+        try {
+            const doc = new PDFDocument({ size: 'A4', margin: 50, rtl: true });
+            const fileName = `agreement_${data.idNumber}_${Date.now()}.pdf`;
+            const pdfPath = path.join(__dirname, fileName);
+            const writeStream = fs.createWriteStream(pdfPath);
+
+            doc.pipe(writeStream);
+
+            // Header
+            doc.fontSize(20)
+                .text('הסכם שיווק השקעות - מובנה', { align: 'center' })
+                .fontSize(14)
+                .text(`העתק מהטופס שמולא בתאריך ${new Date().toLocaleDateString('he-IL')}`, { align: 'center' })
+                .moveDown(2);
+
+            // Personal Details
+            doc.fontSize(16)
+                .text('פרטים אישיים', { align: 'right' })
+                .moveDown(1)
+                .fontSize(12)
+                .text(`שם מלא: ${data.firstName} ${data.lastName}`, { align: 'right' })
+                .text(`תעודת זהות: ${data.idNumber}`, { align: 'right' })
+                .text(`אימייל: ${data.email}`, { align: 'right' })
+                .text(`טלפון: ${data.phone}`, { align: 'right' })
+                .moveDown(2);
+
+            // Investment Details
+            doc.fontSize(16)
+                .text('פרטי השקעה', { align: 'right' })
+                .moveDown(1)
+                .fontSize(12)
+                .text(`סכום השקעה: ${data.investmentAmount}`, { align: 'right' })
+                .text(`בנק: ${data.bank}`, { align: 'right' })
+                .text(`מטבע: ${data.currency}`, { align: 'right' })
+                .text(`מטרת השקעה: ${data.purpose}`, { align: 'right' })
+                .text(`טווח זמן: ${data.timeline}`, { align: 'right' })
+                .moveDown(2);
+
+            // Risk Assessment
+            doc.fontSize(16)
+                .text('שאלון סיכון', { align: 'right' })
+                .moveDown(1)
+                .fontSize(12)
+                .text(`ניסיון בשוק: ${data.marketExperience}`, { align: 'right' })
+                .text(`סובלנות לסיכון: ${data.riskTolerance}`, { align: 'right' })
+                .text(`תגובה להפסד: ${data.lossResponse}`, { align: 'right' })
+                .text(`ידע בהשקעות: ${data.investmentKnowledge}`, { align: 'right' })
+                .text(`מגבלות: ${data.investmentRestrictions || 'אין'}`, { align: 'right' })
+                .moveDown(2);
+
+            // Declarations
+            doc.fontSize(16)
+                .text('הצהרות', { align: 'right' })
+                .moveDown(1)
+                .fontSize(12)
+                .text(`הצהרת סיכון: ${data.riskAcknowledgement}`, { align: 'right' })
+                .text(`החלטה עצמאית: ${data.independentDecision}`, { align: 'right' })
+                .text(`התחייבות לעדכון: ${data.updateCommitment}`, { align: 'right' })
+                .moveDown(2);
+
+            // Signature
+            if (data.signature) {
+                doc.addPage()
+                    .fontSize(14)
+                    .text('חתימת הלקוח:', { align: 'right' });
+
+                const signatureData = data.signature.split(',')[1];
+                if (signatureData) {
+                    const imgBuffer = Buffer.from(signatureData, 'base64');
+                    doc.image(imgBuffer, { fit: [200, 100], align: 'right' });
+                }
+            }
+
+            doc.end();
+
+            writeStream.on('finish', () => resolve(pdfPath));
+            writeStream.on('error', reject);
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+// Function to send email with PDF
+async function sendPDFEmail(pdfPath, data) {
+    const mailOptions = {
+        from: 'aviad@kimfo-fs.com',
+        to: data.email,
+        cc: 'info@kimfo-fs.com',
+        subject: 'הסכם שיווק השקעות - מובנה',
+        text: `${data.firstName} שלום,\n\nמצורף העתק של הסכם שיווק ההשקעות שמילאת.\n\nבברכה,\nצוות מובנה`,
+        attachments: [{
+            filename: path.basename(pdfPath),
+            path: pdfPath
+        }]
+    };
+
+    return transporter.sendMail(mailOptions);
+}
 
 async function appendToSheet(data) {
     try {
@@ -111,8 +226,22 @@ app.post('/api/submit', async (req, res) => {
             }
         }
 
+        // Create and save PDF
+        const pdfPath = await createInvestmentAgreementPDF(formData);
+        console.log('PDF created successfully');
+
+        // Send email with PDF
+        await sendPDFEmail(pdfPath, formData);
+        console.log('Email sent successfully');
+
+        // Add to Google Sheet
         await appendToSheet(formData);
         console.log('Form processed successfully');
+
+        // Clean up PDF file
+        fs.unlink(pdfPath, (err) => {
+            if (err) console.error('Error deleting PDF file:', err);
+        });
         
         res.json({
             success: true,
@@ -163,3 +292,5 @@ process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
     process.exit(1);
 });
+
+module.exports = app;
