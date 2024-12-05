@@ -213,21 +213,20 @@ function navigateNext() {
         isValid = validateSection2();
     } else if (currentSection === 3) {
         isValid = validateSection3();
-    } else {
-        isValid = form.checkValidity();
-        if (!isValid) form.reportValidity();
+    } else if (currentSection === 4) {  // Add this section
+        isValid = validateSection4();
+        if (isValid) {
+            saveFormData();
+            // After section 4, redirect to thank you page
+            window.location.href = '/sections/thank-you.html';
+            return;
+        }
     }
 
     if (isValid) {
         logDebug('Form is valid, saving and navigating...');
         saveFormData();
-        
-        // After section 4, go to thank-you page
-        if (currentSection === 4) {
-            window.location.href = '/sections/thank-you.html';
-        } else {
-            window.location.href = `/sections/section${currentSection + 1}.html`;
-        }
+        window.location.href = `/sections/section${currentSection + 1}.html`;
     } else {
         logDebug('Form validation failed');
     }
