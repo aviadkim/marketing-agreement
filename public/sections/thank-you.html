@@ -24,6 +24,36 @@
             font-size: 48px;
             margin: 20px 0;
         }
+        .download-button {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .download-button:hover {
+            background: #45a049;
+        }
+        .note {
+            color: #666;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .contact-info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .download-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -32,11 +62,43 @@
         <div class="success-icon">✓</div>
         <h1>תודה על מילוי הטופס!</h1>
         <p>הטופס נשלח בהצלחה. נשלח אליך עותק למייל.</p>
+        
+        <div class="download-section">
+            <h3>להורדת העתק של ההסכם:</h3>
+            <a href="" id="downloadButton" class="download-button" target="_blank">
+                לחץ כאן להורדה
+            </a>
+            <p class="note">* הקישור יהיה זמין למשך 30 ימים</p>
+        </div>
+
         <p>נציג שלנו יצור איתך קשר בהקדם.</p>
+        
         <div class="contact-info">
             <p>לשאלות: 03-XXXXXXX</p>
             <p>info@movne.co.il</p>
         </div>
     </div>
+
+    <script>
+        // Get download URL from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const formData = localStorage.getItem('section4Data');
+            if (formData) {
+                try {
+                    const data = JSON.parse(formData);
+                    if (data.downloadUrl) {
+                        document.getElementById('downloadButton').href = data.downloadUrl;
+                    } else {
+                        document.querySelector('.download-section').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error loading download URL:', error);
+                    document.querySelector('.download-section').style.display = 'none';
+                }
+            } else {
+                document.querySelector('.download-section').style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
