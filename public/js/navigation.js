@@ -136,7 +136,7 @@ function validateSection2() {
         errors.forEach(error => showMessage(error, 'error'));
     }
 
-    logDebug('Section 2 validation:', { isValid, errors });
+   logDebug('Section 2 validation:', { isValid, errors });
     return isValid;
 }
 
@@ -144,10 +144,9 @@ function validateSection2() {
 function validateSection3() {
     const form = document.querySelector('form');
     if (!form) return false;
-
     let isValid = true;
     const errors = [];
-
+    
     // Check market experience
     if (!form.querySelector('input[name="marketExperience"]:checked')) {
         isValid = false;
@@ -174,6 +173,57 @@ function validateSection3() {
 
     if (!isValid) {
         errors.forEach(error => showMessage(error, 'error'));
+    }
+    return isValid;
+}
+
+// Validate section 4
+function validateSection4() {
+    const form = document.querySelector('form');
+    if (!form) return false;
+
+    let isValid = true;
+    const errors = [];
+
+    // Check required checkboxes
+    ['riskAcknowledgement', 'independentDecision', 'updateCommitment'].forEach(field => {
+        if (!form.querySelector(`input[name="${field}"]:checked`)) {
+            isValid = false;
+            errors.push('יש לאשר את כל ההצהרות');
+        }
+    });
+
+    // Check signature
+    const signatureData = document.getElementById('signatureData')?.value;
+    if (!signatureData) {
+        isValid = false;
+        errors.push('נדרשת חתימה');
+    }
+
+    if (!isValid) {
+        errors.forEach(error => showMessage(error, 'error'));
+    }
+
+    if (isValid) {
+        // Generate download URL and save it
+        const formData = {};
+        const data = new FormData(form);
+        data.forEach((value, key) => formData[key] = value);
+        
+        // Add current section data to localStorage before submitting
+        localStorage.setItem('section4Data', JSON.stringify(formData));
+        
+        // Submit form to Google Sheets
+        if (window.submitFormToGoogleSheets) {
+            window.submitFormToGoogleSheets()
+                .then(() => {
+                    window.location.href = '/sections/thank-you.html';
+                })
+                .catch(error => {
+                    console.error('Submit error:', error);
+                    showMessage('שגיאה בשליחת הטופס', 'error');
+                });
+        }
     }
 
     return isValid;
@@ -208,19 +258,16 @@ function navigateNext() {
     }
 
     let isValid = true;
-
     if (currentSection === 2) {
         isValid = validateSection2();
     } else if (currentSection === 3) {
         isValid = validateSection3();
-    } else if (currentSection === 4) {  // Add this section
+    } else if (currentSection === 4) {
         isValid = validateSection4();
-        if (isValid) {
-            saveFormData();
-            // After section 4, redirect to thank you page
-            window.location.href = '/sections/thank-you.html';
-            return;
-        }
+        return; // Return here as submission is handled in validateSection4
+    } else {
+        isValid = form.checkValidity();
+        if (!isValid) form.reportValidity();
     }
 
     if (isValid) {
