@@ -1,27 +1,9 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKIS5nbJFMOCgLNZEsIFm0eWuGqkWb8v-1CqjAqHiM8iZ3VTrnKakaOg3PPjCiwOAM/exec';
 
-async function compressImage(dataUrl, maxWidth = 800, quality = 0.7) {
-    const img = new Image();
-    return new Promise((resolve) => {
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            
-            if (width > maxWidth) {
-                height = (maxWidth * height) / width;
-                width = maxWidth;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.src = dataUrl;
-    });
+function generateDownloadUrl(formData) {
+    const timestamp = Date.now();
+    const uniqueId = `${timestamp}_${formData.idNumber}`;
+    return `${window.location.origin}/form/${uniqueId}`;
 }
 
 async function capturePageScreenshot() {
@@ -38,7 +20,7 @@ async function capturePageScreenshot() {
             width: formElement.offsetWidth,
             height: formElement.offsetHeight * 1.5
         });
-        return await compressImage(canvas.toDataURL());
+        return canvas.toDataURL('image/jpeg', 0.7);
     } catch (error) {
         console.error('Error capturing page:', error);
         return null;
@@ -68,8 +50,7 @@ async function captureAllPages() {
                     width: formContent.offsetWidth,
                     height: formContent.offsetHeight * 1.5
                 });
-                const compressedPage = await compressImage(canvas.toDataURL());
-                pages.push(compressedPage);
+                pages.push(canvas.toDataURL('image/jpeg', 0.7));
             }
             
             document.body.removeChild(tempDiv);
@@ -135,9 +116,6 @@ async function processFormData() {
     });
 
     let signatureData = document.getElementById('signatureData')?.value || formData.signature || '';
-    if (signatureData) {
-        signatureData = await compressImage(signatureData, 400, 0.6);
-    }
 
     console.log('Capturing current page...');
     const currentPageScreenshot = await capturePageScreenshot();
@@ -148,6 +126,9 @@ async function processFormData() {
     
     const pdfData = await createPDF(pages);
     console.log('PDF created:', pdfData ? 'success' : 'failed');
+
+    // Add download URL
+    formData.downloadUrl = generateDownloadUrl(formData);
 
     return {
         firstName: formData.firstName || '',
@@ -174,6 +155,7 @@ async function processFormData() {
         signature: signatureData,
         currentPageScreenshot: currentPageScreenshot,
         formPDF: pdfData,
+        downloadUrl: formData.downloadUrl,
         submissionDate: new Date().toISOString()
     };
 }
@@ -218,6 +200,7 @@ async function submitFormToGoogleSheets() {
         });
 
         showMessage('הטופס נשלח בהצלחה', 'success');
+        window.location.href = formData.downloadUrl;
         return true;
 
     } catch (error) {
