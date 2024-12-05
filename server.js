@@ -246,11 +246,9 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
 });
 
-// Add new route here
 app.get('/form/:id', (req, res) => {
     try {
         const [timestamp, idNumber] = req.params.id.split('_');
-        // Send the form viewer page
         res.sendFile(path.join(__dirname, 'public', 'sections', 'viewForm.html'));
     } catch (error) {
         console.error('Form view error:', error);
@@ -258,6 +256,12 @@ app.get('/form/:id', (req, res) => {
     }
 });
 
+// Add the 'thank you' page route here
+app.get('/sections/thank-you.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'sections', 'thank-you.html'));
+});
+
+// Form submission route
 app.post('/api/submit', async (req, res) => {
     try {
         console.log('Received form submission');
