@@ -26,6 +26,23 @@
             font-size: 12px;
             margin-top: 20px;
         }
+        .download-button {
+            display: inline-block;
+            background: #4CAF50;
+            color: white !important;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .download-section {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -40,6 +57,13 @@
             <p>תודה על מילוי הסכם שיווק ההשקעות.</p>
             <p>מצורף העתק של ההסכם שמילאת בתאריך ${new Date().toLocaleDateString('he-IL')}.</p>
             
+            <!-- New Download Section -->
+            <div class="download-section">
+                <h3 style="color: #333; margin-bottom: 15px;">להורדת ההסכם המלא:</h3>
+                <a href="${data.downloadUrl}" class="download-button">לחץ כאן להורדה</a>
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">* הקישור יהיה זמין למשך 30 ימים</p>
+            </div>
+            
             <p>פרטי ההסכם:</p>
             <ul>
                 <li>סכום השקעה: ${formatCurrency(data.investmentAmount)}</li>
@@ -47,12 +71,10 @@
                 <li>מטבע: ${data.currency}</li>
                 <li>מטרת השקעה: ${Array.isArray(data.purpose) ? data.purpose.join(', ') : data.purpose}</li>
             </ul>
-
             <p>במידה ויש לך שאלות נוספות, אנחנו כאן לשירותך.</p>
             
             <p>בברכה,<br>צוות מובנה</p>
         </div>
-
         <div class="footer">
             <p>מסמך זה נשלח באופן אוטומטי, אין להשיב למייל זה</p>
             <p>© מובנה ${new Date().getFullYear()}</p>
