@@ -127,8 +127,14 @@ async function processFormData() {
     const pdfData = await createPDF(pages);
     console.log('PDF created:', pdfData ? 'success' : 'failed');
 
-    // Add download URL
-    formData.downloadUrl = generateDownloadUrl(formData);
+    // Generate and save download URL
+    const downloadUrl = generateDownloadUrl(formData);
+
+    // Save to localStorage for thank you page
+    localStorage.setItem('lastFormData', JSON.stringify({
+        ...formData,
+        downloadUrl: downloadUrl
+    }));
 
     return {
         firstName: formData.firstName || '',
@@ -155,7 +161,7 @@ async function processFormData() {
         signature: signatureData,
         currentPageScreenshot: currentPageScreenshot,
         formPDF: pdfData,
-        downloadUrl: formData.downloadUrl,
+        downloadUrl: downloadUrl,  // Added download URL
         submissionDate: new Date().toISOString()
     };
 }
@@ -184,7 +190,8 @@ async function submitFormToGoogleSheets() {
             ...formData, 
             signature: '[HIDDEN]', 
             currentPageScreenshot: '[HIDDEN]',
-            formPDF: formData.formPDF ? '[PDF DATA]' : 'null' 
+            formPDF: formData.formPDF ? '[PDF DATA]' : 'null',
+            downloadUrl: formData.downloadUrl  // Log the URL
         });
 
         validateFormData(formData);
@@ -200,7 +207,7 @@ async function submitFormToGoogleSheets() {
         });
 
         showMessage('הטופס נשלח בהצלחה', 'success');
-        window.location.href = formData.downloadUrl;
+        window.location.href = '/sections/thank-you.html';
         return true;
 
     } catch (error) {
