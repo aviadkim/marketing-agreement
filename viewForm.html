@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הסכם שיווק השקעות - מובנה</title>
+    <link href="/css/styles.css" rel="stylesheet">
+    <style>
+        .view-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .field {
+            margin: 10px 0;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .field-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .signature-image {
+            max-width: 200px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="view-container">
+        <div class="section">
+            <h1>הסכם שיווק השקעות - מובנה</h1>
+            <p>תאריך: <span id="submissionDate"></span></p>
+        </div>
+
+        <!-- Load all sections dynamically -->
+        <div id="formContent">
+            <!-- Content will be loaded here -->
+        </div>
+
+        <div class="section">
+            <button onclick="window.print()" class="button">הדפס הסכם</button>
+        </div>
+    </div>
+
+    <script src="/js/pdfViewer.js"></script>
+</body>
+</html>
