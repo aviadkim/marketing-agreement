@@ -221,7 +221,13 @@ function navigateNext() {
     if (isValid) {
         logDebug('Form is valid, saving and navigating...');
         saveFormData();
-        window.location.href = `/sections/section${currentSection + 1}.html`;
+        
+        // After section 4, go to thank-you page
+        if (currentSection === 4) {
+            window.location.href = '/sections/thank-you.html';
+        } else {
+            window.location.href = `/sections/section${currentSection + 1}.html`;
+        }
     } else {
         logDebug('Form validation failed');
     }
