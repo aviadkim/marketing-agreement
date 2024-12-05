@@ -246,6 +246,18 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
 });
 
+// Add new route here
+app.get('/form/:id', (req, res) => {
+    try {
+        const [timestamp, idNumber] = req.params.id.split('_');
+        // Send the form viewer page
+        res.sendFile(path.join(__dirname, 'public', 'sections', 'viewForm.html'));
+    } catch (error) {
+        console.error('Form view error:', error);
+        res.status(500).send('Error loading form');
+    }
+});
+
 app.post('/api/submit', async (req, res) => {
     try {
         console.log('Received form submission');
