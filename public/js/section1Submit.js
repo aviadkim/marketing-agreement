@@ -71,10 +71,13 @@ async function submitSection1() {
 
         showMessage('מעבד את הטופס...', 'info');
 
+        // Capture form screenshot first
+        const screenshot = await captureFormScreenshot();
+        document.getElementById('submitScreenshot').value = screenshot;
+
         // Get form data
         const formData = new FormData(form);
-        const screenshot = await captureFormScreenshot();
-
+        
         const processedData = {
             section: '1',
             firstName: formData.get('firstName'),
@@ -89,7 +92,6 @@ async function submitSection1() {
         // Generate download URL
         processedData.downloadUrl = generateDownloadUrl(processedData);
 
-        // Log the data being sent (excluding screenshot)
         console.log('Submitting to Google Sheets:', {
             ...processedData,
             formScreenshot: '[SCREENSHOT DATA]'
