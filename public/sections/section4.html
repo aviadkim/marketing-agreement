@@ -1,402 +1,366 @@
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKIS5nbJFMOCgLNZEsIFm0eWuGqkWb8v-1CqjAqHiM8iZ3VTrnKakaOg3PPjCiwOAM/exec';
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הסכם שיווק השקעות - הצהרות</title>
+    <link href="/css/styles.css" rel="stylesheet">
+    <style>
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
 
-// Configuration
-const signaturePadConfig = {
-    backgroundColor: 'rgb(255, 255, 255)',
-    penColor: 'rgb(0, 0, 0)',
-    velocityFilterWeight: 0.7,
-    minWidth: 0.5,
-    maxWidth: 2.5,
-    throttle: 16,
-    minDistance: 1
-};
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
-// Utility functions
-function showMessage(message, type = 'error') {
-    const existingMessages = document.querySelectorAll('.message');
-    existingMessages.forEach(msg => msg.remove());
-    
-    const div = document.createElement('div');
-    div.className = `message ${type}`;
-    div.textContent = message;
-    div.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 24px;
-        border-radius: 8px;
-        z-index: 1000;
-        color: white;
-        background: ${
-            type === 'success' ? '#4CAF50' : 
-            type === 'info' ? '#2196F3' : 
-            '#dc3545'
-        };
-        animation: fadeIn 0.3s;
-    `;
-    document.body.appendChild(div);
-    
-    if (type !== 'info') {
-        setTimeout(() => div.remove(), 3000);
-    }
-}
+        .message {
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+        }
 
-function generateDownloadUrl(formData) {
-    const timestamp = Date.now();
-    const uniqueId = `${timestamp}_${formData.idNumber}`;
-    return `${window.location.origin}/form/section4_${uniqueId}`;
-}
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Logo -->
+    <header class="form-header">
+        <img src="/images/movne-logo.png" alt="מובנה" class="logo">
+        <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
+    </header>
 
-async function captureFormScreenshot() {
-    try {
-        const formElement = document.querySelector('.form-content');
-        if (!formElement) return null;
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-steps">
+            <div class="step completed" data-step="1">
+                <div class="step-circle">
+                    <span class="step-number">1</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">פרטים אישיים</div>
+            </div>
+            <div class="step completed" data-step="2">
+                <div class="step-circle">
+                    <span class="step-number">2</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">פרטי השקעה</div>
+            </div>
+            <div class="step completed" data-step="3">
+                <div class="step-circle">
+                    <span class="step-number">3</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">שאלון סיכון</div>
+            </div>
+            <div class="step active" data-step="4">
+                <div class="step-circle">
+                    <span class="step-number">4</span>
+                    <span class="step-check">✓</span>
+                </div>
+                <div class="step-label">הצהרות</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Content -->
+    <main class="form-content">
+        <form id="section4-form" class="form-section">
+            <!-- Declarations Accordion -->
+            <div class="accordion-container">
+                <div class="accordion-item" data-declaration="declaration1">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">הצהרת הבנת סיכונים</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="mb-4">
+                            אני מצהיר/ה בזאת כי הובהר לי שההשקעה במוצרים מובנים כרוכה בסיכונים מיוחדים, לרבות:
+                        </p>
+                        <ul class="declaration-list">
+                            <li>סיכון לאובדן חלק או כל הקרן המושקעת</li>
+                            <li>סיכוני שוק ותנודתיות</li>
+                            <li>סיכוני נזילות ואפשרות מוגבלת למכירה לפני מועד הפירעון</li>
+                            <li>סיכוני מטבע ושערי חליפין במידה ורלוונטי</li>
+                            <li>תלות בחוסנם הפיננסי של מנפיקי המוצרים המובנים</li>
+                            <li>מורכבות המוצרים והקושי בהערכת שווים</li>
+                        </ul>
+                        <label class="checkbox-container mt-4">
+                            <input type="checkbox" name="riskAcknowledgement" required>
+                            <span class="checkmark"></span>
+                            קראתי והבנתי את כל הסיכונים המפורטים לעיל
+                        </label>
+                    </div>
+                </div>
+
+                <div class="accordion-item" data-declaration="declaration2">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">הצהרת אי הסתמכות והחלטה עצמאית</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="mb-4">אני מצהיר/ה בזאת כי:</p>
+                        <ul class="declaration-list">
+                            <li>ההחלטה להשקיע במוצרים מובנים התקבלה על פי שיקול דעתי העצמאי בלבד</li>
+                            <li>איני מסתמך/ת על עצות או המלצות של החברה או מי מטעמה</li>
+                            <li>הובהר לי שהחברה אינה משמשת כיועץ השקעות ואינה מספקת ייעוץ אישי</li>
+                            <li>בדקתי את התאמת ההשקעה לצרכיי ולמטרותיי הפיננסיות</li>
+                            <li>אני מבין/ה שביצועי עבר אינם מעידים על ביצועים עתידיים</li>
+                        </ul>
+                        <label class="checkbox-container mt-4">
+                            <input type="checkbox" name="independentDecision" required>
+                            <span class="checkmark"></span>
+                            אני מאשר/ת את כל ההצהרות הנ"ל
+                        </label>
+                    </div>
+                </div>
+
+                <div class="accordion-item" data-declaration="declaration3">
+                    <button type="button" class="accordion-header">
+                        <span class="accordion-title">התחייבות לעדכון פרטים</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="mb-4">אני מתחייב/ת בזאת:</p>
+                        <ul class="declaration-list">
+                            <li>לעדכן את החברה בכתב על כל שינוי מהותי בפרטים שמסרתי בטופס זה</li>
+                            <li>להודיע מיידית על כל שינוי במצבי הפיננסי שעשוי להשפיע על השקעותיי</li>
+                            <li>לעדכן על שינויים בנסיבות האישיות שעשויים להשפיע על פרופיל הסיכון שלי</li>
+                            <li>להודיע על שינויים במטרות ההשקעה או באופק ההשקעה המתוכנן</li>
+                        </ul>
+                        <label class="checkbox-container mt-4">
+                            <input type="checkbox" name="updateCommitment" required>
+                            <span class="checkmark"></span>
+                            אני מתחייב/ת לעדכן על כל שינוי מהותי כמפורט לעיל
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signature Section -->
+            <div class="signature-section mt-6">
+                <h3>חתימה דיגיטלית</h3>
+                <div class="signature-container">
+                    <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                    <div class="signature-controls">
+                        <button type="button" class="btn-secondary" data-clear-signature>נקה חתימה</button>
+                        <button type="button" class="btn-secondary" data-copy-signature>הדבק חתימה קודמת</button>
+                    </div>
+                </div>
+                <input type="hidden" id="signatureData" name="signature" required>
+            </div>
+
+            <!-- Final Confirmation -->
+            <div class="final-confirmation mt-6">
+                <label class="checkbox-container">
+                    <input type="checkbox" name="finalConfirmation" required>
+                    <span class="checkmark"></span>
+                    <span class="text-bold">
+                        אני מאשר/ת שקראתי והבנתי את כל ההצהרות לעיל, ומסכים/ה להן באופן מלא ובלתי חוזר
+                    </span>
+                </label>
+            </div>
+        </form>
+    </main>
+
+    <!-- Navigation -->
+    <footer class="form-navigation">
+        <div class="container">
+            <button type="button" id="btnBack" class="btn-prev">חזור</button>
+            <button type="button" id="finalSubmit" class="btn-next" disabled>סיים והגש טופס</button>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="/js/signatureHandler.js"></script>
+    <script src="/js/accordion.js"></script>
+    <script src="/js/storage.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script type="module" src="/js/formCapture.js"></script>
+    <script type="module" src="/js/googleSheetsSubmit.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
         
-        const canvas = await html2canvas(formElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            logging: true,
-            width: formElement.offsetWidth,
-            height: formElement.offsetHeight * 1.5
-        });
-        return canvas.toDataURL('image/jpeg', 0.8);
-    } catch (error) {
-        console.error('Error capturing form:', error);
-        return null;
-    }
-}
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('#section4-form');
+            const submitButton = document.getElementById('finalSubmit');
 
-function initializeAccordion() {
-    const accordionItems = document.querySelectorAll('.accordion-item');
-    accordionItems.forEach(item => {
-        const header = item.querySelector('.accordion-header');
-        const content = item.querySelector('.accordion-content');
-        
-        header.addEventListener('click', () => {
-            const isOpen = item.classList.contains('open');
-            
-            accordionItems.forEach(otherItem => {
-                otherItem.classList.remove('open');
-                otherItem.querySelector('.accordion-content').style.maxHeight = null;
-                otherItem.querySelector('.accordion-icon').textContent = '▼';
+            // Initialize signature pad
+            const signaturePad = new SignaturePad(document.getElementById('signatureCanvas'), {
+                backgroundColor: 'rgb(255, 255, 255)',
+                penColor: 'rgb(0, 0, 0)'
             });
-            
-            if (!isOpen) {
-                item.classList.add('open');
-                content.style.maxHeight = content.scrollHeight + "px";
-                item.querySelector('.accordion-icon').textContent = '▲';
+
+            // Function to check form validity
+            function checkFormValidity() {
+                const allCheckboxesChecked = 
+                    form.querySelector('input[name="riskAcknowledgement"]').checked &&
+                    form.querySelector('input[name="independentDecision"]').checked &&
+                    form.querySelector('input[name="updateCommitment"]').checked &&
+                    form.querySelector('input[name="finalConfirmation"]').checked;
+
+                const hasSignature = !signaturePad.isEmpty();
+
+                submitButton.disabled = !(allCheckboxesChecked && hasSignature);
             }
-        });
-    });
 
-    // Open first accordion by default
-    if (accordionItems.length > 0) {
-        const firstItem = accordionItems[0];
-        const firstContent = firstItem.querySelector('.accordion-content');
-        firstItem.classList.add('open');
-        firstContent.style.maxHeight = firstContent.scrollHeight + "px";
-        firstItem.querySelector('.accordion-icon').textContent = '▲';
-    }
-}
+            // Add event listeners for form changes
+            form.addEventListener('change', checkFormValidity);
 
-// Form validation and status checking
-function checkFormStatus() {
-    const form = document.getElementById('section4-form');
-    const submitButton = document.getElementById('finalSubmit');
-    
-    const allCheckboxesChecked = [
-        'riskAcknowledgement',
-        'independentDecision',
-        'updateCommitment',
-        'finalConfirmation'
-    ].every(name => form.querySelector(`input[name="${name}"]`).checked);
-    
-    const hasSignature = !window.signaturePad.isEmpty();
-    submitButton.disabled = !(allCheckboxesChecked && hasSignature);
-}
+            // Monitor signature changes
+            signaturePad.onEnd = checkFormValidity;
 
-function attachFormValidationListeners() {
-    const form = document.getElementById('section4-form');
-    const inputs = form.querySelectorAll('input');
-    inputs.forEach(input => {
-        input.addEventListener('change', checkFormStatus);
-        input.addEventListener('input', checkFormStatus);
-    });
-    
-    if (window.signaturePad) {
-        window.signaturePad.onEnd = checkFormStatus;
-    }
-}
+            // Handle signature clear button
+            document.querySelector('[data-clear-signature]').addEventListener('click', function() {
+                signaturePad.clear();
+                document.getElementById('signatureData').value = '';
+                checkFormValidity();
+            });
 
-async function generatePDF(data) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Add form data
-    doc.setFont('helvetica');
-    doc.setFontSize(12);
-    
-    // Add header
-    doc.text('הסכם שיווק השקעות - סיכום', 200, 20, { align: 'right' });
-    
-    // Add form sections
-    let yPosition = 40;
-    Object.entries(data).forEach(([key, value]) => {
-        if (key !== 'signature' && key !== 'formScreenshot') {
-            doc.text(`${key}: ${value}`, 200, yPosition, { align: 'right' });
-            yPosition += 10;
-        }
-    });
-    
-    // Add signature if exists
-    if (data.signature) {
-        doc.addImage(data.signature, 'PNG', 20, yPosition, 50, 20);
-    }
-    
-    return doc;
-}
-
-function handleSubmissionError(error) {
-    console.error('Submission error details:', error);
-    
-    // Save backup of form data
-    const backupData = {
-        timestamp: new Date().toISOString(),
-        error: error.message,
-        formData: localStorage.getItem('section4Data')
-    };
-    localStorage.setItem('section4_backup_' + Date.now(), JSON.stringify(backupData));
-    
-    // Show detailed error message
-    showMessage(`שגיאה בשליחת הטופס: ${error.message}`, 'error');
-    
-    // Enable retry
-    const submitButton = document.getElementById('finalSubmit');
-    submitButton.disabled = false;
-    submitButton.innerHTML = 'נסה שוב';
-}
-
-async function submitSection4() {
-    try {
-        const form = document.getElementById('section4-form');
-        const signaturePad = window.signaturePad;
-        const submitButton = document.getElementById('finalSubmit');
-
-        if (!form.checkValidity() || signaturePad.isEmpty()) {
-            if (signaturePad.isEmpty()) {
-                showMessage('נא להוסיף חתימה', 'error');
-            } else {
-                showMessage('נא למלא את כל השדות הנדרשים', 'error');
-            }
-            return false;
-        }
-
-        const buttonText = submitButton.innerHTML;
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<span class="spinner"></span>';
-
-        showMessage('מעבד את הטופס...', 'info');
-
-        // Get signature
-        const signatureData = signaturePad.toDataURL();
-        localStorage.setItem('lastSignature', signatureData);
-
-        // Capture form screenshot
-        const screenshot = await captureFormScreenshot();
-
-        // Get form data
-        const formData = new FormData(form);
-        const processedData = {
-            section: '4',
-            riskAcknowledgement: formData.get('riskAcknowledgement') === 'on',
-            independentDecision: formData.get('independentDecision') === 'on',
-            updateCommitment: formData.get('updateCommitment') === 'on',
-            finalConfirmation: formData.get('finalConfirmation') === 'on',
-            signature: signatureData,
-            formScreenshot: screenshot,
-            timestamp: new Date().toISOString()
-        };
-
-        // Generate download URL
-        processedData.downloadUrl = generateDownloadUrl(processedData);
-
-        // Get data from previous sections
-        const section1Data = JSON.parse(localStorage.getItem('section1Data') || '{}');
-        const section2Data = JSON.parse(localStorage.getItem('section2Data') || '{}');
-        const section3Data = JSON.parse(localStorage.getItem('section3Data') || '{}');
-
-        // Combine all data for final submission
-        const finalData = {
-            ...section1Data,
-            ...section2Data,
-            ...section3Data,
-            ...processedData,
-            isComplete: true
-        };
-
-        // Generate PDF
-        const pdf = await generatePDF(finalData);
-        const pdfData = pdf.output('datauristring');
-        finalData.pdfDocument = pdfData;
-
-        // Submit to Google Sheets
-        console.log('Submitting final form:', {
-            ...finalData,
-            formScreenshot: '[SCREENSHOT DATA]',
-            signature: '[SIGNATURE DATA]',
-            pdfDocument: '[PDF DATA]'
-        });
-
-        showMessage('שולח את הטופס...', 'info');
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(finalData)
-        });
-
-        // Save final data
-        localStorage.setItem('section4Data', JSON.stringify(processedData));
-        localStorage.setItem('finalFormData', JSON.stringify(finalData));
-
-        showMessage('הטופס נשלח בהצלחה', 'success');
-        
-        // Navigate to thank you page
-        setTimeout(() => {
-            window.location.href = '/sections/thank-you.html';
-        }, 1000);
-
-        return true;
-    } catch (error) {
-        handleSubmissionError(error);
-        return false;
-    }
-}
-
-// Initialize signature pad
-function initializeSignaturePad() {
-    const canvas = document.getElementById('signatureCanvas');
-    if (!canvas) return;
-
-    window.signaturePad = new SignaturePad(canvas, signaturePadConfig);
-
-    // Handle signature clear button
-    document.querySelector('[data-clear-signature]').addEventListener('click', function() {
-        window.signaturePad.clear();
-        document.getElementById('signatureData').value = '';
-        checkFormStatus();
-    });
-
-    // Handle signature copy button
-    document.querySelector('[data-copy-signature]').addEventListener('click', function() {
-        const lastSignature = localStorage.getItem('lastSignature');
-        if (lastSignature) {
-            window.signaturePad.fromDataURL(lastSignature);
-            document.getElementById('signatureData').value = lastSignature;
-            checkFormStatus();
-        } else {
-            showMessage('לא נמצאה חתימה קודמת', 'error');
-        }
-    });
-
-    // Handle window resize
-    let resizeTimeout;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(function() {
-            const data = window.signaturePad.toData();
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            canvas.getContext("2d").scale(ratio, ratio);
-            window.signaturePad.clear();
-            window.signaturePad.fromData(data);
-        }, 100);
-    });
-}
-
-// Main initialization
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('section4-form');
-    const submitButton = document.getElementById('finalSubmit');
-
-    if (!form || !submitButton) {
-        console.error('Required elements not found');
-        return;
-    }
-
-    // Initialize all components
-    initializeSignaturePad();
-    initializeAccordion();
-    attachFormValidationListeners();
-
-    // Handle form submission
-    submitButton.addEventListener('click', async (e) => {
-        e.preventDefault();
-        
-        if (form.checkValidity() && !window.signaturePad.isEmpty()) {
-            const buttonText = submitButton.innerHTML;
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner"></span>';
-
-            try {
-                await submitSection4();
-            } catch (error) {
-                console.error('Submission failed:', error);
-                showMessage('שגיאה בשליחת הטופס', 'error');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.innerHTML = buttonText;
-            }
-        } else {
-            if (window.signaturePad.isEmpty()) {
-                showMessage('נא להוסיף חתימה', 'error');
-            } else {
-                showMessage('נא למלא את כל השדות הנדרשים', 'error');
-            }
-        }
-    });
-
-    // Handle back button
-    const backButton = document.getElementById('btnBack');
-    if (backButton) {
-        backButton.addEventListener('click', () => {
-            window.location.href = '/sections/section3.html';
-        });
-    }
-
-    // Load saved data if exists
-    const savedData = localStorage.getItem('section4Data');
-    if (savedData) {
-        try {
-            const data = JSON.parse(savedData);
-            Object.entries(data).forEach(([key, value]) => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input && input.type === 'checkbox') {
-                    input.checked = value === 'on' || value === true;
+            // Handle signature copy button
+            document.querySelector('[data-copy-signature]').addEventListener('click', function() {
+                const lastSignature = localStorage.getItem('lastSignature');
+                if (lastSignature) {
+                    signaturePad.fromDataURL(lastSignature);
+                    document.getElementById('signatureData').value = lastSignature;
+                    checkFormValidity();
                 }
             });
 
-            // Restore signature if available
-            if (data.signature && window.signaturePad) {
-                window.signaturePad.fromDataURL(data.signature);
-                document.getElementById('signatureData').value = data.signature;
-            }
+            // Handle form submission
+            // Handle form submission (חלק הsubmit בתוך הDOMContentLoaded)
+submitButton.addEventListener('click', async function(e) {
+    e.preventDefault();
+    
+    if (form.checkValidity() && !signaturePad.isEmpty()) {
+        const buttonText = this.innerHTML;
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner"></span>';
 
-            // Update form status
-            checkFormStatus();
+        try {
+            // Save signature
+            const signatureData = signaturePad.toDataURL();
+            document.getElementById('signatureData').value = signatureData;
+            localStorage.setItem('lastSignature', signatureData);
+
+            // Save form data
+            const formData = new FormData(form);
+            const dataToSave = {};
+            formData.forEach((value, key) => {
+                dataToSave[key] = value;
+            });
+            dataToSave.signature = signatureData;
+
+            // צילום הטופס
+            const formElement = document.querySelector('.form-content');
+            const canvas = await html2canvas(formElement, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: true,
+                width: formElement.offsetWidth,
+                height: formElement.offsetHeight
+            });
+            dataToSave.formScreenshot = canvas.toDataURL('image/png', 1.0);
+
+            localStorage.setItem('section4Data', JSON.stringify(dataToSave));
+
+            // Submit form
+            const success = await window.submitFormToGoogleSheets();
+
+            if (success) {
+                window.showMessage('הטופס נשלח בהצלחה', 'success');
+                window.clearFormData();
+                window.location.href = '/sections/preview.html';
+            }
         } catch (error) {
-            console.error('Error loading saved data:', error);
-            showMessage('שגיאה בטעינת נתונים שמורים', 'error');
+            console.error('Submission error:', error);
+            window.showMessage(error.message || 'אירעה שגיאה בשליחת הטופס. נא לנסות שוב.', 'error');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = buttonText;
+        }
+    } else {
+        if (signaturePad.isEmpty()) {
+            window.showMessage('נא להוסיף חתימה', 'error');
+        } else {
+            window.showMessage('נא למלא את כל השדות הנדרשים', 'error');
         }
     }
 });
 
-// Export necessary functions
-window.submitSection4 = submitSection4;
-window.showMessage = showMessage;
-window.validateForm = validateForm;
+            // Handle back button
+            document.getElementById('btnBack').addEventListener('click', function() {
+                window.location.href = '/sections/section3.html';
+            });
+
+            // Load saved data
+            const savedData = localStorage.getItem('section4Data');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                Object.entries(data).forEach(([key, value]) => {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input && input.type === 'checkbox') {
+                        input.checked = value === 'on' || value === true;
+                    }
+                });
+
+                // Restore signature if available
+                if (data.signature) {
+                    signaturePad.fromDataURL(data.signature);
+                    document.getElementById('signatureData').value = data.signature;
+                }
+            }
+
+            // Initialize accordion
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            accordionItems.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                const content = item.querySelector('.accordion-content');
+                
+                header.addEventListener('click', () => {
+                    // Toggle current accordion
+                    const isOpen = item.classList.contains('open');
+                    
+                    // Close all accordions
+                    accordionItems.forEach(otherItem => {
+                        otherItem.classList.remove('open');
+                        otherItem.querySelector('.accordion-content').style.maxHeight = null;
+                        otherItem.querySelector('.accordion-icon').textContent = '▼';
+                    });
+                    
+                    // Open current if it was closed
+                    if (!isOpen) {
+                        item.classList.add('open');
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        item.querySelector('.accordion-icon').textContent = '▲';
+                    }
+                });
+            });
+
+            // Open first accordion by default
+            if (accordionItems.length > 0) {
+                const firstItem = accordionItems[0];
+                const firstContent = firstItem.querySelector('.accordion-content');
+                firstItem.classList.add('open');
+                firstContent.style.maxHeight = firstContent.scrollHeight + "px";
+                firstItem.querySelector('.accordion-icon').textContent = '▲';
+            }
+
+            // Initial validity check
+            checkFormValidity();
+        });
+    </script>
+</body>
+</html>
