@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sheets Test</title>
+    <script>
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwf-7F8NIXbcDGTCKsx_5eCfxv9BTgGkSTYKMfWbCQNm37Rab2HA70gt8MkiXZWd6Ps/exec';
+
+        async function testSubmission() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Sending test data...';
+            
+            const testData = {
+                test: true,
+                timestamp: new Date().toISOString(),
+                message: 'Test submission',
+                random: Math.random()
+            };
+
+            try {
+                console.log('Sending test data:', testData);
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                console.log('Response:', response);
+                resultDiv.textContent = `Sent successfully at ${new Date().toLocaleTimeString()}`;
+                document.getElementById('responseDetails').textContent = 
+                    `Status: ${response.status}\nStatusText: ${response.statusText}`;
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.textContent = 'Error: ' + error.message;
+                document.getElementById('responseDetails').textContent = error.toString();
+            }
+        }
+
+        // Add simple form test
+        async function testFormSubmission(event) {
+            event.preventDefault();
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Sending form data...';
+
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                console.log('Sending form data:', data);
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                console.log('Response:', response);
+                resultDiv.textContent = `Form sent successfully at ${new Date().toLocaleTimeString()}`;
+                document.getElementById('responseDetails').textContent = 
+                    `Status: ${response.status}\nStatusText: ${response.statusText}`;
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.textContent = 'Error: ' + error.message;
+                document.getElementById('responseDetails').textContent = error.toString();
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Google Sheets Submission Test</h1>
+    
+    <button onclick="testSubmission()">Send Test Data</button>
+    <div id="result" style="margin: 20px 0;"></div>
+    <pre id="responseDetails" style="margin: 20px 0;"></pre>
+
+    <hr>
+
+    <h2>Test Form Submission</h2>
+    <form onsubmit="testFormSubmission(event)" style="margin: 20px 0;">
+        <div>
+            <label>Name: <input type="text" name="name" required></label>
+        </div>
+        <div>
+            <label>Email: <input type="email" name="email" required></label>
+        </div>
+        <button type="submit">Submit Form</button>
+    </form>
+</body>
+</html>
