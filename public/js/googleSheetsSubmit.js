@@ -1,4 +1,3 @@
-// googleSheetsSubmit.js
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKIS5nbJFMOCgLNZEsIFm0eWuGqkWb8v-1CqjAqHiM8iZ3VTrnKakaOg3PPjCiwOAM/exec';
 
 function generateDownloadUrl(formData) {
@@ -17,7 +16,9 @@ async function captureFormScreenshot() {
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
-            logging: true
+            logging: true,
+            width: formElement.offsetWidth,
+            height: formElement.offsetHeight * 1.5
         });
         return canvas.toDataURL('image/jpeg', 0.8);
     } catch (error) {
@@ -26,44 +27,60 @@ async function captureFormScreenshot() {
     }
 }
 
-async function submitSection1() {
+async function processSection1Data() {
     try {
-        showMessage('מעבד את הטופס...', 'info');
-        
         const form = document.getElementById('section1-form');
         const formData = new FormData(form);
-        
-        // Process section 1 data
-        const processedData = {
+
+        // Capture current section screenshot
+        const screenshot = await captureFormScreenshot();
+
+        const sectionData = {
             section: '1',
             firstName: formData.get('firstName'),
             lastName: formData.get('lastName'),
             idNumber: formData.get('idNumber'),
             email: formData.get('email'),
             phone: formData.get('phone'),
+            formScreenshot: screenshot,
             timestamp: new Date().toISOString()
         };
 
-        // Capture screenshot
-        console.log('Capturing form screenshot...');
-        const screenshot = await captureFormScreenshot();
-        if (screenshot) {
-            processedData.formScreenshot = screenshot;
+        // Generate unique URL for this section
+        sectionData.downloadUrl = generateDownloadUrl(sectionData);
+
+        // Store for later combination
+        localStorage.setItem('section1Data', JSON.stringify({
+            ...sectionData,
+            formScreenshot: '[STORED SEPARATELY]'
+        }));
+
+        return sectionData;
+    } catch (error) {
+        console.error('Error processing section 1:', error);
+        throw error;
+    }
+}
+
+async function submitSection1() {
+    try {
+        showMessage('מעבד את הטופס...', 'info');
+        
+        // Validate form
+        const form = document.getElementById('section1-form');
+        if (!validateForm(form)) {
+            return false;
         }
 
-        // Generate download URL
-        processedData.downloadUrl = generateDownloadUrl(processedData);
-
-        // Save to localStorage
-        localStorage.setItem('section1Data', JSON.stringify(processedData));
-
-        console.log('Submitting to Google Sheets:', {
+        // Process section data
+        const processedData = await processSection1Data();
+        
+        console.log('Submitting section 1:', {
             ...processedData,
-            formScreenshot: '[SCREENSHOT DATA]'
+            formScreenshot: '[IMAGE DATA]'
         });
 
         // Submit to Google Sheets
-        showMessage('שולח את הטופס...', 'info');
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -75,7 +92,7 @@ async function submitSection1() {
 
         showMessage('הטופס נשלח בהצלחה', 'success');
         
-        // Navigate to section 2
+        // Navigate to next section after short delay
         setTimeout(() => {
             window.location.href = '/sections/section2.html';
         }, 1000);
@@ -86,6 +103,23 @@ async function submitSection1() {
         showMessage(error.message || 'שגיאה בשליחת הטופס', 'error');
         throw error;
     }
+}
+
+function validateForm(form) {
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return false;
+    }
+
+    const requiredFields = ['firstName', 'lastName', 'idNumber', 'email', 'phone'];
+    const missingFields = requiredFields.filter(field => !form.elements[field].value);
+    
+    if (missingFields.length > 0) {
+        showMessage(`חסרים שדות חובה: ${missingFields.join(', ')}`, 'error');
+        return false;
+    }
+
+    return true;
 }
 
 function showMessage(message, type = 'error') {
@@ -117,28 +151,25 @@ function showMessage(message, type = 'error') {
     }
 }
 
-// Export functions
-window.submitSection1 = submitSection1;
-window.showMessage = showMessage;
-
+// Main event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Set up event listener for form submission
-    const continueButton = document.getElementById('saveAndContinue');
-    if (continueButton) {
-        continueButton.addEventListener('click', async (e) => {
+    const saveAndContinueBtn = document.getElementById('saveAndContinue');
+    if (saveAndContinueBtn) {
+        saveAndContinueBtn.addEventListener('click', async (e) => {
             e.preventDefault();
-            const form = document.getElementById('section1-form');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
+            saveAndContinueBtn.disabled = true;
             
             try {
-                continueButton.disabled = true;
                 await submitSection1();
             } catch (error) {
-                continueButton.disabled = false;
+                console.error('Submission failed:', error);
+            } finally {
+                saveAndContinueBtn.disabled = false;
             }
         });
     }
 });
+
+// Export necessary functions
+window.submitSection1 = submitSection1;
+window.showMessage = showMessage;
