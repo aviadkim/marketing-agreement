@@ -30,18 +30,12 @@ function showMessage(message, type = 'error') {
     }
 }
 
-function generateDownloadUrl(formData) {
-    const timestamp = Date.now();
-    const uniqueId = `${timestamp}_${formData.idNumber}`;
-    return `${window.location.origin}/form/section1_${uniqueId}`;
-}
-
 async function captureFormScreenshot() {
     try {
         console.log('Starting screenshot capture...');
         const formElement = document.querySelector('.form-content');
         if (!formElement) {
-            console.error('Form element not found for screenshot');
+            console.error('Form element not found');
             return null;
         }
         
@@ -50,93 +44,56 @@ async function captureFormScreenshot() {
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
-            logging: true,
-            width: formElement.offsetWidth,
-            height: formElement.offsetHeight * 1.5
+            logging: true
         });
         console.log('Screenshot captured successfully');
-        return canvas.toDataURL('image/jpeg', 0.8);
+        return canvas.toDataURL('image/png', 0.8);
     } catch (error) {
-        console.error('Error capturing screenshot:', error);
+        console.error('Screenshot capture error:', error);
         return null;
     }
 }
 
-function validateForm(form) {
-    console.log('Validating form...');
-    if (!form.checkValidity()) {
-        console.log('Form validation failed - missing required fields');
-        form.reportValidity();
-        return false;
-    }
-
-    const requiredFields = ['firstName', 'lastName', 'idNumber', 'email', 'phone'];
-    const missingFields = requiredFields.filter(field => !form.elements[field].value);
-    
-    if (missingFields.length > 0) {
-        console.log('Missing required fields:', missingFields);
-        showMessage(`חסרים שדות חובה: ${missingFields.join(', ')}`, 'error');
-        return false;
-    }
-
-    console.log('Form validation passed');
-    return true;
-}
-
 async function submitSection1() {
     try {
-        console.log('1. Starting form submission process');
-        showMessage('מעבד את הטופס...', 'info');
-        
+        console.log('Starting section 1 submission...');
         const form = document.getElementById('section1-form');
-        if (!validateForm(form)) {
+        if (!form.checkValidity()) {
+            form.reportValidity();
             return false;
         }
 
         const submitButton = document.getElementById('saveAndContinue');
         submitButton.disabled = true;
-        console.log('2. Submit button disabled');
+        showMessage('מעבד את הטופס...', 'info');
 
-        // Get form data
+        // Capture form data
         const formData = new FormData(form);
-        const screenshot = await captureFormScreenshot();
-        
-        console.log('3. Collected form data:', {
-            firstName: formData.get('firstName'),
-            lastName: formData.get('lastName'),
-            idNumber: formData.get('idNumber'),
-            email: formData.get('email'),
-            phone: formData.get('phone')
-        });
+        console.log('Form data collected:', Object.fromEntries(formData));
 
-        if (screenshot) {
-            document.getElementById('submitScreenshot').value = screenshot;
-            console.log('4. Screenshot saved to hidden input');
+        // Capture screenshot
+        const screenshot = await captureFormScreenshot();
+        if (!screenshot) {
+            throw new Error('Failed to capture form screenshot');
         }
 
         const processedData = {
+            section: '1',
             timestamp: new Date().toISOString(),
             firstName: formData.get('firstName'),
             lastName: formData.get('lastName'),
             idNumber: formData.get('idNumber'),
             email: formData.get('email'),
             phone: formData.get('phone'),
-            section: '1',
             formScreenshot: screenshot,
-            downloadUrl: generateDownloadUrl({
-                idNumber: formData.get('idNumber')
-            })
+            downloadUrl: `${window.location.origin}/form/section1_${Date.now()}_${formData.get('idNumber')}`
         };
 
-        console.log('5. Processed data ready for submission:', {
+        console.log('Submitting to Google Sheets:', {
             ...processedData,
             formScreenshot: '[SCREENSHOT DATA HIDDEN]'
         });
 
-        // Submit to Google Sheets
-        console.log('6. Attempting submission to URL:', GOOGLE_SCRIPT_URL);
-        showMessage('שולח את הטופס...', 'info');
-        
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -146,27 +103,24 @@ async function submitSection1() {
             body: JSON.stringify(processedData)
         });
 
-        console.log('7. Response received:', response);
+        console.log('Response received');
 
-        // Store for later combination
+        // Store data for later combination
         localStorage.setItem('section1Data', JSON.stringify({
             ...processedData,
-            formScreenshot: '[STORED SEPARATELY]'
+            formScreenshot: screenshot
         }));
-        console.log('8. Data saved to localStorage');
 
         showMessage('הטופס נשלח בהצלחה', 'success');
-        console.log('9. Success message shown');
 
-        // Navigate to next section
-        console.log('10. Preparing navigation to section 2');
+        // Allow navigation to handle the redirect
         setTimeout(() => {
             window.location.href = '/sections/section2.html';
         }, 1000);
 
         return true;
     } catch (error) {
-        console.error('Form submission error:', error);
+        console.error('Submission error:', error);
         showMessage('שגיאה בשליחת הטופס', 'error');
         
         const submitButton = document.getElementById('saveAndContinue');
@@ -179,41 +133,22 @@ async function submitSection1() {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Page loaded, initializing form...');
+    console.log('Initializing section 1...');
     const form = document.getElementById('section1-form');
-    const saveAndContinueBtn = document.getElementById('saveAndContinue');
+    const submitButton = document.getElementById('saveAndContinue');
 
-    if (!form || !saveAndContinueBtn) {
-        console.error('Required elements not found on page');
+    if (!form || !submitButton) {
+        console.error('Required elements not found');
         return;
     }
 
-    // Load saved data if exists
-    const savedData = localStorage.getItem('section1Data');
-    if (savedData) {
-        try {
-            console.log('Found saved data, attempting to restore');
-            const data = JSON.parse(savedData);
-            Object.entries(data).forEach(([key, value]) => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) {
-                    input.value = value;
-                }
-            });
-            console.log('Saved data restored successfully');
-        } catch (error) {
-            console.error('Error loading saved data:', error);
-        }
-    }
-
-    // Handle form submission
-    saveAndContinueBtn.addEventListener('click', async (e) => {
-        console.log('Submit button clicked');
+    submitButton.addEventListener('click', async (e) => {
         e.preventDefault();
+        e.stopPropagation(); // Prevent navigation.js from handling this
         await submitSection1();
     });
 });
 
-// Export necessary functions
+// Export functions
 window.submitSection1 = submitSection1;
 window.showMessage = showMessage;
