@@ -1,3 +1,6 @@
+// section1Submit.js
+console.log('section1Submit.js loaded');
+
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwf-7F8NIXbcDGTCKsx_5eCfxv9BTgGkSTYKMfWbCQNm37Rab2HA70gt8MkiXZWd6Ps/exec';
 
 // Helper Functions
@@ -35,7 +38,7 @@ async function captureFormScreenshot() {
         console.log('Starting screenshot capture...');
         const formElement = document.querySelector('.form-content');
         if (!formElement) {
-            console.error('Form element not found');
+            console.error('Form element not found for screenshot');
             return null;
         }
         
@@ -44,37 +47,53 @@ async function captureFormScreenshot() {
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
-            logging: true
+            logging: true,
+            width: formElement.offsetWidth,
+            height: formElement.offsetHeight * 1.5
         });
         console.log('Screenshot captured successfully');
-        return canvas.toDataURL('image/png', 0.8);
+        return canvas.toDataURL('image/jpeg', 0.8);
     } catch (error) {
         console.error('Screenshot capture error:', error);
         return null;
     }
 }
 
-async function submitSection1() {
+function validateForm(form) {
+    console.log('Validating form...');
+    if (!form.checkValidity()) {
+        console.log('Form validation failed');
+        form.reportValidity();
+        return false;
+    }
+    return true;
+}
+
+async function handleFormSubmission(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent navigation.js from handling
+    }
+    
+    console.log('Starting form submission...');
+    showMessage('מעבד את הטופס...', 'info');
+    
+    const form = document.getElementById('section1-form');
+    if (!validateForm(form)) {
+        return false;
+    }
+
+    const submitButton = document.getElementById('saveAndContinue');
+    submitButton.disabled = true;
+
     try {
-        console.log('Starting section 1 submission...');
-        const form = document.getElementById('section1-form');
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return false;
-        }
-
-        const submitButton = document.getElementById('saveAndContinue');
-        submitButton.disabled = true;
-        showMessage('מעבד את הטופס...', 'info');
-
-        // Capture form data
+        // Capture form data and screenshot
         const formData = new FormData(form);
-        console.log('Form data collected:', Object.fromEntries(formData));
-
-        // Capture screenshot
+        console.log('Form data collected');
+        
         const screenshot = await captureFormScreenshot();
         if (!screenshot) {
-            throw new Error('Failed to capture form screenshot');
+            throw new Error('Failed to capture screenshot');
         }
 
         const processedData = {
@@ -89,11 +108,12 @@ async function submitSection1() {
             downloadUrl: `${window.location.origin}/form/section1_${Date.now()}_${formData.get('idNumber')}`
         };
 
-        console.log('Submitting to Google Sheets:', {
-            ...processedData,
-            formScreenshot: '[SCREENSHOT DATA HIDDEN]'
+        console.log('Data being sent:', {
+            url: GOOGLE_SCRIPT_URL,
+            data: { ...processedData, formScreenshot: '[SCREENSHOT DATA HIDDEN]' }
         });
 
+        // Submit to Google Sheets
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -101,19 +121,22 @@ async function submitSection1() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(processedData)
+        }).catch(error => {
+            console.error('Fetch error:', error);
+            throw error;
         });
 
-        console.log('Response received');
+        console.log('Response received:', response);
 
-        // Store data for later combination
+        // Store data locally
         localStorage.setItem('section1Data', JSON.stringify({
             ...processedData,
             formScreenshot: screenshot
         }));
 
         showMessage('הטופס נשלח בהצלחה', 'success');
-
-        // Allow navigation to handle the redirect
+        
+        // Navigate to next section
         setTimeout(() => {
             window.location.href = '/sections/section2.html';
         }, 1000);
@@ -122,11 +145,7 @@ async function submitSection1() {
     } catch (error) {
         console.error('Submission error:', error);
         showMessage('שגיאה בשליחת הטופס', 'error');
-        
-        const submitButton = document.getElementById('saveAndContinue');
-        if (submitButton) {
-            submitButton.disabled = false;
-        }
+        submitButton.disabled = false;
         return false;
     }
 }
@@ -142,13 +161,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    submitButton.addEventListener('click', async (e) => {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent navigation.js from handling this
-        await submitSection1();
-    });
+    // Remove any existing click handlers
+    submitButton.replaceWith(submitButton.cloneNode(true));
+    const newSubmitButton = document.getElementById('saveAndContinue');
+    
+    // Add our submit handler
+    newSubmitButton.addEventListener('click', handleFormSubmission);
 });
 
-// Export functions
-window.submitSection1 = submitSection1;
+// Disable navigation.js form handling for section 1
+if (typeof window.handleFormSubmit === 'function') {
+    const originalHandleFormSubmit = window.handleFormSubmit;
+    window.handleFormSubmit = function(event) {
+        if (window.location.pathname.includes('section1')) {
+            return handleFormSubmission(event);
+        }
+        return originalHandleFormSubmit(event);
+    };
+}
+
+// Export necessary functions
+window.submitSection1 = handleFormSubmission;
 window.showMessage = showMessage;
