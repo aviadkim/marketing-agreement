@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק השקעות - פרטים אישיים</title>
-    <link href="/css/styles.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="form-card">
             <header class="form-header">
-                <img src="/images/movne-logo.png" alt="מובנה" class="logo">
-                <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
+                <div class="header-container">
+                    <div class="logo-container">
+                        <img src="/images/movne-logo.png" alt="מובנה" class="logo">
+                    </div>
+                    <div class="header-text">
+                        <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
+                    </div>
+                </div>
             </header>
 
             <div class="progress-container">
@@ -71,7 +77,7 @@
                         </div>
                         <div class="input-group">
                             <label>דוא"ל</label>
-                            <input type="email" name="email" required>
+                            <input type="email" name="email" required dir="ltr">
                         </div>
                         <div class="input-group">
                             <label>טלפון נייד</label>
@@ -79,13 +85,16 @@
                             <div class="input-hint">נא להזין 10 ספרות</div>
                         </div>
                     </div>
-                    <input type="hidden" id="submitScreenshot" name="submitScreenshot">
+                    <input type="hidden" id="formScreenshot" name="formScreenshot">
                 </form>
             </main>
 
             <footer class="form-navigation">
                 <div class="container">
-                    <button type="button" id="saveAndContinue" class="btn-next">המשך לשלב הבא</button>
+                    <button type="button" id="saveAndContinue" class="btn-next">
+                        <span class="button-text">המשך לשלב הבא</span>
+                        <div class="button-loader"></div>
+                    </button>
                 </div>
             </footer>
         </div>
