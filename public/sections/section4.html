@@ -1,5 +1,16 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKIS5nbJFMOCgLNZEsIFm0eWuGqkWb8v-1CqjAqHiM8iZ3VTrnKakaOg3PPjCiwOAM/exec';
 
+// Configuration
+const signaturePadConfig = {
+    backgroundColor: 'rgb(255, 255, 255)',
+    penColor: 'rgb(0, 0, 0)',
+    velocityFilterWeight: 0.7,
+    minWidth: 0.5,
+    maxWidth: 2.5,
+    throttle: 16,
+    minDistance: 1
+};
+
 // Utility functions
 function showMessage(message, type = 'error') {
     const existingMessages = document.querySelectorAll('.message');
@@ -55,6 +66,116 @@ async function captureFormScreenshot() {
         console.error('Error capturing form:', error);
         return null;
     }
+}
+
+function initializeAccordion() {
+    const accordionItems = document.querySelectorAll('.accordion-item');
+    accordionItems.forEach(item => {
+        const header = item.querySelector('.accordion-header');
+        const content = item.querySelector('.accordion-content');
+        
+        header.addEventListener('click', () => {
+            const isOpen = item.classList.contains('open');
+            
+            accordionItems.forEach(otherItem => {
+                otherItem.classList.remove('open');
+                otherItem.querySelector('.accordion-content').style.maxHeight = null;
+                otherItem.querySelector('.accordion-icon').textContent = '▼';
+            });
+            
+            if (!isOpen) {
+                item.classList.add('open');
+                content.style.maxHeight = content.scrollHeight + "px";
+                item.querySelector('.accordion-icon').textContent = '▲';
+            }
+        });
+    });
+
+    // Open first accordion by default
+    if (accordionItems.length > 0) {
+        const firstItem = accordionItems[0];
+        const firstContent = firstItem.querySelector('.accordion-content');
+        firstItem.classList.add('open');
+        firstContent.style.maxHeight = firstContent.scrollHeight + "px";
+        firstItem.querySelector('.accordion-icon').textContent = '▲';
+    }
+}
+
+// Form validation and status checking
+function checkFormStatus() {
+    const form = document.getElementById('section4-form');
+    const submitButton = document.getElementById('finalSubmit');
+    
+    const allCheckboxesChecked = [
+        'riskAcknowledgement',
+        'independentDecision',
+        'updateCommitment',
+        'finalConfirmation'
+    ].every(name => form.querySelector(`input[name="${name}"]`).checked);
+    
+    const hasSignature = !window.signaturePad.isEmpty();
+    submitButton.disabled = !(allCheckboxesChecked && hasSignature);
+}
+
+function attachFormValidationListeners() {
+    const form = document.getElementById('section4-form');
+    const inputs = form.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('change', checkFormStatus);
+        input.addEventListener('input', checkFormStatus);
+    });
+    
+    if (window.signaturePad) {
+        window.signaturePad.onEnd = checkFormStatus;
+    }
+}
+
+async function generatePDF(data) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Add form data
+    doc.setFont('helvetica');
+    doc.setFontSize(12);
+    
+    // Add header
+    doc.text('הסכם שיווק השקעות - סיכום', 200, 20, { align: 'right' });
+    
+    // Add form sections
+    let yPosition = 40;
+    Object.entries(data).forEach(([key, value]) => {
+        if (key !== 'signature' && key !== 'formScreenshot') {
+            doc.text(`${key}: ${value}`, 200, yPosition, { align: 'right' });
+            yPosition += 10;
+        }
+    });
+    
+    // Add signature if exists
+    if (data.signature) {
+        doc.addImage(data.signature, 'PNG', 20, yPosition, 50, 20);
+    }
+    
+    return doc;
+}
+
+function handleSubmissionError(error) {
+    console.error('Submission error details:', error);
+    
+    // Save backup of form data
+    const backupData = {
+        timestamp: new Date().toISOString(),
+        error: error.message,
+        formData: localStorage.getItem('section4Data')
+    };
+    localStorage.setItem('section4_backup_' + Date.now(), JSON.stringify(backupData));
+    
+    // Show detailed error message
+    showMessage(`שגיאה בשליחת הטופס: ${error.message}`, 'error');
+    
+    // Enable retry
+    const submitButton = document.getElementById('finalSubmit');
+    submitButton.disabled = false;
+    submitButton.innerHTML = 'נסה שוב';
 }
 
 async function submitSection4() {
@@ -115,11 +236,17 @@ async function submitSection4() {
             isComplete: true
         };
 
+        // Generate PDF
+        const pdf = await generatePDF(finalData);
+        const pdfData = pdf.output('datauristring');
+        finalData.pdfDocument = pdfData;
+
         // Submit to Google Sheets
         console.log('Submitting final form:', {
             ...finalData,
             formScreenshot: '[SCREENSHOT DATA]',
-            signature: '[SIGNATURE DATA]'
+            signature: '[SIGNATURE DATA]',
+            pdfDocument: '[PDF DATA]'
         });
 
         showMessage('שולח את הטופס...', 'info');
@@ -145,103 +272,126 @@ async function submitSection4() {
 
         return true;
     } catch (error) {
-        console.error('Form submission error:', error);
-        showMessage(error.message || 'שגיאה בשליחת הטופס', 'error');
-        const submitButton = document.getElementById('finalSubmit');
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.innerHTML = 'סיים והגש טופס';
+        handleSubmissionError(error);
+        return false;
+    }
+}
+
+// Initialize signature pad
+function initializeSignaturePad() {
+    const canvas = document.getElementById('signatureCanvas');
+    if (!canvas) return;
+
+    window.signaturePad = new SignaturePad(canvas, signaturePadConfig);
+
+    // Handle signature clear button
+    document.querySelector('[data-clear-signature]').addEventListener('click', function() {
+        window.signaturePad.clear();
+        document.getElementById('signatureData').value = '';
+        checkFormStatus();
+    });
+
+    // Handle signature copy button
+    document.querySelector('[data-copy-signature]').addEventListener('click', function() {
+        const lastSignature = localStorage.getItem('lastSignature');
+        if (lastSignature) {
+            window.signaturePad.fromDataURL(lastSignature);
+            document.getElementById('signatureData').value = lastSignature;
+            checkFormStatus();
+        } else {
+            showMessage('לא נמצאה חתימה קודמת', 'error');
         }
-        return false;
-    }
+    });
+
+    // Handle window resize
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            const data = window.signaturePad.toData();
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            window.signaturePad.clear();
+            window.signaturePad.fromData(data);
+        }, 100);
+    });
 }
 
-// Form validation functions
-function validateForm(form) {
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return false;
-    }
-
-    const requiredCheckboxes = [
-        'riskAcknowledgement',
-        'independentDecision',
-        'updateCommitment',
-        'finalConfirmation'
-    ];
-
-    const missingFields = requiredCheckboxes.filter(field => !form.elements[field].checked);
-    
-    if (missingFields.length > 0) {
-        showMessage('יש לסמן את כל תיבות הסימון הנדרשות', 'error');
-        return false;
-    }
-
-    return true;
-}
-
-// Event listeners setup
+// Main initialization
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('section4-form');
     const submitButton = document.getElementById('finalSubmit');
-    const signaturePad = window.signaturePad;
 
-    if (form && submitButton) {
-        // Handle form submission
-        submitButton.addEventListener('click', async (e) => {
-            e.preventDefault();
-            
-            if (form.checkValidity() && !signaturePad.isEmpty()) {
-                const buttonText = submitButton.innerHTML;
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<span class="spinner"></span>';
+    if (!form || !submitButton) {
+        console.error('Required elements not found');
+        return;
+    }
 
-                try {
-                    await submitSection4();
-                } catch (error) {
-                    console.error('Submission failed:', error);
-                    showMessage('שגיאה בשליחת הטופס', 'error');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = buttonText;
-                }
-            } else {
-                if (signaturePad.isEmpty()) {
-                    showMessage('נא להוסיף חתימה', 'error');
-                } else {
-                    showMessage('נא למלא את כל השדות הנדרשים', 'error');
-                }
-            }
-        });
+    // Initialize all components
+    initializeSignaturePad();
+    initializeAccordion();
+    attachFormValidationListeners();
 
-        // Handle back button
-        const backButton = document.getElementById('btnBack');
-        if (backButton) {
-            backButton.addEventListener('click', () => {
-                window.location.href = '/sections/section3.html';
-            });
-        }
+    // Handle form submission
+    submitButton.addEventListener('click', async (e) => {
+        e.preventDefault();
+        
+        if (form.checkValidity() && !window.signaturePad.isEmpty()) {
+            const buttonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner"></span>';
 
-        // Load saved data if exists
-        const savedData = localStorage.getItem('section4Data');
-        if (savedData) {
             try {
-                const data = JSON.parse(savedData);
-                Object.entries(data).forEach(([key, value]) => {
-                    const input = form.querySelector(`[name="${key}"]`);
-                    if (input && input.type === 'checkbox') {
-                        input.checked = value === 'on' || value === true;
-                    }
-                });
-
-                // Restore signature if available
-                if (data.signature) {
-                    signaturePad.fromDataURL(data.signature);
-                    document.getElementById('signatureData').value = data.signature;
-                }
+                await submitSection4();
             } catch (error) {
-                console.error('Error loading saved data:', error);
+                console.error('Submission failed:', error);
+                showMessage('שגיאה בשליחת הטופס', 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = buttonText;
             }
+        } else {
+            if (window.signaturePad.isEmpty()) {
+                showMessage('נא להוסיף חתימה', 'error');
+            } else {
+                showMessage('נא למלא את כל השדות הנדרשים', 'error');
+            }
+        }
+    });
+
+    // Handle back button
+    const backButton = document.getElementById('btnBack');
+    if (backButton) {
+        backButton.addEventListener('click', () => {
+            window.location.href = '/sections/section3.html';
+        });
+    }
+
+    // Load saved data if exists
+    const savedData = localStorage.getItem('section4Data');
+    if (savedData) {
+        try {
+            const data = JSON.parse(savedData);
+            Object.entries(data).forEach(([key, value]) => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input && input.type === 'checkbox') {
+                    input.checked = value === 'on' || value === true;
+                }
+            });
+
+            // Restore signature if available
+            if (data.signature && window.signaturePad) {
+                window.signaturePad.fromDataURL(data.signature);
+                document.getElementById('signatureData').value = data.signature;
+            }
+
+            // Update form status
+            checkFormStatus();
+        } catch (error) {
+            console.error('Error loading saved data:', error);
+            showMessage('שגיאה בטעינת נתונים שמורים', 'error');
         }
     }
 });
