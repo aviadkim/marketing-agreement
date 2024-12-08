@@ -61,7 +61,8 @@ async function submitToGoogleSheets() {
         const processedData = await processSection1Data();
         debugLog('Sending data to Google Sheets:', processedData);
 
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
+        console.log('[NETWORK] Sending request to:', GOOGLE_SCRIPT_URL);
+const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: {
@@ -70,7 +71,14 @@ async function submitToGoogleSheets() {
             body: JSON.stringify(processedData)
         });
 
-        debugLog('Google Sheets response:', response);
+        console.log('[NETWORK] Response status:', response.status);
+console.log('[NETWORK] Response headers:', Object.fromEntries(response.headers));
+debugLog('Google Sheets response:', response);
+
+// Additional verification
+if (!response.ok && response.status !== 0) {
+    throw new Error(`Network response was not ok: ${response.status}`);
+}
 
         // Store in localStorage for verification
         localStorage.setItem('lastSubmittedData', JSON.stringify({
@@ -121,3 +129,4 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('[ERROR] Submit button not found');
     }
 });
+
