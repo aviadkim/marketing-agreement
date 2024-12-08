@@ -21,7 +21,10 @@ async function captureFormScreenshot() {
 async function submitToGoogleSheets() {
     try {
         const form = document.querySelector('#section1-form');
-        if (!form) return false;
+        if (!form) {
+            console.error('Form not found');
+            return false;
+        }
 
         // Show loading state
         const submitButton = document.getElementById('saveAndContinue');
@@ -30,6 +33,7 @@ async function submitToGoogleSheets() {
             submitButton.textContent = 'שולח...';
         }
 
+        // Get form data
         const formData = new FormData(form);
         const data = {};
         
@@ -38,13 +42,17 @@ async function submitToGoogleSheets() {
             data[key] = value;
         }
         
-        // Add screenshot and metadata
+        // Add metadata
         data.formScreenshot = await captureFormScreenshot();
         data.timestamp = new Date().toISOString();
         data.section = '1';
 
-        console.log('Sending data:', { ...data, formScreenshot: 'BASE64_STRING' });
+        console.log('Sending data to Google Sheets:', {
+            ...data,
+            formScreenshot: '[SCREENSHOT DATA]'
+        });
 
+        // Send to Google Sheets
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             headers: {
@@ -53,19 +61,20 @@ async function submitToGoogleSheets() {
             body: JSON.stringify(data)
         });
 
-        const responseData = await response.text();
-        console.log('Response:', responseData);
+        // Log response
+        const responseText = await response.text();
+        console.log('Response from Google Sheets:', responseText);
 
-        // Store in localStorage
+        // Save to localStorage
         localStorage.setItem('section1Data', JSON.stringify({
             ...data,
-            formScreenshot: null // Don't store screenshot in localStorage
+            formScreenshot: null // Don't store large screenshot in localStorage
         }));
 
         return true;
+
     } catch (error) {
         console.error('Submit error:', error);
-        alert('שגיאה בשליחת הטופס: ' + error.message);
         return false;
     } finally {
         // Reset button state
@@ -79,18 +88,24 @@ async function submitToGoogleSheets() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Section 1 form initialized');
+    
     const submitButton = document.getElementById('saveAndContinue');
     if (submitButton) {
         submitButton.addEventListener('click', async (e) => {
             e.preventDefault();
             
+            console.log('Submit button clicked');
             const success = await submitToGoogleSheets();
             
             if (success) {
-                // Show success message before navigating
-                alert('הנתונים נשלחו בהצלחה!');
+                console.log('Form submitted successfully');
                 window.location.href = '/sections/section2.html';
+            } else {
+                console.error('Form submission failed');
             }
         });
+    } else {
+        console.error('Submit button not found');
     }
 });
