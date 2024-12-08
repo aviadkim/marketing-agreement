@@ -21,7 +21,7 @@ function showMessage(message, type = 'error') {
 
 async function submitForm(e) {
     e.preventDefault();
-    console.log('[DEBUG] Submit button clicked');
+    console.log('[DEBUG] Final submit button clicked');
 
     const form = document.querySelector('form');
     if (!form) {
@@ -40,8 +40,8 @@ async function submitForm(e) {
     }
 
     // Get signature
-    const canvas = document.querySelector('#signatureCanvas');
-    if (!canvas || !window.signatureHandler || window.signatureHandler.isEmpty()) {
+    const signatureData = document.getElementById('signatureData')?.value;
+    if (!signatureData) {
         console.log('[DEBUG] Signature missing');
         showMessage('????? ?????');
         return;
@@ -53,12 +53,13 @@ async function submitForm(e) {
         // Prepare form data
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
-        
-        // Add signature
-        data.signature = canvas.toDataURL();
+        data.signature = signatureData;
         data.timestamp = new Date().toISOString();
 
-        console.log('[DEBUG] Sending data to server');
+        console.log('[DEBUG] Preparing to send data:', {
+            ...data,
+            signature: '[SIGNATURE DATA]'
+        });
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
@@ -70,13 +71,24 @@ async function submitForm(e) {
         });
 
         console.log('[DEBUG] Server response:', response);
-        showMessage('????? ???? ??????', 'success');
+        
+        if (response.status === 0 || response.ok) {
+            showMessage('????? ???? ??????', 'success');
+            
+            // Save submission for verification
+            localStorage.setItem('lastSubmission', JSON.stringify({
+                ...data,
+                signature: '[SAVED]',
+                submittedAt: new Date().toISOString()
+            }));
 
-        // Navigate after short delay
-        setTimeout(() => {
-            window.location.href = '/sections/thank-you.html';
-        }, 1000);
-
+            // Navigate after short delay
+            setTimeout(() => {
+                window.location.href = '/sections/thank-you.html';
+            }, 1000);
+        } else {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
     } catch (error) {
         console.error('[ERROR] Submit failed:', error);
         showMessage('????? ?????? ?????');
@@ -84,12 +96,30 @@ async function submitForm(e) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[DEBUG] Initializing section 4');
+    console.log('[DEBUG] Section 4 initialized');
     
-    const submitButton = document.querySelector('button[type="submit"]');
+    const submitButton = document.getElementById('finalSubmit');
     if (submitButton) {
         submitButton.addEventListener('click', submitForm);
+        console.log('[DEBUG] Submit button handler attached');
+
+        // Enable button when all required fields are filled
+        const form = document.querySelector('form');
+        if (form) {
+            const checkFormValidity = () => {
+                const allChecked = ['riskAcknowledgement', 'independentDecision', 'updateCommitment']
+                    .every(name => document.querySelector(`input[name="${name}"]:checked`));
+                const hasSignature = document.getElementById('signatureData')?.value;
+                submitButton.disabled = !(allChecked && hasSignature);
+            };
+
+            // Check on any form change
+            form.addEventListener('change', checkFormValidity);
+            
+            // Initial check
+            checkFormValidity();
+        }
     } else {
-        console.error('[ERROR] Submit button not found');
+        console.error('[ERROR] Final submit button not found (id: finalSubmit)');
     }
 });
