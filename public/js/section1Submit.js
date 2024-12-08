@@ -52,18 +52,17 @@ async function submitToGoogleSheets() {
             formScreenshot: '[SCREENSHOT DATA]'
         });
 
-        // Send to Google Sheets
+        // Send to Google Sheets with no-cors mode
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
+            mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(data)
         });
 
-        // Log response
-        const responseText = await response.text();
-        console.log('Response from Google Sheets:', responseText);
+        console.log('Response status:', response.status);
 
         // Save to localStorage
         localStorage.setItem('section1Data', JSON.stringify({
@@ -71,10 +70,12 @@ async function submitToGoogleSheets() {
             formScreenshot: null // Don't store large screenshot in localStorage
         }));
 
+        // Successfully sent to Google Sheets
         return true;
 
     } catch (error) {
         console.error('Submit error:', error);
+        alert('שגיאה בשליחת הטופס: ' + error.message);
         return false;
     } finally {
         // Reset button state
