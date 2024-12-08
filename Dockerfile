@@ -2,7 +2,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# התקנת חבילות הנדרשות עבור pdfkit
+# Installing required packages for pdfkit more efficiently
 RUN apk add --no-cache \
     python3 \
     make \
@@ -14,11 +14,14 @@ RUN apk add --no-cache \
 
 COPY package*.json ./
 
-# התקנת כל החבילות כולל החדשות
-RUN npm install
-RUN npm install pdfkit nodemailer
+# Combine npm install commands to reduce layers
+RUN npm install && npm install pdfkit nodemailer
 
 COPY . .
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
 EXPOSE 3000
 
