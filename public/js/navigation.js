@@ -319,9 +319,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Add this new code right after the above section:
+function navigateBack() {
+    if (currentSection > 1) {
+        saveFormData();
+        window.location.href = `/sections/section${currentSection - 1}.html`;
+    }
+}
+
 // Export necessary functions
 window.loadSavedData = loadSavedData;
 window.saveFormData = saveFormData;
 window.navigateNext = navigateNext;
-window.navigateBack = navigateBack;
+window.navigateBack = navigateBack;  // Add this line
 window.showMessage = showMessage;
