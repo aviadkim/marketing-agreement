@@ -1,9 +1,9 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzG0PUeKWY7mr2r-nWWrBcE6w20_9Vq-se8_k8uzVEMBw0iij5qIrCWfNoz9qubq5Mk/exec';
 
-async function submitSection1() {
-    console.log('[DEBUG] Starting section 1 submission');
+async function submitSection2() {
+    console.log('[DEBUG] Starting section 2 submission');
     try {
-        const form = document.getElementById('section1-form');
+        const form = document.getElementById('section2-form');
         if (!form) {
             throw new Error('Form not found');
         }
@@ -12,11 +12,11 @@ async function submitSection1() {
         const data = Object.fromEntries(formData.entries());
         
         // Add metadata
-        data.section = '1';
+        data.section = '2';
         data.timestamp = new Date().toISOString();
         data.formScreenshot = await captureFormScreenshot();
 
-        console.log('[DEBUG] Sending section 1 data');
+        console.log('[DEBUG] Sending section 2 data');
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -26,10 +26,10 @@ async function submitSection1() {
             body: JSON.stringify(data)
         });
 
-        console.log('[DEBUG] Section 1 submitted successfully');
+        console.log('[DEBUG] Section 2 submitted successfully');
         return true;
     } catch (error) {
-        console.error('[ERROR] Section 1 submission failed:', error);
+        console.error('[ERROR] Section 2 submission failed:', error);
         return false;
     }
 }
@@ -51,7 +51,7 @@ async function captureFormScreenshot() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[DEBUG] Section 1 initialized');
+    console.log('[DEBUG] Section 2 initialized');
     
     const submitButton = document.getElementById('saveAndContinue');
     if (submitButton) {
@@ -62,10 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.textContent = '????...';
             
             try {
-                const success = await submitSection1();
+                const success = await submitSection2();
                 if (success) {
-                    console.log('[DEBUG] Navigating to section 2');
-                    window.location.href = '/sections/section2.html';
+                    console.log('[DEBUG] Navigating to section 3');
+                    window.location.href = '/sections/section3.html';
                 }
             } finally {
                 submitButton.disabled = false;
