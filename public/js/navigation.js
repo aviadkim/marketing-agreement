@@ -250,7 +250,7 @@ function showMessage(message, type = 'error') {
 }
 
 // Navigate to next section
-function navigateNext() {
+async function navigateNext() {
     const form = document.querySelector('form');
     if (!form) {
         logDebug('Form not found');
@@ -271,19 +271,27 @@ function navigateNext() {
     }
 
     if (isValid) {
-        logDebug('Form is valid, saving and navigating...');
+        logDebug('Form is valid, capturing and saving...');
+        
+        // Save form data
         saveFormData();
+
+        // Capture current section before navigation
+        try {
+            await Promise.all([
+                window.formCaptureService?.captureCurrentSection(currentSection),
+                window.emailCaptureService?.captureCurrentSection(currentSection)
+            ]);
+            logDebug('Section captured successfully');
+        } catch (error) {
+            console.error('Error capturing section:', error);
+            // Continue with navigation even if capture fails
+        }
+
+        // Navigate to next section
         window.location.href = `/sections/section${currentSection + 1}.html`;
     } else {
         logDebug('Form validation failed');
-    }
-}
-
-// Navigate to previous section
-function navigateBack() {
-    if (currentSection > 1) {
-        saveFormData();
-        window.location.href = `/sections/section${currentSection - 1}.html`;
     }
 }
 
