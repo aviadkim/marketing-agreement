@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwf-7F8NIXbcDGTCKsx_5eCfxv9BTgGkSTYKMfWbCQNm37Rab2HA70gt8MkiXZWd6Ps/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2k9JkMKaE0yrRjaH512ePC2YaZI8N3HWYmyFG3UWkwsfbG83tIYWeeDF5gMg7LHHB/exec';
 
 // Capture form screenshot
 async function captureFormScreenshot() {
