@@ -27,17 +27,16 @@ async function submitToGoogleSheets() {
             return false;
         }
 
-        // Show loading state
+        // Show loading
         const submitButton = document.getElementById('saveAndContinue');
         if (submitButton) {
             submitButton.disabled = true;
             submitButton.textContent = 'שולח...';
         }
 
-        // Get form data
         const formData = new FormData(form);
         const data = {};
-
+        
         // Convert FormData to object
         for (let [key, value] of formData.entries()) {
             data[key] = value;
@@ -48,42 +47,63 @@ async function submitToGoogleSheets() {
         data.timestamp = new Date().toISOString();
         data.section = '1';
 
-        console.log('Sending data to Google Sheets:', {
+        console.log('Sending data:', {
             ...data,
-            formScreenshot: '[SCREENSHOT DATA]'
+            formScreenshot: '[SCREENSHOT DATA]'  // לא מדפיסים את כל הbase64
         });
 
-        // Send to Google Sheets with no-cors mode
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'no-cors',  // חשוב!
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(data)
         });
 
-        console.log('Response status:', response.status);
+        console.log('Response:', {
+            status: response.status,
+            statusText: response.statusText
+        });
 
-        // Save to localStorage
-        localStorage.setItem('section1Data', JSON.stringify({
+        // Save to localStorage for debugging
+        localStorage.setItem('lastSubmittedData', JSON.stringify({
             ...data,
-            formScreenshot: null // Don't store large screenshot in localStorage
+            formScreenshot: null
         }));
 
         return true;
-
     } catch (error) {
         console.error('Submit error:', error);
+        alert('שגיאה בשליחת הטופס: ' + error.message);
         return false;
     } finally {
-        // Reset button state
         const submitButton = document.getElementById('saveAndContinue');
         if (submitButton) {
             submitButton.disabled = false;
             submitButton.textContent = 'המשך לשלב הבא';
         }
     }
+}
+
+// Show error/success message
+function showMessage(message, type = 'error') {
+    const div = document.createElement('div');
+    div.className = `message ${type}`;
+    div.textContent = message;
+    div.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 1000;
+        color: white;
+        background: ${type === 'success' ? '#4CAF50' : '#dc3545'};
+        animation: fadeIn 0.3s;
+    `;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
 }
 
 // Initialize on page load
@@ -100,12 +120,40 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (success) {
                 console.log('Form submitted successfully');
+                showMessage('הנתונים נשלחו בהצלחה!', 'success');
                 window.location.href = '/sections/section2.html';
             } else {
                 console.error('Form submission failed');
+                showMessage('שגיאה בשליחת הטופס');
             }
         });
     } else {
         console.error('Submit button not found');
     }
 });
+
+// Export functions for testing
+window.testGoogleConnection = async function() {
+    const testData = {
+        firstName: "Test",
+        lastName: "User",
+        email: "test@test.com",
+        timestamp: new Date().toISOString()
+    };
+
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(testData)
+        });
+        console.log('Test response:', response);
+        return response;
+    } catch (error) {
+        console.error('Test failed:', error);
+        return null;
+    }
+};
