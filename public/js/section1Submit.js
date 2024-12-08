@@ -1,6 +1,30 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzG0PUeKWY7mr2r-nWWrBcE6w20_9Vq-se8_k8uzVEMBw0iij5qIrCWfNoz9qubq5Mk/exec';
 
-// Capture form screenshot
+function generateDownloadUrl(formData) {
+    const timestamp = Date.now();
+    const uniqueId = `${timestamp}_${formData.idNumber}`;
+    return `${window.location.origin}/form/${uniqueId}`;
+}
+
+function showMessage(message, type = 'error') {
+    const div = document.createElement('div');
+    div.className = `message ${type}`;
+    div.textContent = message;
+    div.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 1000;
+        color: white;
+        background: ${type === 'success' ? '#4CAF50' : '#dc3545'};
+        animation: fadeIn 0.3s;
+    `;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+}
+
 async function captureFormScreenshot() {
     try {
         const formElement = document.querySelector('.form-content');
@@ -17,37 +41,74 @@ async function captureFormScreenshot() {
     }
 }
 
-// Submit form data
+function validateForm(form) {
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return false;
+    }
+
+    const requiredFields = ['firstName', 'lastName', 'idNumber', 'email', 'phone'];
+    const missingFields = requiredFields.filter(field => !form.elements[field].value);
+    
+    if (missingFields.length > 0) {
+        showMessage('?? ???? ?? ?? ????? ?????');
+        return false;
+    }
+
+    return true;
+}
+
+async function processSection1Data() {
+    try {
+        const form = document.getElementById('section1-form');
+        const formData = new FormData(form);
+
+        // Capture current section screenshot
+        const screenshot = await captureFormScreenshot();
+
+        const sectionData = {
+            section: '1',
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            idNumber: formData.get('idNumber'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            formScreenshot: screenshot,
+            timestamp: new Date().toISOString()
+        };
+
+        // Generate unique URL for this section
+        sectionData.downloadUrl = generateDownloadUrl(sectionData);
+
+        // Store for later combination
+        localStorage.setItem('section1Data', JSON.stringify({
+            ...sectionData,
+            formScreenshot: '[STORED SEPARATELY]'
+        }));
+
+        return sectionData;
+    } catch (error) {
+        console.error('Error processing section 1:', error);
+        throw error;
+    }
+}
+
 async function submitToGoogleSheets() {
     try {
-        console.log('Starting form submission');
-        const form = document.querySelector('#section1-form');
-        if (!form) {
-            console.error('Form not found');
+        showMessage('???? ??????...', 'info');
+        
+        const form = document.getElementById('section1-form');
+        if (!validateForm(form)) {
             return false;
         }
 
-        // Show loading
-        const submitButton = document.getElementById('saveAndContinue');
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.textContent = '????...';
-        }
-
-        const formData = new FormData(form);
-        const data = {};
+        // Process section data
+        const processedData = await processSection1Data();
         
-        // Convert FormData to object
-        for (let [key, value] of formData.entries()) {
-            data[key] = value;
-        }
-
-        // Add metadata
-        data.formScreenshot = await captureFormScreenshot();
-        data.timestamp = new Date().toISOString();
-        data.section = '1';
-
-        console.log('Sending data:', data);
+        console.log('Submitting data:', {
+            ...processedData,
+            formScreenshot: '[IMAGE DATA]'
+        });
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
@@ -55,28 +116,15 @@ async function submitToGoogleSheets() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(processedData)
         });
 
-        console.log('Response:', response);
-
-        // Save to localStorage for debugging
-        localStorage.setItem('lastSubmittedData', JSON.stringify({
-            ...data,
-            formScreenshot: null
-        }));
-
+        showMessage('????? ???? ??????', 'success');
         return true;
     } catch (error) {
         console.error('Submit error:', error);
-        alert('????? ?????? ?????: ' + error.message);
+        showMessage(error.message || '????? ?????? ?????');
         return false;
-    } finally {
-        const submitButton = document.getElementById('saveAndContinue');
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.textContent = '???? ???? ???';
-        }
     }
 }
 
@@ -89,14 +137,20 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.addEventListener('click', async (e) => {
             e.preventDefault();
             
-            console.log('Submit button clicked');
-            const success = await submitToGoogleSheets();
+            submitButton.disabled = true;
+            submitButton.textContent = '????...';
             
-            if (success) {
-                console.log('Form submitted successfully');
-                window.location.href = '/sections/section2.html';
-            } else {
-                console.error('Form submission failed');
+            try {
+                const success = await submitToGoogleSheets();
+                if (success) {
+                    console.log('Form submitted successfully');
+                    setTimeout(() => {
+                        window.location.href = '/sections/section2.html';
+                    }, 1000);
+                }
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = '???? ???? ???';
             }
         });
     } else {
