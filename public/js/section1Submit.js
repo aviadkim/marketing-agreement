@@ -38,9 +38,10 @@ async function submitToGoogleSheets() {
             data[key] = value;
         }
         
-        // Add screenshot
+        // Add screenshot and metadata
         data.formScreenshot = await captureFormScreenshot();
         data.timestamp = new Date().toISOString();
+        data.section = '1';
 
         console.log('Sending data:', { ...data, formScreenshot: 'BASE64_STRING' });
 
@@ -52,7 +53,8 @@ async function submitToGoogleSheets() {
             body: JSON.stringify(data)
         });
 
-        console.log('Response:', response);
+        const responseData = await response.text();
+        console.log('Response:', responseData);
 
         // Store in localStorage
         localStorage.setItem('section1Data', JSON.stringify({
