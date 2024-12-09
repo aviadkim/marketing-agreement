@@ -2,43 +2,24 @@
 
 async function submitForm(e) {
     e.preventDefault();
-    console.log("[DEBUG] Starting final form submission");
+    console.log("[DEBUG] Starting form submission");
 
     const submitButton = document.getElementById("finalSubmit");
     if (submitButton) {
         submitButton.disabled = true;
-        submitButton.textContent = "שולח...";
+        const buttonText = submitButton.querySelector(".button-text");
+        if (buttonText) buttonText.textContent = "שולח...";
     }
 
     try {
-        // בדיקת תקינות
         const form = document.querySelector("form");
         const signatureData = document.getElementById("signatureData")?.value;
-        const confirmation = document.getElementById("finalConfirmation")?.checked;
-
-        if (!form || !signatureData || !confirmation) {
-            throw new Error("יש למלא את כל השדות ולחתום");
+        
+        if (!form || !signatureData) {
+            throw new Error("נא למלא את כל השדות הנדרשים");
         }
 
-        // צילום הטופס
-        const formElement = document.querySelector(".form-content");
-        const canvas = await html2canvas(formElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "#ffffff"
-        });
-
-        // יצירת PDF
-        window.jsPDF = window.jspdf.jsPDF;
-        const pdf = new jsPDF();
-        const imgData = canvas.toDataURL("image/jpeg", 1.0);
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
-
-        // שליחה לגוגל שיטס
+        // Get form data
         const formData = new FormData(form);
         const data = {
             ...Object.fromEntries(formData.entries()),
@@ -47,37 +28,23 @@ async function submitForm(e) {
             timestamp: new Date().toISOString()
         };
 
-        await fetch(GOOGLE_SCRIPT_URL, {
+        console.log("[DEBUG] Sending form data");
+
+        // Send to Google Sheets
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(data)
         });
 
-        // שליחת מייל עם PDF
-        const emailResponse = await fetch('/api/submit-final', {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                pdfContent: pdf.output("datauristring"),
-                email: "info@movne.co.il",
-                subject: "טופס הסכם שיווק חדש",
-                name: data.firstName + " " + data.lastName
-            })
-        });
-
-        if (!emailResponse.ok) {
-            throw new Error("שגיאה בשליחת המייל");
-        }
-
+        console.log("[DEBUG] Form submitted successfully");
         showMessage("הטופס נשלח בהצלחה", "success");
+        
         setTimeout(() => {
             window.location.href = "/sections/thank-you.html";
-        }, 1500);
+        }, 1000);
 
     } catch (error) {
         console.error("[ERROR]", error);
@@ -85,7 +52,8 @@ async function submitForm(e) {
     } finally {
         if (submitButton) {
             submitButton.disabled = false;
-            submitButton.textContent = "סיים והגש טופס";
+            const buttonText = submitButton.querySelector(".button-text");
+            if (buttonText) buttonText.textContent = "סיים והגש טופס";
         }
     }
 }
@@ -103,6 +71,7 @@ function showMessage(message, type = "error") {
         z-index: 1000;
         color: white;
         background: ${type === "success" ? "#4CAF50" : "#dc3545"};
+        animation: fadeIn 0.3s;
     `;
     document.body.appendChild(div);
     setTimeout(() => div.remove(), 3000);
@@ -115,27 +84,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitButton = document.getElementById("finalSubmit");
 
     if (form && submitButton) {
-        // בדיקת תקינות הטופס
         const checkFormValidity = () => {
             const signature = document.getElementById("signatureData")?.value;
             const confirmation = document.getElementById("finalConfirmation")?.checked;
             submitButton.disabled = !(signature && confirmation);
         };
 
-        // הוספת מאזינים
         form.addEventListener("change", checkFormValidity);
         form.addEventListener("submit", submitForm);
         
-        // בדיקה התחלתית
+        // Initial check
         checkFormValidity();
     }
 });
-
-window.checkFormValidity = () => {
-    const submitButton = document.getElementById("finalSubmit");
-    const signature = document.getElementById("signatureData")?.value;
-    const confirmation = document.getElementById("finalConfirmation")?.checked;
-    if (submitButton) {
-        submitButton.disabled = !(signature && confirmation);
-    }
-};
