@@ -14,19 +14,34 @@ async function submitForm(e) {
         const form = document.querySelector("form");
         if (!form) throw new Error("Form not found");
 
+        // Create PDF of form
+        const formElement = document.querySelector(".form-content");
+        const canvas = await html2canvas(formElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#ffffff"
+        });
+
+        // Convert to PDF
+        const pdf = new jsPDF();
+        pdf.addImage(canvas.toDataURL("image/jpeg", 1.0), "JPEG", 0, 0);
+        const pdfData = pdf.output("datauristring");
+
+        // Prepare form data
         const formData = new FormData(form);
         const data = {
             ...Object.fromEntries(formData.entries()),
             section: "1",
-            timestamp: new Date().toISOString(),
-            formScreenshot: await captureFormScreenshot()
+            timestamp: new Date().toLocaleString("he-IL", { timeZone: "Asia/Jerusalem" }),
+            formPdf: pdfData
         };
 
-        console.log("[DEBUG] Sending data to server:", data);
+        console.log("[DEBUG] Sending data to server:", { ...data, formPdf: "[PDF DATA]" });
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors", // Important for CORS
+            mode: "no-cors",
             headers: {
                 "Content-Type": "application/json",
             },
@@ -34,15 +49,18 @@ async function submitForm(e) {
         });
 
         console.log("[DEBUG] Server response:", response);
-
-        // Save to localStorage for verification
+        showMessage("????? ???? ??????", "success");
+        
+        // Save to localStorage and navigate
         localStorage.setItem("section1Data", JSON.stringify({
             ...data,
-            formScreenshot: "[SCREENSHOT DATA]"
+            formPdf: "[PDF DATA]"
         }));
 
-        // Navigate to next section
-        window.location.href = "/sections/section2.html";
+        setTimeout(() => {
+            window.location.href = "/sections/section2.html";
+        }, 1000);
+
     } catch (error) {
         console.error("[ERROR] Section 1 submission failed:", error);
         showMessage("????? ?????? ?????");
@@ -51,25 +69,6 @@ async function submitForm(e) {
             submitButton.disabled = false;
             submitButton.textContent = "???? ???? ???";
         }
-    }
-}
-
-async function captureFormScreenshot() {
-    try {
-        const formElement = document.querySelector(".form-content");
-        if (!formElement) return null;
-        
-        const canvas = await html2canvas(formElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "#ffffff"
-        });
-        
-        return canvas.toDataURL("image/png");
-    } catch (error) {
-        console.error("[ERROR] Screenshot capture failed:", error);
-        return null;
     }
 }
 
@@ -95,7 +94,7 @@ function showMessage(message, type = "error") {
 document.addEventListener("DOMContentLoaded", () => {
     console.log("[DEBUG] Section 1 initialized");
     const submitButton = document.getElementById("saveAndContinue");
-    
+
     if (submitButton) {
         submitButton.addEventListener("click", submitForm);
         console.log("[DEBUG] Submit button handler attached");
