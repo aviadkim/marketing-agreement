@@ -1,86 +1,55 @@
 class FormScreenshotService {
     constructor() {
-        this.screenshots = {};
+        this.sections = {};
     }
 
     // ????? ???? ????
-    async captureSingleSection(sectionNumber) {
+    async captureSectionAsPDF(sectionNumber) {
         try {
-            console.log(`[DEBUG] Capturing section ${sectionNumber}`);
             const formElement = document.querySelector(".form-content");
-            
-            if (!formElement) {
-                throw new Error("Form content not found");
-            }
-
             const canvas = await html2canvas(formElement, {
                 scale: 2,
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: "#ffffff"
             });
-
-            // ????? ??????
-            const screenshot = canvas.toDataURL("image/png", 1.0);
-            this.screenshots[`section${sectionNumber}`] = screenshot;
-
-            // ????? PDF ??????? ??????
-            const pdf = await this.createPDFFromScreenshot(screenshot);
             
-            return {
-                screenshot,
-                pdf
-            };
+            // ???? ?PDF
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, 0);
+            
+            this.sections[sectionNumber] = pdf.output('datauristring');
+            return this.sections[sectionNumber];
         } catch (error) {
             console.error(`[ERROR] Failed to capture section ${sectionNumber}:`, error);
             return null;
         }
     }
 
-    // ????? PDF ?????? ????
-    async createPDFFromScreenshot(screenshot) {
-        try {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF("p", "mm", "a4");
-            const imgProps = pdf.getImageProperties(screenshot);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-            pdf.addImage(screenshot, "PNG", 0, 0, pdfWidth, pdfHeight);
-            return pdf.output("datauristring");
-        } catch (error) {
-            console.error("[ERROR] PDF creation failed:", error);
-            return null;
-        }
-    }
-
-    // ????? PDF ??? ???????
+    // ????? PDF ??? ??? ???????
     async createFullFormPDF() {
         try {
             const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF("p", "mm", "a4");
+            const pdf = new jsPDF();
             let currentPage = 0;
 
-            for (const [section, screenshot] of Object.entries(this.screenshots)) {
-                if (currentPage > 0) {
-                    pdf.addPage();
+            for (let i = 1; i <= 4; i++) {
+                if (this.sections[i]) {
+                    if (currentPage > 0) {
+                        pdf.addPage();
+                    }
+                    pdf.addImage(this.sections[i], 'PDF', 0, 0);
+                    currentPage++;
                 }
-
-                const imgProps = pdf.getImageProperties(screenshot);
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-                pdf.addImage(screenshot, "PNG", 0, 0, pdfWidth, pdfHeight);
-                currentPage++;
             }
 
-            return pdf.output("datauristring");
+            return pdf.output('datauristring');
         } catch (error) {
-            console.error("[ERROR] Full PDF creation failed:", error);
+            console.error('[ERROR] Failed to create full PDF:', error);
             return null;
         }
     }
 }
 
-// ????? instance ??????
 window.formScreenshotService = new FormScreenshotService();

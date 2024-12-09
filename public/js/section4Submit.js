@@ -2,32 +2,28 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG0PUeKWY7mr
 
 async function submitForm(e) {
     e.preventDefault();
-    console.log("[DEBUG] Starting form submission");
+    console.log("[DEBUG] Starting final form submission");
 
     try {
-        // Get all required data
         const form = document.querySelector("form");
-        const signatureData = document.getElementById("signatureData")?.value;
-        const screenData = await captureFormScreenshot();
+        if (!form) throw new Error("Form not found");
 
-        if (!form || !signatureData) {
-            showMessage("????? ?????? ????");
-            return;
-        }
+        // ????? ???? 4
+        const section4PDF = await window.formScreenshotService.captureSectionAsPDF(4);
+        
+        // ????? PDF ???
+        const fullFormPDF = await window.formScreenshotService.createFullFormPDF();
 
         const formData = new FormData(form);
         const data = {
             ...Object.fromEntries(formData.entries()),
-            signature: signatureData,
-            formScreenshot: screenData,
+            section: "4",
+            sectionPDF: section4PDF,
+            fullFormPDF: fullFormPDF,
             timestamp: new Date().toISOString()
         };
 
-        console.log("[DEBUG] Sending data:", {
-            ...data,
-            signature: "[SIGNATURE DATA]",
-            formScreenshot: "[SCREENSHOT DATA]"
-        });
+        console.log("[DEBUG] Sending final data");
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
@@ -38,40 +34,16 @@ async function submitForm(e) {
             body: JSON.stringify(data)
         });
 
-        console.log("[DEBUG] Response:", response);
+        console.log("[DEBUG] Final submission successful");
+        showMessage("????? ????? ??????", "success");
 
-        // Save for verification
-        localStorage.setItem("lastSubmission", JSON.stringify({
-            ...data,
-            signature: "[SAVED]",
-            formScreenshot: "[SAVED]",
-            submittedAt: new Date().toISOString()
-        }));
-
-        showMessage("????? ???? ??????", "success");
         setTimeout(() => {
             window.location.href = "/sections/thank-you.html";
         }, 1000);
 
     } catch (error) {
-        console.error("[ERROR] Submit failed:", error);
+        console.error("[ERROR] Final submission failed:", error);
         showMessage("????? ?????? ?????");
-    }
-}
-
-async function captureFormScreenshot() {
-    try {
-        const formElement = document.querySelector(".form-content");
-        const canvas = await html2canvas(formElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "#ffffff"
-        });
-        return canvas.toDataURL("image/png");
-    } catch (error) {
-        console.error("[ERROR] Screenshot failed:", error);
-        return null;
     }
 }
 
@@ -95,10 +67,9 @@ function showMessage(message, type = "error") {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("[DEBUG] Section 4 initialized");
     const submitButton = document.getElementById("finalSubmit");
     if (submitButton) {
         submitButton.addEventListener("click", submitForm);
-    } else {
-        console.error("[ERROR] Submit button not found");
     }
 });
