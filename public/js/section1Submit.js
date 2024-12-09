@@ -4,24 +4,29 @@ async function submitForm(e) {
     e.preventDefault();
     console.log("[DEBUG] Starting section 1 submission");
 
+    const submitButton = document.getElementById("saveAndContinue");
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "????...";
+    }
+
     try {
         const form = document.querySelector("form");
-        const screenData = await captureFormScreenshot();
+        if (!form) throw new Error("Form not found");
 
-        if (!form) {
-            showMessage("???? ?? ????");
-            return;
-        }
+        // ????? ?????
+        const captureResult = await window.formScreenshotService.captureSingleSection(1);
+        if (!captureResult) throw new Error("Failed to capture form");
 
+        // ????? ?????
         const formData = new FormData(form);
         const data = {
             ...Object.fromEntries(formData.entries()),
             section: "1",
-            formScreenshot: screenData,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            formScreenshot: captureResult.screenshot,
+            formPDF: captureResult.pdf
         };
-
-        console.log("[DEBUG] Sending section 1 data");
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
@@ -32,10 +37,10 @@ async function submitForm(e) {
             body: JSON.stringify(data)
         });
 
-        console.log("[DEBUG] Response:", response);
-        localStorage.setItem("section1Data", JSON.stringify({...data, formScreenshot: "[SAVED]"}));
-        showMessage("??????? ????? ??????", "success");
-        
+        console.log("[DEBUG] Form submitted successfully");
+        showMessage("????? ???? ??????", "success");
+
+        // ???? ????? ???
         setTimeout(() => {
             window.location.href = "/sections/section2.html";
         }, 1000);
@@ -43,22 +48,11 @@ async function submitForm(e) {
     } catch (error) {
         console.error("[ERROR] Submit failed:", error);
         showMessage("????? ?????? ?????");
-    }
-}
-
-async function captureFormScreenshot() {
-    try {
-        const formElement = document.querySelector(".form-content");
-        const canvas = await html2canvas(formElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "#ffffff"
-        });
-        return canvas.toDataURL("image/png");
-    } catch (error) {
-        console.error("[ERROR] Screenshot failed:", error);
-        return null;
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = "???? ???? ???";
+        }
     }
 }
 
@@ -86,7 +80,5 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitButton = document.getElementById("saveAndContinue");
     if (submitButton) {
         submitButton.addEventListener("click", submitForm);
-    } else {
-        console.error("[ERROR] Submit button not found");
     }
 });
