@@ -2,26 +2,32 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG0PUeKWY7mr
 
 async function submitForm(e) {
     e.preventDefault();
-    console.log("[DEBUG] Starting section 1 submission");
+    console.log("[DEBUG] Starting form submission");
 
     try {
+        // Get all required data
         const form = document.querySelector("form");
+        const signatureData = document.getElementById("signatureData")?.value;
         const screenData = await captureFormScreenshot();
 
-        if (!form) {
-            showMessage("???? ?? ????");
+        if (!form || !signatureData) {
+            showMessage("????? ?????? ????");
             return;
         }
 
         const formData = new FormData(form);
         const data = {
             ...Object.fromEntries(formData.entries()),
-            section: "1",
+            signature: signatureData,
             formScreenshot: screenData,
             timestamp: new Date().toISOString()
         };
 
-        console.log("[DEBUG] Sending section 1 data");
+        console.log("[DEBUG] Sending data:", {
+            ...data,
+            signature: "[SIGNATURE DATA]",
+            formScreenshot: "[SCREENSHOT DATA]"
+        });
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
@@ -33,11 +39,18 @@ async function submitForm(e) {
         });
 
         console.log("[DEBUG] Response:", response);
-        localStorage.setItem("section1Data", JSON.stringify({...data, formScreenshot: "[SAVED]"}));
-        showMessage("??????? ????? ??????", "success");
-        
+
+        // Save for verification
+        localStorage.setItem("lastSubmission", JSON.stringify({
+            ...data,
+            signature: "[SAVED]",
+            formScreenshot: "[SAVED]",
+            submittedAt: new Date().toISOString()
+        }));
+
+        showMessage("????? ???? ??????", "success");
         setTimeout(() => {
-            window.location.href = "/sections/section2.html";
+            window.location.href = "/sections/thank-you.html";
         }, 1000);
 
     } catch (error) {
@@ -82,8 +95,7 @@ function showMessage(message, type = "error") {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("[DEBUG] Section 1 initialized");
-    const submitButton = document.getElementById("saveAndContinue");
+    const submitButton = document.getElementById("finalSubmit");
     if (submitButton) {
         submitButton.addEventListener("click", submitForm);
     } else {
