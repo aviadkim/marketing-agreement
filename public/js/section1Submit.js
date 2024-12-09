@@ -2,7 +2,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG0PUeKWY7mr
 
 async function submitForm(e) {
     e.preventDefault();
-    console.log("[DEBUG] Starting section 1 submission");
+    console.log("[DEBUG] Starting form submission");
 
     const submitButton = document.getElementById("saveAndContinue");
     if (submitButton) {
@@ -15,18 +15,23 @@ async function submitForm(e) {
         if (!form) throw new Error("Form not found");
 
         // ????? ?????
-        const captureResult = await window.formScreenshotService.captureSingleSection(1);
-        if (!captureResult) throw new Error("Failed to capture form");
+        const formElement = document.querySelector(".form-content");
+        const canvas = await html2canvas(formElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#ffffff"
+        });
 
-        // ????? ?????
         const formData = new FormData(form);
         const data = {
             ...Object.fromEntries(formData.entries()),
             section: "1",
-            timestamp: new Date().toISOString(),
-            formScreenshot: captureResult.screenshot,
-            formPDF: captureResult.pdf
+            formScreenshot: canvas.toDataURL("image/png", 1.0),
+            timestamp: new Date().toISOString()
         };
+
+        console.log("[DEBUG] Sending data to server");
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
@@ -40,7 +45,7 @@ async function submitForm(e) {
         console.log("[DEBUG] Form submitted successfully");
         showMessage("????? ???? ??????", "success");
 
-        // ???? ????? ???
+        // ???? ???? ???
         setTimeout(() => {
             window.location.href = "/sections/section2.html";
         }, 1000);
