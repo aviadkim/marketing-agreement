@@ -1,74 +1,77 @@
 async function captureAllPages() {
     const pages = [];
     
-    // Capture current section state
-    const currentUrl = window.location.pathname;
-    
-    // Try to capture each section
     for (let i = 1; i <= 4; i++) {
         try {
-            // Create temporary iframe
-            const iframe = document.createElement('iframe');
-            iframe.style.width = '1024px';
-            iframe.style.height = '2000px';
-            iframe.style.position = 'absolute';
-            iframe.style.left = '-9999px';
+            const iframe = document.createElement("iframe");
+            iframe.style.width = "1024px";
+            iframe.style.height = "2000px";
+            iframe.style.position = "absolute";
+            iframe.style.left = "-9999px";
             document.body.appendChild(iframe);
-            
-            // Load section content
-            await new Promise((resolve, reject) => {
+
+            await new Promise((resolve) => {
                 iframe.onload = resolve;
                 iframe.src = `/sections/section${i}.html`;
             });
-            
-            // Wait for content to render
+
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Capture section content
-            const formContent = iframe.contentDocument.querySelector('.form-content');
+
+            const formContent = iframe.contentDocument.querySelector(".form-content");
             if (formContent) {
                 const canvas = await html2canvas(formContent, {
                     scale: 2,
                     useCORS: true,
                     allowTaint: true,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: "#ffffff",
                     windowWidth: 1024,
                     windowHeight: 2000
                 });
-                pages.push(canvas.toDataURL('image/png', 1.0));
+
+                // ????? ?-PDF ??????
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF("p", "mm", "a4");
+                const imgData = canvas.toDataURL("image/jpeg", 1.0);
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+                
+                pages.push(pdf.output("datauristring"));
             }
-            
-            // Cleanup
+
             document.body.removeChild(iframe);
         } catch (error) {
             console.error(`Error capturing section ${i}:`, error);
         }
     }
-    
     return pages;
 }
 
-async function createPDF(pages) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
-    
-    for (let i = 0; i < pages.length; i++) {
-        if (i > 0) {
-            doc.addPage();
+async function createFullPDF(pages) {
+    try {
+        const { jsPDF } = window.jspdf;
+        const fullPdf = new jsPDF("p", "mm", "a4");
+        
+        for (let i = 0; i < pages.length; i++) {
+            if (i > 0) {
+                fullPdf.addPage();
+            }
+            
+            // ???? ?-base64 ???? ?-PDF
+            const pageData = pages[i].split(",")[1];
+            const pagePdf = new jsPDF();
+            pagePdf.loadFile(pageData);
+            
+            // ????? ?PDF ????
+            fullPdf.addPage(pagePdf.getPage(1));
         }
         
-        try {
-            const imgProps = doc.getImageProperties(pages[i]);
-            const pdfWidth = doc.internal.pageSize.getWidth();
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            
-            doc.addImage(pages[i], 'PNG', 0, 0, pdfWidth, pdfHeight);
-        } catch (error) {
-            console.error(`Error adding page ${i + 1} to PDF:`, error);
-        }
+        return fullPdf.output("datauristring");
+    } catch (error) {
+        console.error("Error creating full PDF:", error);
+        return null;
     }
-    
-    return doc.output('datauristring');
 }
 
-export { captureAllPages, createPDF };
+export { captureAllPages, createFullPDF };
