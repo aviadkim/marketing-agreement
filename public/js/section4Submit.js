@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG0PUeKWY7mr2r-nWWrBcE6w20_9Vq-se8_k8uzVEMBw0iij5qIrCWfNoz9qubq5Mk/exec";
+﻿const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG0PUeKWY7mr2r-nWWrBcE6w20_9Vq-se8_k8uzVEMBw0iij5qIrCWfNoz9qubq5Mk/exec";
 
 async function submitForm(e) {
     e.preventDefault();
@@ -7,7 +7,8 @@ async function submitForm(e) {
     const submitButton = document.getElementById("finalSubmit");
     if (submitButton) {
         submitButton.disabled = true;
-        submitButton.textContent = '????...';
+        const buttonText = submitButton.querySelector(".button-text");
+        if (buttonText) buttonText.textContent = "שולח...";
     }
 
     try {
@@ -15,31 +16,19 @@ async function submitForm(e) {
         const signatureData = document.getElementById("signatureData")?.value;
         
         if (!form || !signatureData) {
-            throw new Error("?? ???? ?? ?? ????? ???????");
+            throw new Error("נא למלא את כל השדות הנדרשים");
         }
 
-        // Capture form as PDF
-        const formElement = document.querySelector(".form-content");
-        const canvas = await html2canvas(formElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "#ffffff"
-        });
-
-        // Convert to PDF
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF();
-        pdf.addImage(canvas.toDataURL("image/jpeg", 1.0), "JPEG", 0, 0);
-        const pdfData = pdf.output("datauristring");
-
-        // Submit form data
+        // Get form data
         const formData = new FormData(form);
         const data = {
             ...Object.fromEntries(formData.entries()),
             signature: signatureData,
-            pdf: pdfData
+            section: "4",
+            timestamp: new Date().toISOString()
         };
+
+        console.log("[DEBUG] Sending form data");
 
         // Send to Google Sheets
         const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -50,18 +39,8 @@ async function submitForm(e) {
             body: JSON.stringify(data)
         });
 
-        // Send email with PDF
-        await fetch('/api/submit-final', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                pdfContent: pdfData
-            })
-        });
-
-        showMessage("????? ???? ??????", "success");
+        console.log("[DEBUG] Form submitted successfully");
+        showMessage("הטופס נשלח בהצלחה", "success");
         
         setTimeout(() => {
             window.location.href = "/sections/thank-you.html";
@@ -69,11 +48,12 @@ async function submitForm(e) {
 
     } catch (error) {
         console.error("[ERROR]", error);
-        showMessage(error.message || "????? ?????? ?????");
+        showMessage(error.message || "שגיאה בשליחת הטופס");
     } finally {
         if (submitButton) {
             submitButton.disabled = false;
-            submitButton.textContent = '???? ???? ????';
+            const buttonText = submitButton.querySelector(".button-text");
+            if (buttonText) buttonText.textContent = "סיים והגש טופס";
         }
     }
 }
@@ -99,11 +79,10 @@ function showMessage(message, type = "error") {
 
 document.addEventListener("DOMContentLoaded", () => {
     console.log("[DEBUG] Section 4 initialized");
-
-    // Enable submit button when form is valid
+    
     const form = document.querySelector("form");
     const submitButton = document.getElementById("finalSubmit");
-    
+
     if (form && submitButton) {
         const checkFormValidity = () => {
             const signature = document.getElementById("signatureData")?.value;
@@ -113,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         form.addEventListener("change", checkFormValidity);
         form.addEventListener("submit", submitForm);
-
+        
         // Initial check
         checkFormValidity();
     }
