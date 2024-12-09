@@ -2,7 +2,6 @@
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק - סיכום והגשה</title>
     <link href="/css/styles.css" rel="stylesheet">
 </head>
@@ -12,12 +11,21 @@
             <header class="form-header">
                 <h1>סיכום והגשה</h1>
             </header>
+            
             <main class="form-content">
                 <form id="section4-form" class="form-section">
+                    <!-- Checkboxes -->
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="finalConfirmation" name="finalConfirmation" required>
+                            <label for="finalConfirmation">אני מאשר/ת שכל הפרטים נכונים</label>
+                        </div>
+                    </div>
+
                     <!-- Signature -->
                     <div class="signature-section">
                         <div class="signature-container">
-                            <canvas id="signatureCanvas"></canvas>
+                            <canvas id="signatureCanvas" class="signature-canvas"></canvas>
                             <div class="signature-controls">
                                 <button type="button" class="btn-secondary" data-clear-signature>נקה חתימה</button>
                                 <button type="button" class="btn-secondary" data-copy-signature>הדבק חתימה קודמת</button>
@@ -26,26 +34,17 @@
                         </div>
                     </div>
 
-                    <!-- Final Confirmation -->
-                    <div class="final-confirmation">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="finalConfirmation" name="finalConfirmation" required>
-                            <span class="checkmark"></span>
-                            <span class="text-bold">אני מאשר/ת שקראתי והבנתי את כל ההצהרות</span>
-                        </label>
-                    </div>
+                    <!-- Navigation -->
+                    <footer class="form-navigation">
+                        <button type="button" id="btnBack" class="btn-prev">חזור</button>
+                        <button type="button" id="finalSubmit" class="btn-submit">סיים והגש טופס</button>
+                    </footer>
                 </form>
             </main>
-
-            <footer class="form-navigation">
-                <div class="container">
-                    <button type="button" id="btnBack" class="btn-prev">חזור</button>
-                    <button type="submit" id="finalSubmit" class="btn-submit">סיים והגש טופס</button>
-                </div>
-            </footer>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
