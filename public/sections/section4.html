@@ -1,44 +1,63 @@
-<!DOCTYPE html>
-<html dir="rtl">
+﻿<!DOCTYPE html>
+<html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
-    <title>????? ????? ???? - ????? ?????</title>
+    <title>הסכם שיווק - סיכום והגשה</title>
     <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <div class="form-card">
             <header class="form-header">
-                <h1>????? ?????</h1>
+                <h1>סיכום והגשה</h1>
             </header>
+            
             <main class="form-content">
                 <form id="section4-form" class="form-section">
-                    <!-- Your existing form content -->
-                    <div class="signature-section">
-                        <canvas id="signatureCanvas"></canvas>
-                        <button type="button" class="btn-secondary" data-clear-signature>??? ?????</button>
-                        <button type="button" class="btn-secondary" data-copy-signature>???? ????? ?????</button>
-                        <input type="hidden" id="signatureData" name="signature" required>
-                    </div>
+                    <!-- Checkboxes -->
                     <div class="checkbox-group">
                         <div class="checkbox-item">
+                            <input type="checkbox" id="riskAcknowledgement" name="riskAcknowledgement" required>
+                            <label for="riskAcknowledgement">קראתי והבנתי את כל ההצהרות</label>
+                        </div>
+                        <div class="checkbox-item">
                             <input type="checkbox" id="finalConfirmation" name="finalConfirmation" required>
-                            <label for="finalConfirmation">??? ????/? ??? ?????? ??????? ??????</label>
+                            <label for="finalConfirmation">אני מאשר/ת שכל הפרטים נכונים</label>
                         </div>
                     </div>
-                    <div class="form-actions">
-                        <button type="button" id="btnBack" class="btn-prev">????</button>
-                        <button type="submit" id="finalSubmit" class="btn-submit" disabled>???? ???? ????</button>
+
+                    <!-- Signature -->
+                    <div class="signature-section">
+                        <label>חתימה</label>
+                        <canvas id="signatureCanvas"></canvas>
+                        <div class="signature-actions">
+                            <button type="button" class="btn-secondary" data-clear-signature>נקה חתימה</button>
+                            <button type="button" class="btn-secondary" data-copy-signature>הדבק חתימה קודמת</button>
+                        </div>
+                        <input type="hidden" id="signatureData" name="signature" required>
                     </div>
+
+                    <!-- Submit buttons -->
+                    <footer class="form-navigation">
+                        <div class="container">
+                            <button type="button" id="btnBack" class="btn-prev">חזור</button>
+                            <button type="submit" id="finalSubmit" class="btn-submit" disabled>
+                                <span class="button-text">סיים והגש טופס</span>
+                                <div class="button-loader"></div>
+                            </button>
+                        </div>
+                    </footer>
                 </form>
             </main>
         </div>
     </div>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="/js/section4Submit.js"></script>
     <script src="/js/signatureHandler.js"></script>
+    <script src="/js/section4Submit.js"></script>
     <script src="/js/storage.js"></script>
     <script src="/js/navigation.js"></script>
 </body>
