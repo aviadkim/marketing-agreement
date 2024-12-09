@@ -1,33 +1,16 @@
-function testDoPost() {
-  const testEvent = {
-    postData: {
-      contents: JSON.stringify({
-        firstName: "Test",
-        lastName: "User",
-        email: "test@test.com",
-        phone: "0544533709",
-        idNumber: "123456789",
-        investmentAmount: "100000",
-        bank: "leumi",
-        currency: "ILS",
-        purpose: ["savings"],
-        timeline: "medium",
-        marketExperience: "advanced",
-        riskTolerance: "medium",
-        lossResponse: "hold",
-        investmentKnowledge: ["stocks", "bonds"],
-        investmentRestrictions: "",
-        riskAcknowledgement: true,
-        independentDecision: true,
-        updateCommitment: true,
-        signature: "data:image/png;base64,...",
-        formScreenshot: "data:image/png;base64,...",
-        timestamp: new Date().toISOString()
-      })
-    }
-  };
+function testFolderAccess() {
+  const folder = DriveApp.getFoldersByName("Marketing Agreement Forms").next();
+  Logger.log("Folder URL: " + folder.getUrl());
+  Logger.log("Folder access: " + folder.getSharingAccess());
+  Logger.log("Folder permissions: " + folder.getSharingPermission());
   
-  Logger.log('Running test with full data');
-  const result = doPost(testEvent);
-  Logger.log('Test result:', result.getContent());
+  // Test file creation
+  const testBlob = Utilities.newBlob("Test content", "text/plain", "test.txt");
+  const testFile = folder.createFile(testBlob);
+  testFile.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+  Logger.log("Test file URL: " + testFile.getUrl());
+  Logger.log("Test file download URL: " + testFile.getDownloadUrl());
 }
+
+// Run test
+testFolderAccess();
