@@ -1,75 +1,54 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG0PUeKWY7mr2r-nWWrBcE6w20_9Vq-se8_k8uzVEMBw0iij5qIrCWfNoz9qubq5Mk/exec";
-
 async function submitForm(e) {
     e.preventDefault();
     console.log("[DEBUG] Starting final form submission");
 
     try {
-        const form = document.querySelector("form");
-        if (!form) throw new Error("Form not found");
+        // ????? ?? ?????
+        const formElement = document.querySelector(".form-content");
+        const canvas = await html2canvas(formElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#ffffff"
+        });
 
-        // ????? ???? 4
-        const section4PDF = await window.formScreenshotService.captureSectionAsPDF(4);
+        // ???? ?PDF
+        window.jsPDF = window.jspdf.jsPDF;
+        const pdf = new jsPDF();
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
+        pdf.addImage(imgData, "JPEG", 0, 0);
         
-        // ????? PDF ???
-        const fullFormPDF = await window.formScreenshotService.createFullFormPDF();
-
-        const formData = new FormData(form);
-        const data = {
-            ...Object.fromEntries(formData.entries()),
-            section: "4",
-            sectionPDF: section4PDF,
-            fullFormPDF: fullFormPDF,
-            timestamp: new Date().toISOString()
+        // ????? ????
+        const emailData = {
+            to: "info@movne.co.il",
+            subject: "???? ??? ?????",
+            pdfContent: pdf.output("datauristring")
         };
 
-        console.log("[DEBUG] Sending final data");
-
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
+        const response = await fetch("/api/send-form", {
             method: "POST",
-            mode: "no-cors",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(emailData)
         });
 
-        console.log("[DEBUG] Final submission successful");
-        showMessage("????? ????? ??????", "success");
+        if (!response.ok) {
+            throw new Error("Failed to send email");
+        }
 
-        setTimeout(() => {
-            window.location.href = "/sections/thank-you.html";
-        }, 1000);
+        alert("????? ???? ?????? ?????");
+        window.location.href = "/sections/thank-you.html";
 
     } catch (error) {
-        console.error("[ERROR] Final submission failed:", error);
-        showMessage("????? ?????? ?????");
+        console.error("Error:", error);
+        alert("????? ?????? ?????");
     }
 }
 
-function showMessage(message, type = "error") {
-    const div = document.createElement("div");
-    div.className = `message ${type}`;
-    div.textContent = message;
-    div.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 24px;
-        border-radius: 8px;
-        z-index: 1000;
-        color: white;
-        background: ${type === "success" ? "#4CAF50" : "#dc3545"};
-        animation: fadeIn 0.3s;
-    `;
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 3000);
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("[DEBUG] Section 4 initialized");
-    const submitButton = document.getElementById("finalSubmit");
-    if (submitButton) {
-        submitButton.addEventListener("click", submitForm);
+    const form = document.querySelector("form");
+    if (form) {
+        form.addEventListener("submit", submitForm);
     }
 });

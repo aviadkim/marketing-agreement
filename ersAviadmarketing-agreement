@@ -1,0 +1,124 @@
+23226f9 - Restore basic section1 navigation - 13:39:31
+f93234b - Fix navigation and form submission conflicts - 13:35:50
+d2cfcd1 - Fix section 1 form submission and navigation - 13:30:41
+fd56d69 - Update section1.html - 13:21:26
+2d9e694 - Fix section 1 navigation and form submission - 12:40:25
+2370e81 - Fix section 1 navigation and form submission - 12:34:46
+6f11070 - Fix navigation and form submission conflicts - 12:30:00
+6600ab3 - Fix event listener conflicts and form submission - 12:28:57
+0bed259 - Fix form submission conflicts and improve PDF generation - 12:26:42
+485ebac - Fix section1 submission with PDF generation and Hebrew support - 12:10:31
+c1dcf75 - Add file handling and email notifications - 11:51:04
+21486c2 - Add file handling and email notifications - 11:37:24
+fd2ffaa - Fix section 4 submission and file handling - 10:48:17
+27c5121 - Reset submit files to match section 4 pattern - 10:32:33
+4a6ca48 - Fix form submission and add network logging - 10:24:35
+c36cf69 - Fix section1 form submission and add detailed logging - 10:16:55
+68bca0d - Fix section1 submission and add detailed logging - 10:07:47
+4b5fd1d - Update all section submit files and add testing scripts - 10:00:40
+1c956fb - Update HTML files with new script references - 23:28:20
+5e8bc66 - Update section submit files with improved form submission handling - 23:27:55
+bc7e55e - Fix form submission and data handling - 23:06:39
+c0cd08e - Fix section 4 form submission and button handling - 22:56:37
+dcb8660 - Fix signature handling in section 4 - 22:44:05
+1ea15f6 - Add enhanced debugging for section 4 submission - 22:42:39
+53b928f - Add network request logging and fix CORS settings - 22:41:04
+b402e7f - Add enhanced debugging for form submission - 22:30:08
+47e5305 - Fix Google Script URLs to use consistent endpoint - 22:22:56
+ff2274b - Update section1Submit.js with validation and improved functionality - 21:56:24
+c4e03ae - Fix form submission and remove duplicate scripts - 21:55:23
+e77e1d2 - Update section1Submit.js with complete logging and error handling - 17:58:22
+461880e - Clean up: Remove duplicate files and update dependencies - 17:48:38
+f1620f1 - Fix section1Submit.js - add logging and proper error handling - 17:35:54
+acca66e - Update section1Submit.js with no-cors mode for Google Sheets integration - 17:25:27
+ff1a2e6 - Update section1Submit and env configurations - 17:03:28
+96269f6 - Update section1Submit.js with improved logging and error handling - 16:58:20
+10c136e - Update Environment Variables - 15:51:38
+34b0222 - Update section1Submit.js with improved Google Sheets integration - 15:35:26
+345aa76 - Update section1Submit.js with improved Google Sheets integration - 15:33:39
+2ef66d0 - Update section1Submit.js - 15:32:09
+20ee0f7 - Update navigation.js - 15:31:35
+243c269 - Update googleSheetsSubmit.js - 12:12:35
+83bcae1 - Update section4Submit.js - 12:11:13
+75cfddc - Update Google Script URL - 11:45:13
+557a655 - Update section1Submit.js - 11:44:33
+323b0e7 - Update section1Submit.js - 11:35:24
+9f50e1e - Update section1Submit.js - 11:27:55
+5e3e95a - Update section1Submit.js - 11:17:12
+998107f - Update section1Submit.js - 11:00:07
+a8835ca - Update section1.html - 10:57:58
+6057e89 - Update navigation.js - 10:53:56
+50aed75 - Create formCaptureEmail.js - 10:50:55
+530c96b - Create formCaptureDrive.js - 10:50:18
+d47377e - Updated Dockerfile and marketing agreement - 10:33:35
+f8c1bf3 - Updated Dockerfile and marketing agreement - 10:32:19
+78f5a44 - Update section1Submit.js - 09:16:24
+9f88a75 - Create test-sheets.html - 00:23:06
+da6a806 - Update section1Submit.js - 00:17:18
+effe43f - Update section1Submit.js - 00:13:27
+a8b44b2 - Update section1Submit.js - 00:06:47
+8ef4cff - Update section1Submit.js - 23:57:10
+349130c - Update googleSheetsSubmit.js - 23:51:52
+5dcedd8 - Update section1Submit.js - 23:51:27
+7622464 - Update Environment Variables - 23:47:10
+cce756f - Update section1Submit.js - 23:45:11
+d127729 - Update section1Submit.js - 23:38:13
+308b112 - Update section1Submit.js - 23:28:32
+7c0649e - Update section4.html - 20:09:27
+1063182 - Update section4.html - 20:09:06
+148bb16 - Update section4.html - 19:51:13
+8f58653 - Update section4.html - 19:50:05
+236bf12 - Update section1Submit.js - 19:39:59
+de0a514 - Update section4.html - 19:29:41
+0b09402 - Update section4.html - 19:24:23
+0e79454 - Create section4Submit.js - 19:16:32
+5a986a0 - Update section1.html - 19:14:54
+edfdbf1 - Update section1Submit.js - 19:14:12
+ee5f9da - Create section1Submit.js - 19:01:34
+2cd50f0 - Update section1.html - 19:00:55
+3dea198 - Update section1.html - 18:53:00
+c1dc251 - Update googleSheetsSubmit.js - 18:52:13
+8dfd967 - Update googleSheetsSubmit.js - 18:47:15
+8ce6a9a - Update section1.html - 18:42:43
+3902d3e - Update section1.html - 18:34:35
+5c82901 - Update section1.html - 18:32:03
+c19872f - Update server.js - 12:11:36
+a271f6c - Create utils.js - 11:51:59
+7713a6a - Update server.js - 11:40:43
+178dba4 - Update navigation.js - 11:16:56
+8d729c1 - Update googleSheetsSubmit.js - 11:12:10
+efa4388 - Update navigation.js - 11:09:39
+adb2b29 - Update thank-you.html - 10:53:41
+223d8a7 - Update navigation.js - 10:52:08
+af68293 - Create viewForm.html - 10:46:10
+7d4ef99 - Create formViewer.js - 10:45:42
+99472bf - Update server.js - 10:35:07
+722ea51 - Create viewForm.html - 10:31:45
+113f018 - Create pdfViewer.js - 10:30:28
+d9c7950 - Update email-template.html - 10:22:10
+4bdc633 - Update googleSheetsSubmit.js - 10:20:39
+3129d5b - Update pdfGenerator.js - 21:48:09
+58ab670 - Update googleSheetsSubmit.js - 20:19:36
+47dd554 - Update pdfGenerator.js - 19:54:45
+c08ca3c - Update signatureHandler.js - 19:49:28
+acf9151 - Update googleSheetsSubmit.js - 19:48:47
+15da17c - Update server.js - 18:18:11
+e6236e4 - Update email.js - 18:16:30
+9142f05 - Create email-template.html - 18:12:42
+be9b7c9 - Update server.js - 18:09:59
+1adaf86 - Create thank-you.html - 18:07:51
+704de21 - Update signatureHandler.js - 18:01:26
+f598a51 - Update googleSheetsSubmit.js - 17:58:04
+3fe695c - Update section4.html - 17:52:36
+443fd5d - Update formCapture.js - 17:52:01
+cabacd9 - Update section4.html - 17:29:00
+68c9733 - Update section4.html - 16:53:32
+4eeee87 - Update section4.html - 16:51:55
+ada9759 - Update section4.html - 16:51:21
+6ff9bc5 - Update index.html - 16:49:33
+f4fa074 - Update index.html - 16:47:59
+f8ea86e - Update googleSheetsSubmit.js - 16:46:46
+6ece5bf - Update section4.html - 16:46:18
+2daccaa - Update googleSheetsSubmit.js - 16:44:03
+fa32e0f - Create formCapture.js - 16:41:47
+a324c85 - Create temp - 16:31:28
