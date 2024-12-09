@@ -23,11 +23,20 @@ async function submitForm(e) {
             backgroundColor: "#ffffff"
         });
 
+        // ????? PDF
+        window.jsPDF = window.jspdf.jsPDF;
+        const pdf = new jsPDF();
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+
         const formData = new FormData(form);
         const data = {
             ...Object.fromEntries(formData.entries()),
             section: "1",
-            formScreenshot: canvas.toDataURL("image/png", 1.0),
+            formPdf: pdf.output("datauristring"),
             timestamp: new Date().toISOString()
         };
 
