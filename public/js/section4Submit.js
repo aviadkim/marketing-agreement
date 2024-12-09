@@ -4,14 +4,18 @@ async function submitForm(e) {
     e.preventDefault();
     console.log("[DEBUG] Starting form submission");
 
+    const submitButton = document.getElementById("finalSubmit");
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = '????...';
+    }
+
     try {
-        // Get all required data
         const form = document.querySelector("form");
         const signatureData = document.getElementById("signatureData")?.value;
-        const screenData = await captureFormScreenshot();
-
+        
         if (!form || !signatureData) {
-            showMessage("????? ?????? ????");
+            showMessage("?? ?????? ?? ?? ????? ???????");
             return;
         }
 
@@ -19,56 +23,55 @@ async function submitForm(e) {
         const data = {
             ...Object.fromEntries(formData.entries()),
             signature: signatureData,
-            formScreenshot: screenData,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }),
+            formScreenshot: await captureFormScreenshot()
         };
 
-        console.log("[DEBUG] Sending data:", {
-            ...data,
-            signature: "[SIGNATURE DATA]",
-            formScreenshot: "[SCREENSHOT DATA]"
-        });
+        console.log("[DEBUG] Sending data", data);
 
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         });
 
-        console.log("[DEBUG] Response:", response);
-
-        // Save for verification
-        localStorage.setItem("lastSubmission", JSON.stringify({
-            ...data,
-            signature: "[SAVED]",
-            formScreenshot: "[SAVED]",
-            submittedAt: new Date().toISOString()
-        }));
+        if (!response.ok && response.status !== 0) {
+            throw new Error(`????? ??????: ${response.status}`);
+        }
 
         showMessage("????? ???? ??????", "success");
+        
         setTimeout(() => {
             window.location.href = "/sections/thank-you.html";
-        }, 1000);
+        }, 1500);
 
     } catch (error) {
-        console.error("[ERROR] Submit failed:", error);
+        console.error("[ERROR]", error);
         showMessage("????? ?????? ?????");
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = '???? ???? ????';
+        }
     }
 }
 
 async function captureFormScreenshot() {
     try {
         const formElement = document.querySelector(".form-content");
+        if (!formElement) return null;
+
         const canvas = await html2canvas(formElement, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             backgroundColor: "#ffffff"
         });
-        return canvas.toDataURL("image/png");
+
+        const dataUrl = canvas.toDataURL('application/pdf');
+        return dataUrl;
     } catch (error) {
         console.error("[ERROR] Screenshot failed:", error);
         return null;
@@ -95,6 +98,8 @@ function showMessage(message, type = "error") {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("[DEBUG] Section 4 initialized");
+    
     const submitButton = document.getElementById("finalSubmit");
     if (submitButton) {
         submitButton.addEventListener("click", submitForm);
