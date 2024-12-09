@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const nextButton = document.getElementById('saveAndContinue');
     if (nextButton) {
-        nextButton.addEventListener('click', navigateNext);
+        // Disabled to avoid conflicts with section submit
     }
 });
 
