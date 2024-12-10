@@ -1,90 +1,68 @@
 const express = require("express");
-const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
 
 const app = express();
+
+// Middleware setup
 app.use(express.json({ limit: "50mb" }));
 app.use(express.static("public"));
+app.use('/pdfs', express.static(path.join(__dirname, 'pdfs')));
 
-// יצירת תיקיית PDF אם לא קיימת
+// Ensure PDF directory exists
 const PDF_DIR = path.join(__dirname, 'pdfs');
-if (!fs.existsSync(PDF_DIR)){
-    fs.mkdirSync(PDF_DIR);
+if (!fs.existsSync(PDF_DIR)) {
+    fs.mkdirSync(PDF_DIR, { recursive: true });
 }
 
-// הגדרת המייל
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-        user: "info@movne.co.il",
-        pass: "wnxi vwum ugpf sack"
-    }
-});
-
-// נתיב חדש לשמירת PDF
+// PDF save endpoint
 app.post("/api/save-pdf", async (req, res) => {
     try {
-        const { pdfContent, formName } = req.body;
-        const fileName = `form_${Date.now()}.pdf`;
-        const pdfBuffer = Buffer.from(pdfContent.split(',')[1], 'base64');
-        
-        // שמירת הקובץ בתיקיית pdfs
+        console.log("[SERVER] Received PDF save request");
+        const { pdfContent, formData } = req.body;
+
+        if (!pdfContent) {
+            throw new Error("Missing PDF content");
+        }
+
+        // Create unique filename
+        const timestamp = new Date().getTime();
+        const fileName = `form_${formData.idNumber || timestamp}.pdf`;
         const filePath = path.join(PDF_DIR, fileName);
-        fs.writeFileSync(filePath, pdfBuffer);
 
-        // שליחת מייל עם הPDF
-        await transporter.sendMail({
-            from: "info@movne.co.il",
-            to: "info@movne.co.il",
-            subject: "טופס חדש נשלח",
-            text: "מצורף טופס חדש",
-            attachments: [{
-                filename: fileName,
-                path: filePath
-            }]
+        // Extract and save PDF content
+        const base64Data = pdfContent.replace(/^data:application\/pdf;base64,/, "");
+        fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+
+        // Verify file was created successfully
+        const stats = fs.statSync(filePath);
+        console.log(`[SERVER] PDF saved: ${filePath} (${stats.size} bytes)`);
+
+        if (stats.size === 0) {
+            throw new Error("Created PDF file is empty");
+        }
+
+        // Return success response
+        res.json({
+            success: true,
+            fileName,
+            fileUrl: `/pdfs/${fileName}`,
+            fileSize: stats.size
         });
 
-        res.json({ 
-            success: true, 
-            fileName: fileName,
-            filePath: filePath
-        });
     } catch (error) {
-        console.error("Error saving PDF:", error);
-        res.status(500).json({ error: error.message });
+        console.error("[SERVER ERROR]:", error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            stack: error.stack
+        });
     }
 });
 
-// אנדפוינט לשליחת טופס במייל
-app.post("/api/send-form", async (req, res) => {
-    try {
-        const { pdfContent, email, formData } = req.body;
-
-        await transporter.sendMail({
-            from: "info@movne.co.il",
-            to: email,
-            subject: "טופס שיווק חדש",
-            text: "מצורף טופס להסכם",
-            attachments: [{
-                filename: "form.pdf",
-                content: pdfContent.split("base64,")[1],
-                encoding: "base64"
-            }]
-        });
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error("Error sending email:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// הפעלת השרת
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log(`PDF directory: ${PDF_DIR}`);
+    console.log(`[SERVER] Running on port ${PORT}`);
+    console.log(`[SERVER] PDF directory: ${PDF_DIR}`);
 });

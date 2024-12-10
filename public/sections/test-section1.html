@@ -3,18 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>הסכם שיווק השקעות - פרטים אישיים</title>
+    <title>הסכם שיווק השקעות - בדיקה</title>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
     
+    <!-- ספריות נדרשות -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="/js/formScreenshotService.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="/js/testEmailPDF.js"></script>
 </head>
 <body>
     <div class="container">
@@ -30,93 +25,46 @@
                 </div>
             </header>
 
-            <div class="progress-container">
-                <div class="progress-steps">
-                    <div class="step active" data-step="1">
-                        <div class="step-circle">
-                            <span class="step-number">1</span>
-                            <span class="step-check">✓</span>
-                        </div>
-                        <div class="step-label">פרטים אישיים</div>
-                        <div class="step-time">כ-2 דקות</div>
-                    </div>
-                    <div class="step" data-step="2">
-                        <div class="step-circle">
-                            <span class="step-number">2</span>
-                            <span class="step-check">✓</span>
-                        </div>
-                        <div class="step-label">פרטי השקעה</div>
-                        <div class="step-time">כ-3 דקות</div>
-                    </div>
-                    <div class="step" data-step="3">
-                        <div class="step-circle">
-                            <span class="step-number">3</span>
-                            <span class="step-check">✓</span>
-                        </div>
-                        <div class="step-label">שאלון סיכון</div>
-                        <div class="step-time">כ-5 דקות</div>
-                    </div>
-                    <div class="step" data-step="4">
-                        <div class="step-circle">
-                            <span class="step-number">4</span>
-                            <span class="step-check">✓</span>
-                        </div>
-                        <div class="step-label">הצהרות</div>
-                        <div class="step-time">כ-3 דקות</div>
-                    </div>
-                </div>
-            </div>
-
             <main class="form-content">
-                <form id="section1-form" class="form-section">
+                <form id="test-form" class="form-section">
                     <div class="grid-2">
                         <div class="input-group">
                             <label>שם פרטי</label>
-                            <input type="text" name="firstName" required>
+                            <input type="text" name="firstName">
                         </div>
                         <div class="input-group">
                             <label>שם משפחה</label>
-                            <input type="text" name="lastName" required>
+                            <input type="text" name="lastName">
                         </div>
                         <div class="input-group">
                             <label>תעודת זהות</label>
-                            <input type="text" name="idNumber" pattern="\d{9}" minlength="9" maxlength="9" required>
+                            <input type="text" name="idNumber">
                             <div class="input-hint">נא להזין 9 ספרות</div>
                         </div>
                         <div class="input-group">
                             <label>דוא"ל</label>
-                            <input type="email" name="email" required dir="ltr">
+                            <input type="email" name="email" dir="ltr">
                         </div>
                         <div class="input-group">
                             <label>טלפון נייד</label>
-                            <input type="tel" name="phone" pattern="[0-9]{10}" minlength="10" maxlength="10" required>
+                            <input type="tel" name="phone">
                             <div class="input-hint">נא להזין 10 ספרות</div>
                         </div>
                     </div>
-                     <input type="hidden" id="submitScreenshot" name="submitScreenshot">
                 </form>
             </main>
 
             <footer class="form-navigation">
                 <div class="container">
                     <button type="button" id="saveAndContinue" class="btn-next">
-                        <span class="button-text">המשך לשלב הבא</span>
-                        <div class="button-loader"></div>
+                        שלח טופס
                     </button>
                 </div>
             </footer>
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
-
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
-    
-    <script src="/js/storage.js"></script>
+    <!-- קובץ הJS שלנו -->
     <script src="/js/test-section1Submit.js"></script>
-    <script src="/js/navigation.js"></script>
 </body>
 </html>
