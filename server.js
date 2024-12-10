@@ -1,80 +1,68 @@
-const express = require("express");
-const nodemailer = require("nodemailer");
-const cors = require("cors");
-const path = require("path");
+const express = require('express');
+const bodyParser = require('body-parser');
+const nodemailer = require('nodemailer');
+const PDFDocument = require('pdfkit');
+const cors = require('cors');
+const path = require('path');
 const app = express();
 
-// Middleware
 app.use(cors());
-app.use(express.json({ limit: "50mb" }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Email configuration
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host: 'smtp.gmail.com',
     port: 587,
     secure: false,
     auth: {
-        user: "info@movne.co.il",
+        user: 'info@movne.co.il',
         pass: process.env.EMAIL_PASSWORD
     }
 });
 
-// Section 1 submission
-app.post("/api/submit-section1", async (req, res) => {
+app.post('/api/generate-pdf', (req, res) => {
+    const { htmlContent } = req.body;
+    const doc = new PDFDocument();
+    let buffers = [];
+    
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', () => {
+        let pdfData = Buffer.concat(buffers).toString('base64');
+        res.send(pdfData);
+    });
+
+    doc.text(htmlContent);
+    doc.end();
+});
+
+app.post('/api/send-email', async (req, res) => {
+    const { pdfBase64, ...formData } = req.body;
+
+    const mailOptions = {
+        from: 'info@movne.co.il',
+        to: 'info@movne.co.il',
+        subject: 'Section 1 Submission',
+        text: 'Please find the attached PDF for Section 1 submission.',
+        attachments: [
+            {
+                filename: 'section1.pdf',
+                content: pdfBase64,
+                encoding: 'base64'
+            }
+        ]
+    };
+
     try {
-        const { formData, pdfContent } = req.body;
-        await transporter.sendMail({
-            from: "info@movne.co.il",
-            to: "info@movne.co.il",
-            subject: "New Form Section 1",
-            text: `New registration from ${formData.firstName} ${formData.lastName}`,
-            attachments: [{
-                filename: "section1.pdf",
-                content: pdfContent.split("base64,")[1],
-                encoding: "base64"
-            }]
-        });
-        res.json({ success: true });
+        await transporter.sendMail(mailOptions);
+        res.status(200).send('Email sent successfully');
     } catch (error) {
-        console.error("Email error:", error);
-        res.status(500).json({ error: error.message });
+        console.error('Error sending email:', error);
+        res.status(500).send('Error sending email');
     }
-});
-
-// Final form submission
-app.post("/api/submit-final", async (req, res) => {
-    try {
-        const { pdfContent } = req.body;
-        await transporter.sendMail({
-            from: "info@movne.co.il",
-            to: "info@movne.co.il", 
-            subject: "Complete Form Submission",
-            text: "Complete form submission attached",
-            attachments: [{
-                filename: "complete-form.pdf",
-                content: pdfContent.split("base64,")[1],
-                encoding: "base64"
-            }]
-        });
-        res.json({ success: true });
-    } catch (error) {
-        console.error("Email error:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Health check
-app.get("/health", (req, res) => {
-    res.json({ status: "ok" });
-});
-
-// Handle all routes for SPA
-app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
