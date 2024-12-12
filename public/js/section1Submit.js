@@ -1,53 +1,24 @@
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEjJN6RYWQ_p5bE9iCLhIAjuqMINULfql5W_3eR45Ab1fg2t50qr4h24K5nli4kLYI/exec";
 
-// Add the missing function
-async function testGoogleConnection() {
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        console.log('[DEBUG] Google connection test:', response.ok);
-        return response.ok;
-    } catch (error) {
-        console.error('[ERROR] Google connection test failed:', error);
-        return false;
-    }
-}
-
 async function submitForm(e) {
     e.preventDefault();
-    console.log("[DEBUG] Starting form submission");
+    console.log("[DEBUG] התחלת שליחת טופס");
     
     const submitButton = document.getElementById("saveAndContinue");
-    if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = "שולח...";
-    }
+    submitButton.disabled = true;
+    submitButton.textContent = "שולח...";
 
     try {
-        // Test connection first
-        const isConnected = await testGoogleConnection();
-        console.log('[DEBUG] Google connection status:', isConnected);
-
-        // Get form content
+        // יצירת צילום מסך של הטופס
         const formElement = document.querySelector(".form-content");
-        if (!formElement) {
-            throw new Error("Form element not found");
-        }
-
-        console.log('[DEBUG] Creating canvas');
         const canvas = await html2canvas(formElement, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
-            backgroundColor: "#ffffff",
-            logging: true
+            backgroundColor: "#ffffff"
         });
 
-        console.log('[DEBUG] Creating PDF');
+        // יצירת PDF
         window.jsPDF = window.jspdf.jsPDF;
         const pdf = new jsPDF();
         const imgData = canvas.toDataURL("image/jpeg", 1.0);
@@ -56,51 +27,56 @@ async function submitForm(e) {
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
         pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
 
-        // Get form data
+        // איסוף נתוני הטופס
         const form = document.querySelector("form");
         const formData = new FormData(form);
-        
+        const idNumber = formData.get("idNumber") || "unknown";
+
         const data = {
             section: "1",
             formPdf: pdf.output("datauristring"),
+            idNumber: idNumber,
             timestamp: new Date().toISOString()
         };
 
-        console.log('[DEBUG] Sending to Google Drive');
+        console.log("[DEBUG] שולח לשרת");
+
+        // שליחה לשרת
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         });
 
-        console.log('[DEBUG] Google Drive response:', response);
+        console.log("[DEBUG] התקבלה תשובה מהשרת");
+        showMessage("הטופס נשלח בהצלחה", "success");
 
-        if (response.ok) {
-            console.log('[DEBUG] Form submitted successfully');
-            showMessage("הטופס נשלח בהצלחה", "success");
-            
-            setTimeout(() => {
-                window.location.href = "/sections/section2.html";
-            }, 1000);
-        } else {
-            throw new Error('Server response was not OK');
-        }
+        // שמירת נתונים ומעבר לעמוד הבא
+        const formDataToSave = {
+            firstName: formData.get("firstName"),
+            lastName: formData.get("lastName"),
+            idNumber: formData.get("idNumber"),
+            email: formData.get("email"),
+            phone: formData.get("phone")
+        };
+        localStorage.setItem("formData", JSON.stringify(formDataToSave));
+
+        setTimeout(() => {
+            window.location.href = "/sections/section2.html";
+        }, 1000);
 
     } catch (error) {
-        console.error("[ERROR] Submit failed:", error);
-        showMessage("שגיאה בשליחת הטופס: " + error.message);
+        console.error("[ERROR] שגיאה:", error);
+        showMessage("אירעה שגיאה בשליחת הטופס");
     } finally {
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.textContent = "המשך לשלב הבא";
-        }
+        submitButton.disabled = false;
+        submitButton.textContent = "המשך לשלב הבא";
     }
 }
 
 function showMessage(message, type = "error") {
-    console.log(`[${type.toUpperCase()}] ${message}`);
     const div = document.createElement("div");
     div.className = `message ${type}`;
     div.textContent = message;
@@ -113,34 +89,15 @@ function showMessage(message, type = "error") {
         z-index: 1000;
         color: white;
         background: ${type === "success" ? "#4CAF50" : "#dc3545"};
-        animation: fadeIn 0.3s;
     `;
     document.body.appendChild(div);
     setTimeout(() => div.remove(), 3000);
 }
 
-// Initialize form
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("[DEBUG] Section 1 initialized");
-    
-    // Verify dependencies
-    if (!window.jspdf) {
-        console.error("[ERROR] jsPDF not loaded");
-    }
-    if (!window.html2canvas) {
-        console.error("[ERROR] html2canvas not loaded");
-    }
-    
+    console.log("[DEBUG] אתחול דף 1");
     const submitButton = document.getElementById("saveAndContinue");
     if (submitButton) {
         submitButton.addEventListener("click", submitForm);
-        console.log("[DEBUG] Submit button handler attached");
-    } else {
-        console.error("[ERROR] Submit button not found");
     }
-
-    // Test Google connection on page load
-    testGoogleConnection().then(isConnected => {
-        console.log('[DEBUG] Initial Google connection test:', isConnected);
-    });
 });
