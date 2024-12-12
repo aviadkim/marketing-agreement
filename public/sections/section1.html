@@ -7,14 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
 
-    <!-- ספריות נדרשות -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
-    <!-- Firebase SDK -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
 </head>
 <body>
     <div class="container">
@@ -29,6 +24,43 @@
                     </div>
                 </div>
             </header>
+
+            <div class="progress-container">
+                <div class="progress-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-circle">
+                            <span class="step-number">1</span>
+                            <span class="step-check">✓</span>
+                        </div>
+                        <div class="step-label">פרטים אישיים</div>
+                        <div class="step-time">כ-2 דקות</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-circle">
+                            <span class="step-number">2</span>
+                            <span class="step-check">✓</span>
+                        </div>
+                        <div class="step-label">פרטי השקעה</div>
+                        <div class="step-time">כ-3 דקות</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-circle">
+                            <span class="step-number">3</span>
+                            <span class="step-check">✓</span>
+                        </div>
+                        <div class="step-label">שאלון סיכון</div>
+                        <div class="step-time">כ-5 דקות</div>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-circle">
+                            <span class="step-number">4</span>
+                            <span class="step-check">✓</span>
+                        </div>
+                        <div class="step-label">הצהרות</div>
+                        <div class="step-time">כ-3 דקות</div>
+                    </div>
+                </div>
+            </div>
 
             <main class="form-content">
                 <form id="section1-form" class="form-section">
@@ -70,6 +102,9 @@
         </div>
     </div>
 
+    <div id="toast" class="toast"></div>
+    
+    <!-- Scripts -->
     <script src="/js/section1Submit.js"></script>
 </body>
 </html>
