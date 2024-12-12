@@ -1,29 +1,32 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzG0PUeKWY7mr2r-nWWrBcE6w20_9Vq-se8_k8uzVEMBw0iij5qIrCWfNoz9qubq5Mk/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrwLGbjBzrjc9sgHa2wEDryXMrZocmliFheT6qS43Rzp8qv1hLYzj11BD7zrgUba1w/exec";
 
 async function submitForm(e) {
     e.preventDefault();
-    console.log("[DEBUG] Starting form submission");
-
+    console.log("[DEBUG] התחלת שליחת טופס");
+    
     const submitButton = document.getElementById("saveAndContinue");
-    if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = "????...";
-    }
-
+    const loadingText = "שולח...";
+    const originalText = submitButton.textContent;
+    
     try {
-        const form = document.querySelector("form");
-        if (!form) throw new Error("Form not found");
+        // השבתת כפתור השליחה
+        submitButton.disabled = true;
+        submitButton.textContent = loadingText;
 
-        // ????? ?????
+        // יצירת PDF מהטופס
+        console.log("[DEBUG] מתחיל יצירת PDF");
         const formElement = document.querySelector(".form-content");
+        if (!formElement) throw new Error("לא נמצא אלמנט הטופס");
+
         const canvas = await html2canvas(formElement, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
-            backgroundColor: "#ffffff"
+            backgroundColor: "#ffffff",
+            logging: true
         });
 
-        // ????? PDF
+        console.log("[DEBUG] יצירת PDF");
         window.jsPDF = window.jspdf.jsPDF;
         const pdf = new jsPDF();
         const imgData = canvas.toDataURL("image/jpeg", 1.0);
@@ -32,6 +35,8 @@ async function submitForm(e) {
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
         pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
 
+        // איסוף נתוני הטופס
+        const form = document.querySelector("form");
         const formData = new FormData(form);
         const data = {
             ...Object.fromEntries(formData.entries()),
@@ -40,8 +45,7 @@ async function submitForm(e) {
             timestamp: new Date().toISOString()
         };
 
-        console.log("[DEBUG] Sending data to server");
-
+        console.log("[DEBUG] שולח נתונים לשרת");
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
@@ -51,22 +55,20 @@ async function submitForm(e) {
             body: JSON.stringify(data)
         });
 
-        console.log("[DEBUG] Form submitted successfully");
-        showMessage("????? ???? ??????", "success");
+        console.log("[DEBUG] הטופס נשלח בהצלחה");
+        showMessage("הטופס נשלח בהצלחה", "success");
 
-        // ???? ???? ???
+        // מעבר לעמוד הבא
         setTimeout(() => {
             window.location.href = "/sections/section2.html";
         }, 1000);
 
     } catch (error) {
-        console.error("[ERROR] Submit failed:", error);
-        showMessage("????? ?????? ?????");
+        console.error("[ERROR] שליחה נכשלה:", error);
+        showMessage("אירעה שגיאה בשליחת הטופס");
     } finally {
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.textContent = "???? ???? ???";
-        }
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
     }
 }
 
@@ -90,7 +92,7 @@ function showMessage(message, type = "error") {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("[DEBUG] Section 1 initialized");
+    console.log("[DEBUG] אתחול סקשן 1");
     const submitButton = document.getElementById("saveAndContinue");
     if (submitButton) {
         submitButton.addEventListener("click", submitForm);
