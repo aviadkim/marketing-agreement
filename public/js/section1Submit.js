@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz93-PXYufShXM0AazF3RWZL8mzo96aSFxbLMbjTCmW2Rw17tqPN6WnnTw66VJy3lVt/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-rq4IzUA23RrWdw2yfuNH8JzilDR5e54WuBH8pGd4eICjBia2cXLzUGslwvWJjs2Y/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] Page loaded');
