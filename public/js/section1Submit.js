@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVzyS8-nQwhNPhInyVDzrkoFYk1pCdKx5UNinjvtvViIgoxYuwsJOIKiLI5zNPW80/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz93-PXYufShXM0AazF3RWZL8mzo96aSFxbLMbjTCmW2Rw17tqPN6WnnTw66VJy3lVt/exec";
 
 async function captureFormToPDF(formElement) {
     const canvas = await html2canvas(formElement, {
