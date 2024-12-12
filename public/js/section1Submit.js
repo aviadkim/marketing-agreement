@@ -1,104 +1,89 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-rq4IzUA23RrWdw2yfuNH8JzilDR5e54WuBH8pGd4eICjBia2cXLzUGslwvWJjs2Y/exec";
+// Initialize Firebase
+firebase.initializeApp({
+    apiKey: "AIzaSyAHIdA1pXZh3lrn_i5qRFjk0yPEOY5N1cs",
+    authDomain: "client-d5bfe.firebaseapp.com",
+    projectId: "client-d5bfe",
+    storageBucket: "client-d5bfe.appspot.com",
+    messagingSenderId: "456858425357",
+    appId: "1:456858425357:web:6fbe8feb27fd9a52ca0c29"
+});
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('[DEBUG] Page loaded');
+const storage = firebase.storage();
+const db = firebase.firestore();
+
+async function submitForm(e) {
+    e.preventDefault();
+    console.log('[DEBUG] Starting form submission');
     
     const submitButton = document.getElementById('saveAndContinue');
+    const buttonText = submitButton.querySelector('.button-text');
+    const buttonLoader = submitButton.querySelector('.button-loader');
     
-    if (submitButton) {
-        console.log('[DEBUG] Found submit button');
-        
-        submitButton.addEventListener('click', async (e) => {
-            e.preventDefault();
-            console.log('[DEBUG] Submit button clicked');
-            
-            const buttonText = submitButton.querySelector('.button-text');
-            const buttonLoader = submitButton.querySelector('.button-loader');
-            
-            try {
-                // UI updates
-                submitButton.disabled = true;
-                buttonText.style.opacity = '0';
-                buttonLoader.style.display = 'block';
-                console.log('[DEBUG] Starting PDF creation');
+    try {
+        submitButton.disabled = true;
+        buttonText.style.opacity = '0';
+        buttonLoader.style.display = 'block';
 
-                // Get form content
-                const formElement = document.querySelector('.form-content');
-                if (!formElement) {
-                    throw new Error('Form content not found');
-                }
-
-                // Create canvas
-                console.log('[DEBUG] Creating canvas');
-                const canvas = await html2canvas(formElement, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff'
-                });
-                console.log('[DEBUG] Canvas created');
-
-                // Create PDF
-                console.log('[DEBUG] Creating PDF');
-                window.jsPDF = window.jspdf.jsPDF;
-                const pdf = new jsPDF();
-                const imgData = canvas.toDataURL('image/png', 1.0);
-                const imgProps = pdf.getImageProperties(imgData);
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                console.log('[DEBUG] PDF created');
-
-                // Get form data
-                const form = document.querySelector('form');
-                const formData = new FormData(form);
-
-                const data = {
-                    section: "1",
-                    formPdf: pdf.output('datauristring'),
-                    idNumber: formData.get('idNumber') || 'unknown',
-                    timestamp: new Date().toISOString()
-                };
-
-                console.log('[DEBUG] Sending to server');
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                console.log('[DEBUG] Server response received');
-
-                // Save form data
-                localStorage.setItem('formData', JSON.stringify({
-                    firstName: formData.get('firstName'),
-                    lastName: formData.get('lastName'),
-                    idNumber: formData.get('idNumber'),
-                    email: formData.get('email'),
-                    phone: formData.get('phone')
-                }));
-
-                showMessage("הטופס נשלח בהצלחה", "success");
-                
-                setTimeout(() => {
-                    window.location.href = '/sections/section2.html';
-                }, 1000);
-
-            } catch (error) {
-                console.error('[ERROR]', error);
-                showMessage("שגיאה בשליחת הטופס: " + error.message);
-            } finally {
-                submitButton.disabled = false;
-                buttonText.style.opacity = '1';
-                buttonLoader.style.display = 'none';
-            }
+        // Create screenshot
+        const formElement = document.querySelector('.form-card');
+        console.log('[DEBUG] Creating screenshot');
+        const canvas = await html2canvas(formElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff'
         });
-    } else {
-        console.error('[ERROR] Submit button not found');
+        
+        // Upload to Firebase Storage
+        const imageData = canvas.toDataURL('image/png', 1.0);
+        const fileName = `forms/section1/${Date.now()}.png`;
+        const storageRef = storage.ref(fileName);
+        
+        console.log('[DEBUG] Uploading to Firebase');
+        await storageRef.putString(imageData, 'data_url');
+        const imageUrl = await storageRef.getDownloadURL();
+
+        // Get form data
+        const form = document.querySelector('form');
+        const formData = new FormData(form);
+        
+        // Save to Firestore
+        console.log('[DEBUG] Saving to Firestore');
+        await db.collection('forms').add({
+            section: "1",
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            idNumber: formData.get('idNumber'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            imageUrl: imageUrl,
+            timestamp: new Date().toISOString()
+        });
+
+        // Save to localStorage
+        localStorage.setItem('formData', JSON.stringify({
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            idNumber: formData.get('idNumber'),
+            email: formData.get('email'),
+            phone: formData.get('phone')
+        }));
+
+        showMessage('הטופס נשלח בהצלחה', 'success');
+        
+        setTimeout(() => {
+            window.location.href = '/sections/section2.html';
+        }, 1000);
+
+    } catch (error) {
+        console.error('[ERROR] Submit failed:', error);
+        showMessage("שגיאה בשליחת הטופס: " + error.message);
+    } finally {
+        submitButton.disabled = false;
+        buttonText.style.opacity = '1';
+        buttonLoader.style.display = 'none';
     }
-});
+}
 
 function showMessage(message, type = "error") {
     const div = document.createElement("div");
@@ -118,3 +103,11 @@ function showMessage(message, type = "error") {
     document.body.appendChild(div);
     setTimeout(() => div.remove(), 3000);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DEBUG] Section 1 initialized');
+    const submitButton = document.getElementById('saveAndContinue');
+    if (submitButton) {
+        submitButton.addEventListener('click', submitForm);
+    }
+});
