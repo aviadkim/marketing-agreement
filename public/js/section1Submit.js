@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrwLGbjBzrjc9sgHa2wEDryXMrZocmliFheT6qS43Rzp8qv1hLYzj11BD7zrgUba1w/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzfeQx5cDnEIZLfSShiezaqkY6JjkX2frbLcG4A9gcMfp1eoMjWJCjeql_AWaK4x4ur/exec";
 
 class PDFSubmissionService {
     constructor() {
