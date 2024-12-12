@@ -1,67 +1,105 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="he">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>הסכם שיווק השקעות - פרטים אישיים</title>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="/css/styles.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container">
-        <div class="form-card">
-            <header class="form-header">
-                <div class="header-container">
-                    <div class="logo-container">
-                        <img src="/images/movne-logo.png" alt="מובנה" class="logo">
-                    </div>
-                    <div class="header-text">
-                        <h1>הסכם שיווק השקעות חד פעמי למוצרים מובנים</h1>
-                    </div>
-                </div>
-            </header>
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz93-PXYufShXM0AazF3RWZL8mzo96aSFxbLMbjTCmW2Rw17tqPN6WnnTw66VJy3lVt/exec";
 
-            <main class="form-content">
-                <form id="section1-form" class="form-section">
-                    <div class="grid-2">
-                        <div class="input-group">
-                            <label>שם פרטי</label>
-                            <input type="text" name="firstName" required>
-                        </div>
-                        <div class="input-group">
-                            <label>שם משפחה</label>
-                            <input type="text" name="lastName" required>
-                        </div>
-                        <div class="input-group">
-                            <label>תעודת זהות</label>
-                            <input type="text" name="idNumber" pattern="\d{9}" minlength="9" maxlength="9" required>
-                        </div>
-                        <div class="input-group">
-                            <label>דוא"ל</label>
-                            <input type="email" name="email" required>
-                        </div>
-                        <div class="input-group">
-                            <label>טלפון נייד</label>
-                            <input type="tel" name="phone" pattern="[0-9]{10}" minlength="10" maxlength="10" required>
-                        </div>
-                    </div>
-                </form>
-            </main>
+async function submitForm(e) {
+    e.preventDefault();
+    
+    const submitButton = document.getElementById('saveAndContinue');
+    const buttonText = submitButton.querySelector('.button-text');
+    const buttonLoader = submitButton.querySelector('.button-loader');
+    
+    try {
+        // עדכון ממשק המשתמש
+        submitButton.disabled = true;
+        buttonText.style.opacity = '0';
+        buttonLoader.style.display = 'block';
 
-            <footer class="form-navigation">
-                <button type="button" id="saveAndContinue" class="btn-next">
-                    <span class="button-text">המשך לשלב הבא</span>
-                    <div class="button-loader"></div>
-                </button>
-            </footer>
-        </div>
-    </div>
+        // יצירת צילום מסך של הטופס
+        const formElement = document.querySelector('.form-card');
+        const canvas = await html2canvas(formElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff'
+        });
 
-    <div id="toast" class="toast"></div>
+        // יצירת PDF
+        window.jsPDF = window.jspdf.jsPDF;
+        const pdf = new jsPDF();
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-    <!-- הסקריפטים החיוניים בלבד -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="/js/section1Submit.js"></script>
-</body>
-</html>
+        // איסוף נתוני הטופס
+        const form = document.querySelector('form');
+        const formData = new FormData(form);
+
+        // הכנת הנתונים לשליחה
+        const data = {
+            section: "1",
+            formPdf: pdf.output('datauristring'),
+            idNumber: formData.get('idNumber') || 'unknown',
+            timestamp: new Date().toISOString()
+        };
+
+        // שליחה לשרת
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        // שמירת נתונים ב-localStorage
+        localStorage.setItem('formData', JSON.stringify({
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            idNumber: formData.get('idNumber'),
+            email: formData.get('email'),
+            phone: formData.get('phone')
+        }));
+
+        showMessage('הטופס נשלח בהצלחה', 'success');
+        
+        // מעבר לעמוד הבא
+        setTimeout(() => {
+            window.location.href = '/sections/section2.html';
+        }, 1000);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('שגיאה בשליחת הטופס');
+    } finally {
+        submitButton.disabled = false;
+        buttonText.style.opacity = '1';
+        buttonLoader.style.display = 'none';
+    }
+}
+
+function showMessage(message, type = 'error') {
+    const div = document.createElement('div');
+    div.className = `message ${type}`;
+    div.textContent = message;
+    div.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 1000;
+        color: white;
+        background: ${type === 'success' ? '#4CAF50' : '#dc3545'};
+        animation: fadeIn 0.3s;
+    `;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const submitButton = document.getElementById('saveAndContinue');
+    if (submitButton) {
+        submitButton.addEventListener('click', submitForm);
+    }
+});
