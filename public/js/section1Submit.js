@@ -3,13 +3,10 @@ firebase.initializeApp({
   apiKey: "AIzaSyBlrfwQJmkUSnqoNZp3bxfH9DH0QuuJtMs",
   authDomain: "client-d5bfe.firebaseapp.com",
   projectId: "client-d5bfe",
-  storageBucket: "client-d5bfe.firebasestorage.app",
   messagingSenderId: "678297464867",
-  appId: "1:678297464867:web:2c929a45d2e9f0cdb68196",
-  measurementId: "G-BMQVKBGBQ5"
+  appId: "1:678297464867:web:2c929a45d2e9f0cdb68196"
 });
 
-const storage = firebase.storage();
 const db = firebase.firestore();
 
 async function submitForm(e) {
@@ -21,28 +18,10 @@ async function submitForm(e) {
     const buttonLoader = submitButton.querySelector('.button-loader');
     
     try {
+        // UI updates
         submitButton.disabled = true;
         buttonText.style.opacity = '0';
         buttonLoader.style.display = 'block';
-
-        // Create screenshot
-        const formElement = document.querySelector('.form-card');
-        console.log('[DEBUG] Creating screenshot');
-        const canvas = await html2canvas(formElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-        });
-        
-        // Upload to Firebase Storage
-        const imageData = canvas.toDataURL('image/png', 1.0);
-        const fileName = `forms/section1/${Date.now()}.png`;
-        const storageRef = storage.ref(fileName);
-        
-        console.log('[DEBUG] Uploading to Firebase');
-        await storageRef.putString(imageData, 'data_url');
-        const imageUrl = await storageRef.getDownloadURL();
 
         // Get form data
         const form = document.querySelector('form');
@@ -57,9 +36,9 @@ async function submitForm(e) {
             idNumber: formData.get('idNumber'),
             email: formData.get('email'),
             phone: formData.get('phone'),
-            imageUrl: imageUrl,
             timestamp: new Date().toISOString()
         });
+        console.log('[DEBUG] Save successful');
 
         // Save to localStorage
         localStorage.setItem('formData', JSON.stringify({
@@ -72,6 +51,7 @@ async function submitForm(e) {
 
         showMessage('הטופס נשלח בהצלחה', 'success');
         
+        // Navigate to next section
         setTimeout(() => {
             window.location.href = '/sections/section2.html';
         }, 1000);
@@ -109,6 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] Section 1 initialized');
     const submitButton = document.getElementById('saveAndContinue');
     if (submitButton) {
+        console.log('[DEBUG] Found submit button');
         submitButton.addEventListener('click', submitForm);
+    } else {
+        console.error('[ERROR] Submit button not found');
     }
 });
