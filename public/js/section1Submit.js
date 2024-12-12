@@ -1,134 +1,118 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzfeQx5cDnEIZLfSShiezaqkY6JjkX2frbLcG4A9gcMfp1eoMjWJCjeql_AWaK4x4ur/exec";
+// Define Google Script URL
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEjJN6RYWQ_p5bE9iCLhIAjuqMINULfql5W_3eR45Ab1fg2t50qr4h24K5nli4kLYI/exec";
 
-class PDFSubmissionService {
-    constructor() {
-        console.log('[DEBUG] PDFSubmissionService initialized');
-    }
+// Form validation functions
+function validateIdNumber(idNumber) {
+    return /^\d{9}$/.test(idNumber);
+}
 
-    async createPDF(formElement) {
-        try {
-            console.log('[DEBUG] Starting PDF creation');
-            
-            const canvas = await html2canvas(formElement, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: "#ffffff",
-                logging: true, // Enable html2canvas logging
-                onclone: function(clonedDoc) {
-                    console.log('[DEBUG] Document cloned for PDF creation');
-                }
-            });
-            console.log('[DEBUG] Canvas created successfully');
+function validatePhone(phone) {
+    return /^0\d{9}$/.test(phone);
+}
 
-            window.jsPDF = window.jspdf.jsPDF;
-            const pdf = new jsPDF();
-            const imgData = canvas.toDataURL("image/jpeg", 1.0);
-            console.log('[DEBUG] Image data created, size:', imgData.length);
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
-            const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
-            
-            console.log('[DEBUG] PDF created successfully');
-            return pdf.output("datauristring");
-        } catch (error) {
-            console.error('[ERROR] PDF creation failed:', error);
-            throw new Error(`PDF creation failed: ${error.message}`);
-        }
-    }
-
-    async sendToGoogleDrive(data) {
-        try {
-            console.log('[DEBUG] Sending data to Google Drive');
-            console.log('[DEBUG] Using URL:', GOOGLE_SCRIPT_URL);
-            
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            });
-
-            console.log('[DEBUG] Response received from Google Drive');
-            return response;
-        } catch (error) {
-            console.error('[ERROR] Google Drive submission failed:', error);
-            throw new Error(`Drive submission failed: ${error.message}`);
-        }
-    }
+// Function to capture form data
+function captureFormData(form) {
+    const formData = new FormData(form);
+    return Object.fromEntries(formData.entries());
 }
 
 // Main submit handler
 async function submitForm(e) {
     e.preventDefault();
-    const service = new PDFSubmissionService();
+    console.log("[DEBUG] Starting form submission");
+
     const submitButton = document.getElementById("saveAndContinue");
-    
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "שולח...";
+    }
+
     try {
-        console.log('[DEBUG] Starting form submission process');
-        
-        // Disable button and show loading state
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.textContent = "שולח...";
-            console.log('[DEBUG] Submit button disabled');
-        }
-
-        // Validate form elements
+        // Form validation
         const form = document.querySelector("form");
-        const formElement = document.querySelector(".form-content");
+        if (!form) throw new Error("Form not found");
+
+        const formData = captureFormData(form);
         
-        if (!form || !formElement) {
-            throw new Error("Required form elements not found");
-        }
-        console.log('[DEBUG] Form elements validated');
+        // Validate required fields
+        if (!formData.firstName?.trim()) throw new Error("שם פרטי הוא שדה חובה");
+        if (!formData.lastName?.trim()) throw new Error("שם משפחה הוא שדה חובה");
+        if (!validateIdNumber(formData.idNumber)) throw new Error("מספר תעודת זהות לא תקין");
+        if (!validateEmail(formData.email)) throw new Error("כתובת אימייל לא תקינה");
+        if (!validatePhone(formData.phone)) throw new Error("מספר טלפון לא תקין");
 
-        // Create PDF
-        const pdfData = await service.createPDF(formElement);
-        console.log('[DEBUG] PDF created');
+        // Create PDF from form
+        console.log("[DEBUG] Creating form PDF");
+        const formElement = document.querySelector(".form-content");
+        const canvas = await html2canvas(formElement, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#ffffff",
+            logging: true
+        });
 
-        // Collect form data
-        const formData = new FormData(form);
+        // Convert to PDF
+        window.jsPDF = window.jspdf.jsPDF;
+        const pdf = new jsPDF();
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+
+        // Prepare data for submission
         const data = {
-            ...Object.fromEntries(formData.entries()),
+            ...formData,
             section: "1",
-            formPdf: pdfData,
+            formPdf: pdf.output("datauristring"),
             timestamp: new Date().toISOString()
         };
-        console.log('[DEBUG] Form data collected:', Object.keys(data));
 
-        // Send to Google Drive
-        await service.sendToGoogleDrive(data);
-        console.log('[DEBUG] Data sent to Google Drive');
+        // Save data to localStorage for future sections
+        localStorage.setItem('formData', JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            idNumber: formData.idNumber,
+            email: formData.email,
+            phone: formData.phone
+        }));
 
-        // Show success message
+        console.log("[DEBUG] Sending data to server");
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        console.log("[DEBUG] Form submitted successfully");
         showMessage("הטופס נשלח בהצלחה", "success");
-        
+
         // Navigate to next section
-        console.log('[DEBUG] Preparing to navigate to next section');
         setTimeout(() => {
             window.location.href = "/sections/section2.html";
         }, 1000);
 
     } catch (error) {
-        console.error('[ERROR] Form submission failed:', error);
-        showMessage(`שגיאה בשליחת הטופס: ${error.message}`);
+        console.error("[ERROR] Submit failed:", error);
+        showMessage(error.message || "אירעה שגיאה בשליחת הטופס");
     } finally {
         if (submitButton) {
             submitButton.disabled = false;
             submitButton.textContent = "המשך לשלב הבא";
-            console.log('[DEBUG] Submit button re-enabled');
         }
     }
 }
 
-// Success/Error message handler
+// Message display function
 function showMessage(message, type = "error") {
-    console.log(`[${type.toUpperCase()}] Showing message:`, message);
     const div = document.createElement("div");
     div.className = `message ${type}`;
     div.textContent = message;
@@ -147,24 +131,54 @@ function showMessage(message, type = "error") {
     setTimeout(() => div.remove(), 3000);
 }
 
-// Initialize event listeners
+// Function to pre-fill form if data exists
+function loadSavedData() {
+    const savedData = localStorage.getItem('formData');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        const form = document.querySelector("form");
+        if (form) {
+            Object.entries(data).forEach(([key, value]) => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) input.value = value;
+            });
+        }
+    }
+}
+
+// Initialize form
 document.addEventListener("DOMContentLoaded", () => {
-    console.log('[DEBUG] Section 1 initialized');
-    console.log('[DEBUG] Checking for dependencies...');
+    console.log("[DEBUG] Section 1 initialized");
     
-    // Verify required dependencies
+    // Check dependencies
     if (!window.jspdf) {
-        console.error('[ERROR] jsPDF not loaded');
+        console.error("[ERROR] jsPDF not loaded");
     }
     if (!window.html2canvas) {
-        console.error('[ERROR] html2canvas not loaded');
+        console.error("[ERROR] html2canvas not loaded");
     }
+
+    // Load any saved data
+    loadSavedData();
     
+    // Attach submit handler
     const submitButton = document.getElementById("saveAndContinue");
     if (submitButton) {
         submitButton.addEventListener("click", submitForm);
-        console.log('[DEBUG] Submit button event listener attached');
+        console.log("[DEBUG] Submit button handler attached");
     } else {
-        console.error('[ERROR] Submit button not found');
+        console.error("[ERROR] Submit button not found");
+    }
+
+    // Add real-time validation listeners
+    const form = document.querySelector("form");
+    if (form) {
+        form.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.remove('error');
+                const errorDiv = input.parentElement.querySelector('.error-message');
+                if (errorDiv) errorDiv.remove();
+            });
+        });
     }
 });
