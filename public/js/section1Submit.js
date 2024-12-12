@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHJTWLcu65gC9uXi5t8rzVaVIP5D3rlPLn-tREkHh2K2DP_YcrRh2wzEYlnEN2Vsbn/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVzyS8-nQwhNPhInyVDzrkoFYk1pCdKx5UNinjvtvViIgoxYuwsJOIKiLI5zNPW80/exec";
 
 async function submitForm(e) {
     e.preventDefault();
