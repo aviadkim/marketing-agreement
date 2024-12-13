@@ -1,31 +1,5 @@
-console.log('[DEBUG] Script started loading');
-
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyBlrfwQJmkUSnqoNZp3bxfH9DH0QuuJtMs",
-    authDomain: "client-d5bfe.firebaseapp.com",
-    projectId: "client-d5bfe",
-    storageBucket: "client-d5bfe.appspot.com",
-    messagingSenderId: "678297464867",
-    appId: "1:678297464867:web:2c929a45d2e9f0cdb68196"
-};
-
-// Initialize Firebase
-console.log('[DEBUG] Starting Firebase initialization');
-try {
-    firebase.initializeApp(firebaseConfig);
-    console.log('[DEBUG] Firebase initialized successfully');
-} catch (error) {
-    console.error('[ERROR] Firebase initialization failed:', error);
-}
-
-let db;
-try {
-    db = firebase.firestore();
-    console.log('[DEBUG] Firestore instance created successfully');
-} catch (error) {
-    console.error('[ERROR] Failed to create Firestore instance:', error);
-}
+// section1Submit.js
+console.log('[DEBUG] Section1Submit script loading');
 
 async function submitForm(e) {
     e.preventDefault();
@@ -48,8 +22,7 @@ async function submitForm(e) {
             throw new Error('Form element not found');
         }
         const formData = new FormData(form);
-        console.log('[DEBUG] Form data collected:', 
-            Object.fromEntries(formData.entries()));
+        console.log('[DEBUG] Form data collected:', Object.fromEntries(formData.entries()));
 
         // Create screenshot
         console.log('[DEBUG] Starting screenshot creation');
@@ -71,6 +44,15 @@ async function submitForm(e) {
         const screenshot = canvas.toDataURL('image/png', 1.0);
         console.log('[DEBUG] Screenshot converted to base64');
 
+        // Upload screenshot to Storage
+        const storageRef = firebase.storage().ref();
+        const screenshotRef = storageRef.child(`screenshots/section1_${Date.now()}.png`);
+        
+        console.log('[DEBUG] Uploading screenshot to Storage');
+        const uploadTask = await screenshotRef.putString(screenshot, 'data_url');
+        const screenshotUrl = await uploadTask.ref.getDownloadURL();
+        console.log('[DEBUG] Screenshot uploaded, URL:', screenshotUrl);
+
         // Create document data
         const docData = {
             section: "1",
@@ -79,18 +61,27 @@ async function submitForm(e) {
             idNumber: formData.get('idNumber'),
             email: formData.get('email'),
             phone: formData.get('phone'),
-            screenshot: screenshot,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            screenshotUrl: screenshotUrl,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            status: 'completed'
         };
         console.log('[DEBUG] Document data prepared:', {
             ...docData,
-            screenshot: 'base64_data_removed_from_log'
+            screenshotUrl: 'url_removed_from_log'
         });
+
+        // Create test document first
+        console.log('[DEBUG] Creating test document');
+        const testDoc = await db.collection('test').add({
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            test: 'Write test'
+        });
+        console.log('[DEBUG] Test document created successfully:', testDoc.id);
 
         // Save to Firestore
         console.log('[DEBUG] Starting Firestore save');
-        await db.collection('forms').add(docData);
-        console.log('[DEBUG] Saved to Firestore successfully');
+        const docRef = await db.collection('forms').add(docData);
+        console.log('[DEBUG] Saved to Firestore successfully, ID:', docRef.id);
 
         // Save to localStorage
         const localStorageData = {
@@ -98,11 +89,13 @@ async function submitForm(e) {
             lastName: docData.lastName,
             idNumber: docData.idNumber,
             email: docData.email,
-            phone: docData.phone
+            phone: docData.phone,
+            formId: docRef.id
         };
         localStorage.setItem('formData', JSON.stringify(localStorageData));
         console.log('[DEBUG] Saved to localStorage:', localStorageData);
 
+        // Show success message
         showMessage('הטופס נשלח בהצלחה', 'success');
         console.log('[DEBUG] Success message shown');
 
@@ -113,7 +106,11 @@ async function submitForm(e) {
         }, 1000);
 
     } catch (error) {
-        console.error('[ERROR] Submit failed:', error);
+        console.error('[ERROR] Submit failed:', {
+            message: error.message,
+            code: error.code,
+            stack: error.stack
+        });
         showMessage("שגיאה בשליחת הטופס: " + error.message);
     } finally {
         submitButton.disabled = false;
@@ -148,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] Page loaded, starting initialization');
     
     // Test Firebase connection
-    if (db) {
+    if (typeof db !== 'undefined') {
         console.log('[DEBUG] Testing Firebase connection');
         db.collection('forms').get()
             .then(() => {
@@ -156,9 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('[ERROR] Firebase connection failed:', error);
+                showMessage("שגיאה בחיבור למסד הנתונים");
             });
     } else {
         console.error('[ERROR] Firestore instance not available');
+        showMessage("שגיאה: מסד הנתונים לא זמין");
     }
     
     const submitButton = document.getElementById('saveAndContinue');
