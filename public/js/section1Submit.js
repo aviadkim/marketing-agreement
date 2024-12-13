@@ -1,11 +1,10 @@
-// section1Submit.js
 console.log('[DEBUG] Script started loading');
 
 const firebaseConfig = {
     apiKey: "AIzaSyBlrfwQJmkUSnqoNZp3bxfH9DH0QuuJtMs",
     authDomain: "client-d5bfe.firebaseapp.com",
     projectId: "client-d5bfe",
-    storageBucket: "client-d5bfe.firebasestorage.app", // שינוי לכתובת הנכונה
+    storageBucket: "client-d5bfe.firebasestorage.app",
     messagingSenderId: "678297464867",
     appId: "1:678297464867:web:2c929a45d2e9f0cdb68196"
 };
@@ -16,7 +15,6 @@ try {
     
     const db = firebase.firestore();
     const storage = firebase.storage();
-    firebase.firestore.setLogLevel('debug');
 } catch (error) {
     console.error('[ERROR] Firebase initialization failed:', error);
 }
@@ -41,42 +39,61 @@ async function submitForm(e) {
         const formData = new FormData(form);
 
         // Create PDF
-        console.log('[DEBUG] Creating PDF');
+        console.log('[DEBUG] Starting PDF creation');
         const formElement = document.querySelector('.form-card');
         if (!formElement) throw new Error('Form card element not found');
 
+        // First create canvas
         const canvas = await html2canvas(formElement, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            logging: true
         });
+        console.log('[DEBUG] Canvas created');
 
         // Convert to PDF
+        console.log('[DEBUG] Converting to PDF');
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgData = canvas.toDataURL('image/png', 1.0);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        
-        // Convert PDF to blob
-        const pdfBlob = pdf.output('blob');
-        
-        // Upload to Firebase Storage
-        console.log('[DEBUG] Uploading PDF to Storage');
-        const metadata = {
-            contentType: 'application/pdf',
-            customMetadata: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
-            }
-        };
+        const imgData = canvas.toDataURL('image/png');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
 
+        // Calculate dimensions to maintain aspect ratio
+        const ratio = canvas.width / canvas.height;
+        let width = pageWidth;
+        let height = width / ratio;
+        if (height > pageHeight) {
+            height = pageHeight;
+            width = height * ratio;
+        }
+
+        pdf.addImage(imgData, 'PNG', 
+            (pageWidth - width) / 2,
+            0,
+            width, 
+            height
+        );
+
+        // Convert to blob for upload
+        const pdfBlob = pdf.output('blob');
+        console.log('[DEBUG] PDF created, size:', pdfBlob.size);
+
+        // Upload to Firebase Storage
+        console.log('[DEBUG] Starting PDF upload');
         const fileName = `forms/section1_${Date.now()}.pdf`;
         const storageRef = firebase.storage().ref().child(fileName);
-        const uploadTask = await storageRef.put(pdfBlob, metadata);
+        const uploadTask = await storageRef.put(pdfBlob, {
+            contentType: 'application/pdf',
+            customMetadata: {
+                formSection: '1',
+                timestamp: new Date().toISOString()
+            }
+        });
+
         const pdfUrl = await uploadTask.ref.getDownloadURL();
-        console.log('[DEBUG] PDF uploaded successfully:', pdfUrl);
+        console.log('[DEBUG] PDF uploaded successfully');
 
         // Save to Firestore
         const docData = {
@@ -101,6 +118,7 @@ async function submitForm(e) {
         }));
 
         showMessage('הטופס נשלח בהצלחה', 'success');
+        console.log('[DEBUG] Form submitted successfully');
 
         // Navigate to next section
         setTimeout(() => {
@@ -137,8 +155,16 @@ function showMessage(message, type = 'error') {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DEBUG] Page loaded, checking PDF library');
+    if (typeof jsPDF === 'undefined') {
+        console.error('[ERROR] jsPDF library not loaded');
+    }
+    
     const submitButton = document.getElementById('saveAndContinue');
     if (submitButton) {
         submitButton.addEventListener('click', submitForm);
+        console.log('[DEBUG] Submit button handler attached');
+    } else {
+        console.error('[ERROR] Submit button not found');
     }
 });
