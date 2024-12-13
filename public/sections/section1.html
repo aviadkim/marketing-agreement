@@ -55,17 +55,34 @@
         </div>
     </div>
 
-    <!-- Firebase Core -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+
     <!-- Other utilities -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Firebase Config - חשוב שיהיה לפני שאר הסקריפטים -->
+    <script src="/js/firebaseConfig.js"></script>
     
     <!-- App scripts -->
     <script src="/js/storage.js"></script>
     <script src="/js/section1Submit.js"></script>
     <script src="/js/navigation.js"></script>
+
+    <!-- Debug script -->
+    <script>
+        // בדיקת טעינת Firebase
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[DEBUG] Checking Firebase initialization...');
+            if (firebase.apps.length) {
+                console.log('[DEBUG] Firebase is initialized');
+            } else {
+                console.error('[DEBUG] Firebase is not initialized!');
+            }
+        });
+    </script>
 </body>
 </html>
