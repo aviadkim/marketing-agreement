@@ -1,8 +1,5 @@
 // public/js/firebaseConfig.js
-// ייבוא SDK של פיירבייס
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+console.log('[DEBUG] Starting Firebase configuration');
 
 const firebaseConfig = {
     apiKey: "AIzaSyBlrfwQJmkUSnqoNZp3bxfH9DH0QuuJtMs",
@@ -10,14 +7,30 @@ const firebaseConfig = {
     projectId: "client-d5bfe",
     storageBucket: "client-d5bfe.appspot.com",
     messagingSenderId: "678297464867",
-    appId: "1:678297464867:web:2c929a45d2e9f0cdb68196",
-    measurementId: "G-YOUR-MEASUREMENT-ID"  // אם יש לך
+    appId: "1:678297464867:web:2c929a45d2e9f0cdb68196"
 };
 
-// אתחול פיירבייס
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
+try {
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    console.log('[DEBUG] Firebase initialized successfully');
 
-// ייצוא לשימוש בקבצים אחרים
-export { db, storage };
+    // Initialize Firestore with debug logging
+    window.db = firebase.firestore();
+    firebase.firestore.setLogLevel('debug');
+
+    // Initialize Storage with debug logging
+    window.storage = firebase.storage();
+    storage.setLogLevel('debug');
+
+    // Test connection
+    db.collection('test').add({
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        test: 'Connection test'
+    })
+    .then(() => console.log('[DEBUG] Firebase connection test successful'))
+    .catch(error => console.error('[ERROR] Firebase connection test failed:', error));
+
+} catch (error) {
+    console.error('[ERROR] Firebase initialization failed:', error);
+}
