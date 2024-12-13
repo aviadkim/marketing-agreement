@@ -1,3 +1,4 @@
+// קובץ section1Submit.js מלא עם שינויים מודגשים בהערות
 console.log('[DEBUG] Script started loading');
 
 const firebaseConfig = {
@@ -9,12 +10,16 @@ const firebaseConfig = {
     appId: "1:678297464867:web:2c929a45d2e9f0cdb68196"
 };
 
+// ייצוא הפונקציות לשימוש גלובלי
+window.db = null;
+window.storage = null;
+
 try {
     firebase.initializeApp(firebaseConfig);
     console.log('[DEBUG] Firebase initialized');
     
-    const db = firebase.firestore();
-    const storage = firebase.storage();
+    window.db = firebase.firestore();
+    window.storage = firebase.storage();
 } catch (error) {
     console.error('[ERROR] Firebase initialization failed:', error);
 }
@@ -28,22 +33,22 @@ async function submitForm(e) {
     const buttonLoader = submitButton.querySelector('.button-loader');
 
     try {
-        // Update UI
+        // UI עדכון
         submitButton.disabled = true;
         buttonText.style.opacity = '0';
         buttonLoader.style.display = 'block';
 
-        // Get form data
+        // קבלת נתוני הטופס
         const form = document.querySelector('form');
         if (!form) throw new Error('Form element not found');
         const formData = new FormData(form);
 
-        // Create PDF
+        // יצירת PDF
         console.log('[DEBUG] Starting PDF creation');
         const formElement = document.querySelector('.form-card');
         if (!formElement) throw new Error('Form card element not found');
 
-        // First create canvas
+        // יצירת canvas
         const canvas = await html2canvas(formElement, {
             scale: 2,
             useCORS: true,
@@ -53,14 +58,15 @@ async function submitForm(e) {
         });
         console.log('[DEBUG] Canvas created');
 
-        // Convert to PDF
+        // המרה ל-PDF
         console.log('[DEBUG] Converting to PDF');
+        const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         const imgData = canvas.toDataURL('image/png');
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
 
-        // Calculate dimensions to maintain aspect ratio
+        // חישוב יחס גובה-רוחב
         const ratio = canvas.width / canvas.height;
         let width = pageWidth;
         let height = width / ratio;
@@ -76,14 +82,14 @@ async function submitForm(e) {
             height
         );
 
-        // Convert to blob for upload
+        // המרה ל-blob להעלאה
         const pdfBlob = pdf.output('blob');
         console.log('[DEBUG] PDF created, size:', pdfBlob.size);
 
-        // Upload to Firebase Storage
+        // העלאה ל-Firebase Storage
         console.log('[DEBUG] Starting PDF upload');
         const fileName = `forms/section1_${Date.now()}.pdf`;
-        const storageRef = firebase.storage().ref().child(fileName);
+        const storageRef = storage.ref().child(fileName);
         const uploadTask = await storageRef.put(pdfBlob, {
             contentType: 'application/pdf',
             customMetadata: {
@@ -93,9 +99,9 @@ async function submitForm(e) {
         });
 
         const pdfUrl = await uploadTask.ref.getDownloadURL();
-        console.log('[DEBUG] PDF uploaded successfully');
+        console.log('[DEBUG] PDF uploaded successfully:', pdfUrl);
 
-        // Save to Firestore
+        // שמירה ב-Firestore
         const docData = {
             section: "1",
             firstName: formData.get('firstName'),
@@ -111,7 +117,7 @@ async function submitForm(e) {
         const docRef = await db.collection('forms').add(docData);
         console.log('[DEBUG] Saved to Firestore:', docRef.id);
 
-        // Save to localStorage
+        // שמירה ב-localStorage
         localStorage.setItem('formData', JSON.stringify({
             formId: docRef.id,
             ...docData
@@ -120,10 +126,11 @@ async function submitForm(e) {
         showMessage('הטופס נשלח בהצלחה', 'success');
         console.log('[DEBUG] Form submitted successfully');
 
-        // Navigate to next section
+        // מעבר לסקשן הבא רק אחרי שכל התהליך הסתיים
         setTimeout(() => {
+            console.log('[DEBUG] Navigating to next section');
             window.location.href = '/sections/section2.html';
-        }, 1000);
+        }, 2000); // נותן קצת יותר זמן
 
     } catch (error) {
         console.error('[ERROR] Submit failed:', error);
@@ -154,15 +161,16 @@ function showMessage(message, type = 'error') {
     setTimeout(() => div.remove(), 3000);
 }
 
+// אתחול והוספת event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[DEBUG] Page loaded, checking PDF library');
-    if (typeof jsPDF === 'undefined') {
-        console.error('[ERROR] jsPDF library not loaded');
-    }
+    console.log('[DEBUG] Section 1 loaded. Testing required features:');
+    console.log('- jsPDF available:', typeof window.jspdf !== 'undefined');
+    console.log('- html2canvas available:', typeof html2canvas !== 'undefined');
+    console.log('- Firebase available:', typeof firebase !== 'undefined');
     
     const submitButton = document.getElementById('saveAndContinue');
     if (submitButton) {
-        submitButton.addEventListener('click', submitForm);
+        submitButton.onclick = submitForm;  // שימוש ישיר בפונקציה
         console.log('[DEBUG] Submit button handler attached');
     } else {
         console.error('[ERROR] Submit button not found');
