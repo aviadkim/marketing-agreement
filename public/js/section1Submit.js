@@ -1,32 +1,24 @@
-// section1Submit.js - קובץ מלא
+// section1Submit.js
 console.log('[DEBUG] Script started loading');
 
-// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBlrfwQJmkUSnqoNZp3bxfH9DH0QuuJtMs",
     authDomain: "client-d5bfe.firebaseapp.com",
     projectId: "client-d5bfe",
-    storageBucket: "client-d5bfe.appspot.com",
+    storageBucket: "client-d5bfe.firebasestorage.app", // שינוי לכתובת הנכונה
     messagingSenderId: "678297464867",
     appId: "1:678297464867:web:2c929a45d2e9f0cdb68196"
 };
 
-// Initialize Firebase
-console.log('[DEBUG] Starting Firebase initialization');
 try {
     firebase.initializeApp(firebaseConfig);
-    console.log('[DEBUG] Firebase initialized successfully');
+    console.log('[DEBUG] Firebase initialized');
+    
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+    firebase.firestore.setLogLevel('debug');
 } catch (error) {
     console.error('[ERROR] Firebase initialization failed:', error);
-}
-
-let db;
-try {
-    db = firebase.firestore();
-    firebase.firestore.setLogLevel('debug');  // הוספת שורה זו לדיבוג
-    console.log('[DEBUG] Firestore instance created successfully');
-} catch (error) {
-    console.error('[ERROR] Failed to create Firestore instance:', error);
 }
 
 async function submitForm(e) {
@@ -42,54 +34,51 @@ async function submitForm(e) {
         submitButton.disabled = true;
         buttonText.style.opacity = '0';
         buttonLoader.style.display = 'block';
-        console.log('[DEBUG] Button disabled');
-
-        // Test Firebase connection first
-        console.log('[DEBUG] Testing Firebase connection...');
-        const testDoc = await db.collection('test').add({
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            test: 'Connection test'
-        });
-        console.log('[DEBUG] Firebase connection test successful:', testDoc.id);
 
         // Get form data
         const form = document.querySelector('form');
-        if (!form) {
-            throw new Error('Form element not found');
-        }
+        if (!form) throw new Error('Form element not found');
         const formData = new FormData(form);
-        console.log('[DEBUG] Form data collected:', 
-            Object.fromEntries(formData.entries()));
 
-        // Create screenshot
-        console.log('[DEBUG] Starting screenshot creation');
+        // Create PDF
+        console.log('[DEBUG] Creating PDF');
         const formElement = document.querySelector('.form-card');
-        if (!formElement) {
-            throw new Error('Form card element not found');
-        }
-        
+        if (!formElement) throw new Error('Form card element not found');
+
         const canvas = await html2canvas(formElement, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
-            backgroundColor: '#ffffff',
-            logging: true
+            backgroundColor: '#ffffff'
         });
-        console.log('[DEBUG] Screenshot created successfully');
 
-        // Convert to base64
-        const screenshot = canvas.toDataURL('image/png', 1.0);
-        console.log('[DEBUG] Screenshot converted to base64');
+        // Convert to PDF
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        
+        // Convert PDF to blob
+        const pdfBlob = pdf.output('blob');
+        
+        // Upload to Firebase Storage
+        console.log('[DEBUG] Uploading PDF to Storage');
+        const metadata = {
+            contentType: 'application/pdf',
+            customMetadata: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+            }
+        };
 
-        // Upload screenshot to Storage first
-        console.log('[DEBUG] Starting screenshot upload to Storage');
-        const storageRef = firebase.storage().ref();
-        const screenshotRef = storageRef.child(`screenshots/section1_${Date.now()}.png`);
-        const uploadTask = await screenshotRef.putString(screenshot, 'data_url');
-        const screenshotUrl = await uploadTask.ref.getDownloadURL();
-        console.log('[DEBUG] Screenshot uploaded successfully:', screenshotUrl);
+        const fileName = `forms/section1_${Date.now()}.pdf`;
+        const storageRef = firebase.storage().ref().child(fileName);
+        const uploadTask = await storageRef.put(pdfBlob, metadata);
+        const pdfUrl = await uploadTask.ref.getDownloadURL();
+        console.log('[DEBUG] PDF uploaded successfully:', pdfUrl);
 
-        // Create document data
+        // Save to Firestore
         const docData = {
             section: "1",
             firstName: formData.get('firstName'),
@@ -97,37 +86,23 @@ async function submitForm(e) {
             idNumber: formData.get('idNumber'),
             email: formData.get('email'),
             phone: formData.get('phone'),
-            screenshotUrl: screenshotUrl,
+            pdfUrl: pdfUrl,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             status: 'completed'
         };
-        console.log('[DEBUG] Document data prepared:', {
-            ...docData,
-            screenshotUrl: 'url_removed_from_log'
-        });
 
-        // Save to Firestore
-        console.log('[DEBUG] Starting Firestore save');
         const docRef = await db.collection('forms').add(docData);
-        console.log('[DEBUG] Saved to Firestore successfully, ID:', docRef.id);
+        console.log('[DEBUG] Saved to Firestore:', docRef.id);
 
         // Save to localStorage
-        const localStorageData = {
-            firstName: docData.firstName,
-            lastName: docData.lastName,
-            idNumber: docData.idNumber,
-            email: docData.email,
-            phone: docData.phone,
-            formId: docRef.id
-        };
-        localStorage.setItem('formData', JSON.stringify(localStorageData));
-        console.log('[DEBUG] Saved to localStorage:', localStorageData);
+        localStorage.setItem('formData', JSON.stringify({
+            formId: docRef.id,
+            ...docData
+        }));
 
         showMessage('הטופס נשלח בהצלחה', 'success');
-        console.log('[DEBUG] Success message shown');
 
         // Navigate to next section
-        console.log('[DEBUG] Starting navigation to section 2');
         setTimeout(() => {
             window.location.href = '/sections/section2.html';
         }, 1000);
@@ -139,12 +114,10 @@ async function submitForm(e) {
         submitButton.disabled = false;
         buttonText.style.opacity = '1';
         buttonLoader.style.display = 'none';
-        console.log('[DEBUG] Button re-enabled');
     }
 }
 
 function showMessage(message, type = 'error') {
-    console.log(`[${type.toUpperCase()}] Showing message:`, message);
     const div = document.createElement('div');
     div.className = `message ${type}`;
     div.textContent = message;
@@ -163,31 +136,9 @@ function showMessage(message, type = 'error') {
     setTimeout(() => div.remove(), 3000);
 }
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[DEBUG] Page loaded, starting initialization');
-    
-    // Test Firebase connection
-    if (db) {
-        console.log('[DEBUG] Testing Firebase connection');
-        db.collection('forms').get()
-            .then(() => {
-                console.log('[DEBUG] Firebase connection successful');
-            })
-            .catch(error => {
-                console.error('[ERROR] Firebase connection failed:', error);
-            });
-    } else {
-        console.error('[ERROR] Firestore instance not available');
-    }
-    
     const submitButton = document.getElementById('saveAndContinue');
     if (submitButton) {
         submitButton.addEventListener('click', submitForm);
-        console.log('[DEBUG] Submit button handler attached');
-    } else {
-        console.error('[ERROR] Submit button not found');
     }
-    
-    console.log('[DEBUG] Initialization complete');
 });
