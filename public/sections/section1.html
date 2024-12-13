@@ -65,49 +65,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>window.jsPDF = window.jspdf.jsPDF;</script>
 
-    <!-- Debug Script - תוספת חדשה -->
-    <script>
-        console.log('=== בדיקת טעינת ספריות ===');
-        console.log({
-            jspdf: typeof window.jspdf,
-            html2canvas: typeof html2canvas,
-            firebase: typeof firebase,
-            jsPDF: typeof window.jsPDF
-        });
-
-        // הוספת כפתור בדיקה זמני
-        document.addEventListener('DOMContentLoaded', () => {
-            const debugButton = document.createElement('button');
-            debugButton.innerHTML = 'בדיקת מערכת';
-            debugButton.style.position = 'fixed';
-            debugButton.style.bottom = '10px';
-            debugButton.style.right = '10px';
-            debugButton.onclick = () => {
-                console.log('=== בדיקת מערכת ===');
-                // בדיקת Firebase
-                if (typeof firebase !== 'undefined') {
-                    console.log('Firebase זמין');
-                    const db = firebase.firestore();
-                    db.collection('test').add({
-                        test: true,
-                        timestamp: new Date()
-                    })
-                    .then(doc => console.log('נוצר מסמך טסט:', doc.id))
-                    .catch(err => console.error('שגיאת Firebase:', err));
-                }
-                
-                // בדיקת PDF
-                if (typeof window.jspdf !== 'undefined') {
-                    console.log('jsPDF זמין');
-                    const doc = new window.jspdf.jsPDF();
-                    doc.text('בדיקה', 10, 10);
-                    const blob = doc.output('blob');
-                    console.log('נוצר PDF בגודל:', blob.size);
-                }
-            };
-            document.body.appendChild(debugButton);
-        });
-    </script>
+    <!-- Test System -->
+    <script src="/js/test-system.js"></script>
 
     <!-- App Scripts -->
     <script src="/js/section1Submit.js"></script>
