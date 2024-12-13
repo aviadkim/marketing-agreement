@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; img-src * data: blob:;">
     <title>הסכם שיווק השקעות - פרטים אישיים</title>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="/css/styles.css" rel="stylesheet">
@@ -60,11 +61,30 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
 
-    <!-- Other utilities -->
+    <!-- PDF Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- App scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- App Scripts -->
     <script src="/js/section1Submit.js"></script>
     <script src="/js/navigation.js"></script>
+
+    <!-- Debug Script -->
+    <script>
+        // Test script loading
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[DEBUG] HTML loaded and scripts initialized');
+            // Test for required libraries
+            if (typeof html2canvas === 'undefined') {
+                console.error('[ERROR] html2canvas library not loaded');
+            }
+            if (typeof jsPDF === 'undefined') {
+                console.error('[ERROR] jsPDF library not loaded');
+            }
+            if (typeof firebase === 'undefined') {
+                console.error('[ERROR] Firebase libraries not loaded');
+            }
+        });
+    </script>
 </body>
 </html>
