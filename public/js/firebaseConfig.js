@@ -1,18 +1,23 @@
 // public/js/firebaseConfig.js
+// ייבוא SDK של פיירבייס
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+
 const firebaseConfig = {
     apiKey: "AIzaSyBlrfwQJmkUSnqoNZp3bxfH9DH0QuuJtMs",
     authDomain: "client-d5bfe.firebaseapp.com",
     projectId: "client-d5bfe",
     storageBucket: "client-d5bfe.appspot.com",
     messagingSenderId: "678297464867",
-    appId: "1:678297464867:web:2c929a45d2e9f0cdb68196"
+    appId: "1:678297464867:web:2c929a45d2e9f0cdb68196",
+    measurementId: "G-YOUR-MEASUREMENT-ID"  // אם יש לך
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const storage = firebase.storage();
+// אתחול פיירבייס
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-// Enable debugging
-firebase.firestore.setLogLevel('debug');
-firebase.storage().setLogLevel('debug');
+// ייצוא לשימוש בקבצים אחרים
+export { db, storage };
