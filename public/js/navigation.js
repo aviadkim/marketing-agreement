@@ -297,6 +297,16 @@ async function navigateNext() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // בדיקה אם הגענו לדף שלא דרך הטופס
+    const referrer = document.referrer;
+    console.log('[DEBUG] Page referrer:', referrer);
+    
+    if (!referrer.includes('/sections/') && !window.location.pathname.includes('section1')) {
+        console.log('[DEBUG] Redirecting to section1');
+        window.location.href = '/sections/section1.html';
+        return;
+    }
+
     logDebug('Initializing page', `Section ${currentSection}`);
     
     loadSavedData();
