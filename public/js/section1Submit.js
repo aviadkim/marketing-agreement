@@ -123,6 +123,9 @@ async function submitForm(e) {
             ...docData
         }));
 
+        // להוסיף:
+        console.log('[DEBUG] Section 1 localStorage saved:', JSON.parse(localStorage.getItem('formData')));
+
         showMessage('הטופס נשלח בהצלחה', 'success');
         console.log('[DEBUG] Form submitted successfully');
 
