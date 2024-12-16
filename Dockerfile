@@ -14,8 +14,8 @@ RUN apk add --no-cache \
 
 COPY package*.json ./
 
-# Combine npm install commands to reduce layers
-RUN npm install && npm install pdfkit nodemailer
+# Single npm install
+RUN npm install
 
 COPY . .
 
