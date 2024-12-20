@@ -1,28 +1,36 @@
 class FormHandler {
     constructor() {
+        // Prevent multiple instances
         if (window.formHandler) {
             console.log('[DEBUG] Form handler already exists');
             return window.formHandler;
         }
         
-        console.log('[DEBUG] Initializing new FormHandler');
+        console.log('[DEBUG] Starting new form handler initialization');
         window.formHandler = this;
 
         // Initialize state
         this.currentSection = 0;
         this.formData = {};
         this.sections = document.querySelectorAll('.form-section');
-        this.hasChanges = false;
 
-        // Check if sections exist
-        if (!this.sections || this.sections.length === 0) {
-            console.error('[ERROR] No form sections found!');
-            this.showDebugMessage();
+        // Debug form structure
+        console.log('[DEBUG] Found sections:', this.sections.length);
+        this.sections.forEach((section, index) => {
+            console.log(`[DEBUG] Section ${index + 1}:`, {
+                id: section.id,
+                visible: section.style.display !== 'none',
+                content: section.innerHTML.substring(0, 100) + '...'
+            });
+        });
+
+        // Check if form exists
+        if (!document.getElementById('mainForm')) {
+            console.error('[ERROR] Main form not found!');
             return;
         }
 
-        console.log(`[DEBUG] Found ${this.sections.length} sections`);
-
+        // Make sure sections are visible
         this.initializeSections();
         this.initializeEventListeners();
         this.initializeSignaturePad();
@@ -31,106 +39,58 @@ class FormHandler {
         return this;
     }
 
-    showDebugMessage() {
-        alert(`
-            בעיית תצוגה בטופס:
-            - נמצאו ${this.sections.length} סקשנים
-            - בדוק בבקשה את הקונסול
-            - וודא שכל הקבצים נטענו כראוי
-        `);
-    }
-
     initializeSections() {
-        console.log('[DEBUG] Initializing sections');
-
-        // Force sections to be visible during initialization
+        console.log('[DEBUG] Initializing sections display');
+        
+        // Reset all sections first
         this.sections.forEach(section => {
             section.style.position = 'relative';
             section.style.display = 'none';
             section.style.opacity = '1';
             section.style.visibility = 'visible';
-            section.classList.remove('active');
         });
 
         // Show first section
         if (this.sections[0]) {
-            console.log('[DEBUG] Displaying first section');
             this.sections[0].style.display = 'block';
             this.sections[0].classList.add('active');
+            console.log('[DEBUG] First section displayed:', this.sections[0].id);
         }
 
-        // Update UI
         this.updateProgressBar();
         this.updateNavigationButtons();
-
-        // Log sections state
-        this.sections.forEach((section, index) => {
-            console.log(`[DEBUG] Section ${index + 1} (${section.id}):`, {
-                display: section.style.display,
-                visible: section.style.visibility,
-                opacity: section.style.opacity,
-                position: section.style.position
-            });
-        });
     }
 
     initializeEventListeners() {
-        console.log('[DEBUG] Setting up event listeners');
-
-        // Navigation buttons
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const submitBtn = document.getElementById('submitBtn');
-
-        if (!prevBtn || !nextBtn || !submitBtn) {
-            console.error('[ERROR] Navigation buttons not found!');
+        const form = document.getElementById('mainForm');
+        if (!form) {
+            console.error('[ERROR] Form element not found');
             return;
         }
 
-        prevBtn.addEventListener('click', (e) => {
+        // Navigation buttons
+        document.getElementById('prevBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('[DEBUG] Previous button clicked');
             this.prevSection();
         });
 
-        nextBtn.addEventListener('click', (e) => {
+        document.getElementById('nextBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('[DEBUG] Next button clicked');
             this.nextSection();
         });
 
-        submitBtn.addEventListener('click', (e) => {
+        document.getElementById('submitBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('[DEBUG] Submit button clicked');
             this.submitForm();
         });
 
-        // Form changes
-        const form = document.getElementById('mainForm');
-        if (form) {
-            form.addEventListener('input', () => {
-                this.hasChanges = true;
-                this.autoSave();
-            });
-        }
+        // Save changes automatically
+        form.addEventListener('input', () => {
+            this.hasChanges = true;
+            this.autoSave();
+        });
 
-        // Debug button
-        const debugBtn = document.createElement('button');
-        debugBtn.textContent = 'בדוק מצב טופס';
-        debugBtn.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 9999;
-            padding: 8px 16px;
-            background: #2d3748;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        `;
-        debugBtn.onclick = () => this.debugForm();
-        document.body.appendChild(debugBtn);
+        console.log('[DEBUG] Event listeners initialized');
     }
 
     updateProgressBar() {
@@ -163,61 +123,205 @@ class FormHandler {
     nextSection() {
         if (this.currentSection >= this.sections.length - 1) return;
 
+        // Hide current section
         this.sections[this.currentSection].style.display = 'none';
         this.sections[this.currentSection].classList.remove('active');
         
+        // Show next section
         this.currentSection++;
-        
         this.sections[this.currentSection].style.display = 'block';
         this.sections[this.currentSection].classList.add('active');
 
+        console.log(`[DEBUG] Moving to section ${this.currentSection + 1}`);
+        
         this.updateProgressBar();
         this.updateNavigationButtons();
         window.scrollTo(0, 0);
-
-        console.log(`[DEBUG] Moved to section ${this.currentSection + 1}`);
     }
 
     prevSection() {
         if (this.currentSection <= 0) return;
 
+        // Hide current section
         this.sections[this.currentSection].style.display = 'none';
         this.sections[this.currentSection].classList.remove('active');
         
+        // Show previous section
         this.currentSection--;
-        
         this.sections[this.currentSection].style.display = 'block';
         this.sections[this.currentSection].classList.add('active');
 
+        console.log(`[DEBUG] Moving back to section ${this.currentSection + 1}`);
+        
         this.updateProgressBar();
         this.updateNavigationButtons();
         window.scrollTo(0, 0);
-
-        console.log(`[DEBUG] Moved back to section ${this.currentSection + 1}`);
     }
 
-    debugForm() {
-        console.log('='.repeat(50));
-        console.log('Form Debug Information');
-        console.log('='.repeat(50));
-        console.log('Current Section:', this.currentSection + 1);
-        console.log('Total Sections:', this.sections.length);
+    async loadSavedData() {
+        try {
+            const savedData = localStorage.getItem('formData');
+            if (savedData) {
+                this.formData = JSON.parse(savedData);
+                this.populateFormFields();
+                console.log('[DEBUG] Loaded saved data');
+            }
+        } catch (error) {
+            console.error('[ERROR] Failed to load saved data:', error);
+        }
+    }
+
+    populateFormFields() {
+        Object.entries(this.formData).forEach(([name, value]) => {
+            const field = document.querySelector(`[name="${name}"]`);
+            if (field) {
+                field.value = value;
+            }
+        });
+    }
+
+    autoSave() {
+        const form = document.getElementById('mainForm');
+        if (!form) return;
+
+        const formData = new FormData(form);
+        this.formData = Object.fromEntries(formData.entries());
+        localStorage.setItem('formData', JSON.stringify(this.formData));
+        console.log('[DEBUG] Form auto-saved');
+    }
+
+    initializeSignaturePad() {
+        const canvas = document.getElementById('signatureCanvas');
+        if (!canvas) {
+            console.warn('[WARN] Signature canvas not found');
+            return;
+        }
+
+        this.signaturePad = new SignaturePad(canvas);
         
-        this.sections.forEach((section, index) => {
-            console.log(`\nSection ${index + 1} (${section.id}):`);
-            console.log('Display:', window.getComputedStyle(section).display);
-            console.log('Visibility:', window.getComputedStyle(section).visibility);
-            console.log('Opacity:', window.getComputedStyle(section).opacity);
-            console.log('Position:', window.getComputedStyle(section).position);
-            console.log('Content (first 100 chars):', section.innerHTML.substring(0, 100));
+        document.querySelector('[data-clear-signature]')?.addEventListener('click', () => {
+            this.signaturePad.clear();
         });
 
-        alert('Debug information has been logged to console');
+        document.querySelector('[data-save-signature]')?.addEventListener('click', () => {
+            if (!this.signaturePad.isEmpty()) {
+                localStorage.setItem('savedSignature', this.signaturePad.toDataURL());
+                this.showMessage('החתימה נשמרה בהצלחה', 'success');
+            }
+        });
+    }
+
+    async submitForm() {
+        try {
+            console.log('[DEBUG] Starting form submission');
+            this.showLoader();
+
+            const form = document.getElementById('mainForm');
+            if (!form) throw new Error('Form not found');
+
+            // Validate form
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                throw new Error('נא למלא את כל השדות הנדרשים');
+            }
+
+            // Check signature
+            if (!this.signaturePad || this.signaturePad.isEmpty()) {
+                throw new Error('נא לחתום על הטופס');
+            }
+
+            // Prepare form data
+            const formData = new FormData(form);
+            const submission = Object.fromEntries(formData.entries());
+            submission.signature = this.signaturePad.toDataURL();
+
+            // Create PDF
+            const pdfBlob = await this.generatePDF(submission);
+            
+            // Upload to Firebase
+            await window.firebaseHelpers.waitForReady();
+            const fileName = `forms/${Date.now()}_${submission.idNumber || 'unknown'}.pdf`;
+            const pdfUrl = await window.firebaseHelpers.uploadFile(pdfBlob, fileName);
+            
+            // Save to Firestore
+            submission.pdfUrl = pdfUrl;
+            await window.firebaseHelpers.saveForm(submission);
+
+            // Clear saved data
+            localStorage.removeItem('formData');
+            this.hasChanges = false;
+
+            this.showMessage('הטופס נשלח בהצלחה!', 'success');
+            setTimeout(() => {
+                window.location.href = '/thank-you.html';
+            }, 2000);
+
+        } catch (error) {
+            console.error('[ERROR] Submit failed:', error);
+            this.showMessage(error.message || 'שגיאה בשליחת הטופס', 'error');
+        } finally {
+            this.hideLoader();
+        }
+    }
+
+    async generatePDF(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Add content to PDF
+        doc.setFont('helvetica');
+        doc.text('טופס הסכם שיווק השקעות', 105, 20, { align: 'center' });
+        
+        let y = 40;
+        Object.entries(data).forEach(([key, value]) => {
+            if (key !== 'signature') {
+                doc.text(`${key}: ${value}`, 20, y);
+                y += 10;
+            }
+        });
+
+        // Add signature
+        if (this.signaturePad) {
+            const signatureImage = this.signaturePad.toDataURL();
+            doc.addImage(signatureImage, 'PNG', 20, y, 50, 20);
+        }
+
+        return doc.output('blob');
+    }
+
+    showMessage(text, type = 'error') {
+        const message = document.createElement('div');
+        message.className = `message ${type}`;
+        message.textContent = text;
+        message.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            color: white;
+            background: ${type === 'success' ? '#4CAF50' : '#dc3545'};
+            animation: fadeIn 0.3s;
+        `;
+        
+        document.body.appendChild(message);
+        setTimeout(() => message.remove(), 5000);
+    }
+
+    showLoader() {
+        const loader = document.querySelector('.loader');
+        if (loader) loader.style.display = 'block';
+    }
+
+    hideLoader() {
+        const loader = document.querySelector('.loader');
+        if (loader) loader.style.display = 'none';
     }
 }
 
-// Initialize handler when DOM is ready
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[DEBUG] DOM loaded, initializing form handler');
-    window.formHandler = new FormHandler();
+    console.log('[DEBUG] DOM loaded');
+    new FormHandler();
 });
