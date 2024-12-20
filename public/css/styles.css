@@ -572,3 +572,41 @@ input:focus, select:focus, textarea:focus {
 input, select, textarea, button {
     transition: none !important;
 }
+
+/* Form Layout Fixes */
+.form-sections-container {
+    position: relative;
+    min-height: 400px; /* מונע קפיצות בגובה הטופס */
+}
+
+/* Performance Improvements */
+.form-section {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+}
+
+/* Fix for Safari */
+.form-section.active {
+    position: relative !important;
+    display: block !important;
+}
+
+/* Fix for Firefox */
+@-moz-document url-prefix() {
+    .form-section {
+        transform: translateX(20px) translateZ(0);
+    }
+    .form-section.active {
+        transform: translateX(0) translateZ(0);
+    }
+}
+
+/* Prevent FOUC (Flash of Unstyled Content) */
+.js-loading * {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -ms-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+}
