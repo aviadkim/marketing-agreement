@@ -3,42 +3,39 @@ const path = require("path");
 const fs = require("fs");
 const app = express();
 
-// Force redirect from sections before any static file serving
+// Block old sections before any other middleware
 app.use((req, res, next) => {
-    if (req.url.startsWith('/sections/') || req.url === '/sections') {
-        console.log('[SERVER] Intercepting sections request:', req.url);
-        return res.redirect('/');
+    if (req.url.includes('/sections/') || 
+        req.url.includes('section1.html') || 
+        req.url.includes('section2.html') || 
+        req.url.includes('section3.html') || 
+        req.url.includes('section4.html')) {
+        console.log('[SERVER] Blocking old section access:', req.url);
+        return res.redirect(301, '/');  // permanent redirect
     }
     next();
 });
 
-// Middleware setup
+// Basic middleware setup
 app.use(express.json({ limit: "50mb" }));
+
+// Static files with cache control
 app.use(express.static("public", {
-    // מונע גישה לתיקיית sections
-    setHeaders: (res, path) => {
-        if (path.includes('/sections/')) {
-            return res.redirect('/');
-        }
+    setHeaders: (res) => {
+        res.set('Cache-Control', 'no-store, must-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
     }
 }));
-app.use('/pdfs', express.static(path.join(__dirname, 'pdfs')));
 
-// Ensure PDF directory exists
+// PDF directory setup
+app.use('/pdfs', express.static(path.join(__dirname, 'pdfs')));
 const PDF_DIR = path.join(__dirname, 'pdfs');
 if (!fs.existsSync(PDF_DIR)) {
     fs.mkdirSync(PDF_DIR, { recursive: true });
 }
 
-// Aggressive cache control
-app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-    next();
-});
-
-// Main route - serve new form
+// Main route - always serve the new form
 app.get('/', (req, res) => {
     console.log('[SERVER] Serving new form page');
     res.sendFile(path.join(__dirname, 'public', 'form-new.html'));
@@ -47,7 +44,10 @@ app.get('/', (req, res) => {
 // Health check endpoint
 app.get('/health', (req, res) => {
     console.log('[SERVER] Health check');
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString() 
+    });
 });
 
 // PDF save endpoint
@@ -104,13 +104,22 @@ app.get("/api/forms", (req, res) => {
         res.json({ success: true, forms });
     } catch (error) {
         console.error("[SERVER ERROR]:", error);
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
-// Catch-all route - redirect everything else to new form
-app.use((req, res) => {
-    console.log(`[SERVER] Redirecting unhandled request: ${req.url}`);
+// Block unwanted files
+app.use('*/sections/*', (req, res) => {
+    console.log('[SERVER] Blocking access to old sections folder');
+    res.redirect(301, '/');
+});
+
+// Final catch-all route - redirect everything else to new form
+app.use('*', (req, res) => {
+    console.log(`[SERVER] Redirecting unknown request to new form:`, req.url);
     res.redirect('/');
 });
 
@@ -118,7 +127,7 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log('='.repeat(50));
-    console.log(`[SERVER] Starting new version with sections redirect`);
+    console.log(`[SERVER] Starting new version with sections blocking`);
     console.log(`[SERVER] Running on port ${PORT}`);
     console.log(`[SERVER] PDF directory: ${PDF_DIR}`);
     console.log(`[SERVER] Cache disabled`);
