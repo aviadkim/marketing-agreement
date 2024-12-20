@@ -1,5 +1,7 @@
+```javascript
 class FormHandler {
     constructor() {
+        // מניעת אתחול כפול
         if (window.formHandler) {
             console.log('[DEBUG] Form handler already initialized');
             return;
@@ -7,32 +9,70 @@ class FormHandler {
         window.formHandler = this;
         
         console.log('[DEBUG] Initializing FormHandler');
+        this.currentSection = 0;
         this.formData = {};
-        this.initializeForm();
-    }
+        this.sections = document.querySelectorAll('.form-section');
 
-    initializeForm() {
-        // מאזין לכל השינויים בטופס
-        const form = document.querySelector('form');
-        if (!form) {
-            console.error('[ERROR] Form not found');
-            return;
+        // הסתרת כל הסקשנים בהתחלה
+        this.sections.forEach(section => {
+            section.style.display = 'none';
+            section.classList.remove('active');
+        });
+
+        // הצגת סקשן ראשון
+        if (this.sections[0]) {
+            this.sections[0].style.display = 'block';
+            this.sections[0].classList.add('active');
+            this.updateProgressBar(0);
         }
 
-        // שמירה אוטומטית בכל שינוי
-        form.addEventListener('change', () => this.autoSave());
-        
-        // אתחול חתימה
+        this.initializeEventListeners();
         this.initializeSignaturePad();
-
-        // כפתור שליחה
-        form.addEventListener('submit', (e) => this.submitForm(e));
-
-        // טעינת מידע שמור
         this.loadSavedData();
     }
 
+    initializeEventListeners() {
+        console.log('[DEBUG] Setting up event listeners');
+        
+        // ניווט באמצעות כפתורים
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.nextSection();
+            });
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.prevSection();
+            });
+        }
+
+        if (submitBtn) {
+            submitBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.submitForm();
+            });
+        }
+
+        // שמירה אוטומטית בשינוי שדות
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', (e) => e.preventDefault());
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => this.autoSave());
+            });
+        }
+    }
+
     initializeSignaturePad() {
+        console.log('[DEBUG] Initializing signature pad');
         const canvas = document.getElementById('signatureCanvas');
         if (!canvas) {
             console.warn('[WARN] Signature canvas not found');
@@ -46,21 +86,80 @@ class FormHandler {
         });
 
         document.querySelector('[data-copy-signature]')?.addEventListener('click', () => {
-            const savedSig = localStorage.getItem('savedSignature');
-            if (savedSig) {
-                this.signaturePad.fromDataURL(savedSig);
+            const savedSignature = localStorage.getItem('savedSignature');
+            if (savedSignature) {
+                this.signaturePad.fromDataURL(savedSignature);
             }
         });
 
         document.querySelector('[data-save-signature]')?.addEventListener('click', () => {
             if (!this.signaturePad.isEmpty()) {
-                localStorage.setItem('savedSignature', this.signaturePad.toDataURL());
+                const signatureData = this.signaturePad.toDataURL();
+                localStorage.setItem('savedSignature', signatureData);
                 this.showMessage('החתימה נשמרה', 'success');
             }
         });
     }
 
+    updateProgressBar(sectionIndex) {
+        const steps = document.querySelectorAll('.step');
+        steps.forEach((step, index) => {
+            if (index <= sectionIndex) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
+        });
+    }
+
+    nextSection() {
+        console.log('[DEBUG] Moving to next section');
+        if (this.currentSection < this.sections.length - 1) {
+            // הסתר נוכחי
+            this.sections[this.currentSection].style.display = 'none';
+            this.sections[this.currentSection].classList.remove('active');
+            
+            // הצג הבא
+            this.currentSection++;
+            this.sections[this.currentSection].style.display = 'block';
+            this.sections[this.currentSection].classList.add('active');
+            
+            this.updateProgressBar(this.currentSection);
+            this.updateNavigationButtons();
+            window.scrollTo(0, 0);
+        }
+    }
+
+    prevSection() {
+        console.log('[DEBUG] Moving to previous section');
+        if (this.currentSection > 0) {
+            // הסתר נוכחי
+            this.sections[this.currentSection].style.display = 'none';
+            this.sections[this.currentSection].classList.remove('active');
+            
+            // הצג קודם
+            this.currentSection--;
+            this.sections[this.currentSection].style.display = 'block';
+            this.sections[this.currentSection].classList.add('active');
+            
+            this.updateProgressBar(this.currentSection);
+            this.updateNavigationButtons();
+            window.scrollTo(0, 0);
+        }
+    }
+
+    updateNavigationButtons() {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (prevBtn) prevBtn.style.display = this.currentSection === 0 ? 'none' : 'block';
+        if (nextBtn) nextBtn.style.display = this.currentSection === this.sections.length - 1 ? 'none' : 'block';
+        if (submitBtn) submitBtn.style.display = this.currentSection === this.sections.length - 1 ? 'block' : 'none';
+    }
+
     async autoSave() {
+        console.log('[DEBUG] Auto-saving form data');
         const form = document.querySelector('form');
         if (!form) return;
 
@@ -70,10 +169,10 @@ class FormHandler {
             ...Object.fromEntries(formData)
         };
         localStorage.setItem('formData', JSON.stringify(this.formData));
-        console.log('[DEBUG] Form data saved:', this.formData);
     }
 
     loadSavedData() {
+        console.log('[DEBUG] Loading saved form data');
         const savedData = localStorage.getItem('formData');
         if (savedData) {
             try {
@@ -99,29 +198,37 @@ class FormHandler {
     }
 
     async generatePDF() {
-        const form = document.querySelector('.form-container');
-        const canvas = await html2canvas(form, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff'
-        });
+        console.log('[DEBUG] Generating PDF');
+        try {
+            const form = document.querySelector('.form-container');
+            const canvas = await html2canvas(form, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            });
 
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
-        
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-        return pdf;
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            
+            pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
+            return pdf;
+        } catch (error) {
+            console.error('[ERROR] PDF generation failed:', error);
+            throw error;
+        }
     }
 
-    async submitForm(e) {
-        e.preventDefault();
+    async submitForm() {
         console.log('[DEBUG] Starting form submission');
-
         try {
-            // הצגת לוודר
             this.showLoader();
 
             // בדיקת תקינות
@@ -146,7 +253,7 @@ class FormHandler {
             await storageRef.put(pdfBlob);
             const pdfUrl = await storageRef.getDownloadURL();
 
-            // שמירת נתונים ב-Firestore
+            // שמירה בfirestore
             const submission = {
                 ...this.formData,
                 signature: this.signaturePad.toDataURL(),
@@ -156,11 +263,10 @@ class FormHandler {
 
             await window.db.collection('submissions').add(submission);
 
-            // הצגת הודעת הצלחה
+            // ניקוי ומעבר לדף תודה
+            localStorage.removeItem('formData');
             this.showMessage('הטופס נשלח בהצלחה!', 'success');
             
-            // ניקוי והפניה לדף תודה
-            localStorage.removeItem('formData');
             setTimeout(() => {
                 window.location.href = '/thank-you.html';
             }, 2000);
@@ -208,3 +314,4 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] Starting form initialization');
     new FormHandler();
 });
+```
