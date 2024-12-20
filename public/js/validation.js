@@ -6,27 +6,27 @@ class FormValidator {
         }
         window.formValidator = this;
         this.initializeValidation();
+        console.log('[DEBUG] FormValidator initialized');
     }
 
     initializeValidation() {
-        // ID number validation
+        // Add validation for each field type
         this.addIdNumberValidation();
-        
-        // Phone number validation
         this.addPhoneValidation();
-        
-        // Email validation
         this.addEmailValidation();
-
-        // Investment amount validation
         this.addInvestmentAmountValidation();
-
-        console.log('[DEBUG] Form validation initialized');
+        
+        // Log all validated fields
+        const fields = document.querySelectorAll('input[required]');
+        console.log(`[DEBUG] Found ${fields.length} fields to validate`);
     }
 
     addIdNumberValidation() {
         const idInput = document.querySelector('input[name="idNumber"]');
-        if (!idInput) return;
+        if (!idInput) {
+            console.warn('[WARN] ID number input not found');
+            return;
+        }
 
         idInput.addEventListener('input', (e) => {
             const value = e.target.value;
@@ -46,7 +46,10 @@ class FormValidator {
 
     addPhoneValidation() {
         const phoneInput = document.querySelector('input[name="phone"]');
-        if (!phoneInput) return;
+        if (!phoneInput) {
+            console.warn('[WARN] Phone input not found');
+            return;
+        }
 
         phoneInput.addEventListener('input', (e) => {
             const value = e.target.value;
@@ -66,7 +69,10 @@ class FormValidator {
 
     addEmailValidation() {
         const emailInput = document.querySelector('input[name="email"]');
-        if (!emailInput) return;
+        if (!emailInput) {
+            console.warn('[WARN] Email input not found');
+            return;
+        }
 
         emailInput.addEventListener('input', (e) => {
             const value = e.target.value;
@@ -80,11 +86,14 @@ class FormValidator {
 
     addInvestmentAmountValidation() {
         const amountInput = document.querySelector('input[name="investmentAmount"]');
-        if (!amountInput) return;
+        if (!amountInput) {
+            console.warn('[WARN] Investment amount input not found');
+            return;
+        }
 
         amountInput.addEventListener('input', (e) => {
             const value = parseInt(e.target.value);
-            if (value < 0) {
+            if (isNaN(value) || value < 0) {
                 amountInput.setCustomValidity('סכום ההשקעה חייב להיות חיובי');
             } else if (value > 10000000) {
                 amountInput.setCustomValidity('סכום ההשקעה גדול מדי');
@@ -96,21 +105,24 @@ class FormValidator {
 
     validateIsraeliID(id) {
         // Israeli ID validation algorithm
-        if (id.length !== 9) return false;
+        if (!/^\d{9}$/.test(id)) return false;
         
+        const digits = id.split('').map(Number);
         let sum = 0;
+        
         for (let i = 0; i < 9; i++) {
-            let digit = parseInt(id.charAt(i));
+            let digit = digits[i];
             if (i % 2 === 0) {
                 digit *= 1;
             } else {
                 digit *= 2;
                 if (digit > 9) {
-                    digit = digit % 10 + Math.floor(digit / 10);
+                    digit = (digit % 10) + Math.floor(digit / 10);
                 }
             }
             sum += digit;
         }
+
         return sum % 10 === 0;
     }
 
@@ -121,11 +133,17 @@ class FormValidator {
 
     validateEmail(email) {
         // Basic email validation
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     }
 
     validateSection(sectionElement) {
-        const inputs = sectionElement.querySelectorAll('input, select, textarea');
+        if (!sectionElement) {
+            console.error('[ERROR] Section element not provided for validation');
+            return false;
+        }
+
+        const inputs = sectionElement.querySelectorAll('input[required], select[required], textarea[required]');
         let isValid = true;
         let firstInvalid = null;
 
@@ -135,12 +153,38 @@ class FormValidator {
                 if (!firstInvalid) {
                     firstInvalid = input;
                 }
+                console.log(`[DEBUG] Invalid field:`, {
+                    name: input.name,
+                    type: input.type,
+                    value: input.value,
+                    validationMessage: input.validationMessage
+                });
             }
         });
 
-        if (firstInvalid) {
+        if (!isValid && firstInvalid) {
             firstInvalid.reportValidity();
             firstInvalid.focus();
+            console.log(`[DEBUG] First invalid field: ${firstInvalid.name}`);
+        }
+
+        return isValid;
+    }
+
+    validateForm() {
+        const form = document.getElementById('mainForm');
+        if (!form) {
+            console.error('[ERROR] Form not found');
+            return false;
+        }
+
+        const isValid = form.checkValidity();
+        if (!isValid) {
+            console.log('[DEBUG] Form validation failed');
+            const invalidInputs = form.querySelectorAll(':invalid');
+            invalidInputs.forEach(input => {
+                console.log(`[DEBUG] Invalid field: ${input.name} - ${input.validationMessage}`);
+            });
         }
 
         return isValid;
@@ -150,5 +194,5 @@ class FormValidator {
 // Initialize validation when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] Initializing form validation');
-    new FormValidator();
+    window.formValidator = new FormValidator();
 });
