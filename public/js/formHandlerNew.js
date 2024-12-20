@@ -1,49 +1,61 @@
 class FormHandler {
     constructor() {
-        // Prevent multiple instances
+        // מניעת יצירת מופע כפול
         if (window.formHandler) {
             console.log('[DEBUG] Form handler already exists');
             return window.formHandler;
         }
-        console.log('[DEBUG] Initializing FormHandler');
+        
+        console.log('[DEBUG] Initializing new FormHandler');
         window.formHandler = this;
 
-        // Initialize state
+        // אתחול משתני המחלקה
         this.currentSection = 0;
         this.formData = {};
         this.sections = document.querySelectorAll('.form-section');
         this.hasChanges = false;
 
-        // Initialize components
-        this.initializeView();
+        // בדיקה שיש סקשנים
+        if (this.sections.length === 0) {
+            console.error('[ERROR] No form sections found');
+            return;
+        }
+
+        this.initializeSections();
         this.initializeEventListeners();
         this.initializeSignaturePad();
         this.loadSavedData();
+        
+        // הפעלת הדיבאג פאנל
+        this.initializeDebugPanel();
 
         return this;
     }
 
-    initializeView() {
-        console.log('[DEBUG] Initializing view');
-        // Hide all sections
-        this.sections.forEach(section => {
+    initializeSections() {
+        console.log('[DEBUG] Initializing sections');
+        
+        // הסתרת כל הסקשנים
+        this.sections.forEach((section, index) => {
             section.style.display = 'none';
             section.classList.remove('active');
+            console.log(`[DEBUG] Section ${index + 1} initialized`);
         });
 
-        // Show first section
+        // הצגת הסקשן הראשון
         if (this.sections[0]) {
             this.sections[0].style.display = 'block';
             this.sections[0].classList.add('active');
             this.updateProgressBar();
             this.updateNavigationButtons();
+            console.log('[DEBUG] First section displayed');
         }
     }
 
     initializeEventListeners() {
         console.log('[DEBUG] Setting up event listeners');
         
-        // Navigation buttons
+        // כפתורי ניווט
         document.getElementById('prevBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
             this.prevSection();
@@ -59,14 +71,14 @@ class FormHandler {
             this.submitForm();
         });
 
-        // Form inputs
+        // מעקב אחר שינויים בטופס
         const form = document.getElementById('mainForm');
         form?.addEventListener('input', () => {
             this.hasChanges = true;
             this.autoSave();
         });
 
-        // Prevent accidental navigation
+        // מניעת יציאה בטעות
         window.addEventListener('beforeunload', (e) => {
             if (this.hasChanges) {
                 e.preventDefault();
@@ -77,11 +89,14 @@ class FormHandler {
 
     initializeSignaturePad() {
         const canvas = document.getElementById('signatureCanvas');
-        if (!canvas) return;
+        if (!canvas) {
+            console.warn('[WARN] Signature canvas not found');
+            return;
+        }
 
         this.signaturePad = new SignaturePad(canvas);
 
-        // Signature controls
+        // כפתורי חתימה
         document.querySelector('[data-clear-signature]')?.addEventListener('click', () => {
             this.signaturePad.clear();
             console.log('[DEBUG] Signature cleared');
@@ -91,9 +106,20 @@ class FormHandler {
             if (!this.signaturePad.isEmpty()) {
                 const signatureData = this.signaturePad.toDataURL();
                 localStorage.setItem('savedSignature', signatureData);
-                this.showMessage('החתימה נשמרה בהצלחה', 'success');
+                this.showMessage('החתימה נשמרה', 'success');
                 console.log('[DEBUG] Signature saved');
             }
+        });
+    }
+
+    initializeDebugPanel() {
+        const debugPanel = document.querySelector('.debug-panel');
+        if (debugPanel) {
+            debugPanel.style.display = 'block';
+        }
+
+        document.getElementById('checkLogsBtn')?.addEventListener('click', () => {
+            this.checkLogs();
         });
     }
 
@@ -159,7 +185,7 @@ class FormHandler {
     nextSection() {
         if (this.currentSection >= this.sections.length - 1) return;
 
-        // Validate current section
+        // בדיקת תקינות הסקשן הנוכחי
         const currentFields = this.sections[this.currentSection].querySelectorAll('input, select, textarea');
         const isValid = Array.from(currentFields).every(field => field.checkValidity());
 
@@ -168,7 +194,7 @@ class FormHandler {
             return;
         }
 
-        // Move to next section
+        // מעבר לסקשן הבא
         this.sections[this.currentSection].style.display = 'none';
         this.sections[this.currentSection].classList.remove('active');
         
@@ -180,6 +206,8 @@ class FormHandler {
         this.updateProgressBar();
         this.updateNavigationButtons();
         window.scrollTo(0, 0);
+        
+        console.log(`[DEBUG] Moved to section ${this.currentSection + 1}`);
     }
 
     prevSection() {
@@ -196,6 +224,8 @@ class FormHandler {
         this.updateProgressBar();
         this.updateNavigationButtons();
         window.scrollTo(0, 0);
+        
+        console.log(`[DEBUG] Moved back to section ${this.currentSection + 1}`);
     }
 
     async submitForm() {
@@ -203,44 +233,44 @@ class FormHandler {
             console.log('[DEBUG] Starting form submission');
             this.showLoader();
 
-            // Validate form
+            // בדיקת תקינות הטופס
             const form = document.getElementById('mainForm');
             if (!form.checkValidity()) {
                 form.reportValidity();
                 throw new Error('נא למלא את כל השדות הנדרשים');
             }
 
-            // Check signature
+            // בדיקת חתימה
             if (!this.signaturePad || this.signaturePad.isEmpty()) {
                 throw new Error('נא לחתום על הטופס');
             }
 
-            // Prepare form data
+            // הכנת הנתונים לשליחה
             const formData = new FormData(form);
             const submission = Object.fromEntries(formData.entries());
             submission.signature = this.signaturePad.toDataURL();
 
-            // Wait for Firebase
-            await window.firebaseHelpers.waitForReady();
+            // המתנה לפיירבייס
+            await window.firebaseService.waitForReady();
 
-            // Create PDF
+            // יצירת PDF
             const pdfBlob = await this.generatePDF();
             
-            // Upload PDF
+            // העלאת PDF
             const fileName = `forms/${Date.now()}_${submission.idNumber || 'unknown'}.pdf`;
-            const pdfUrl = await window.firebaseHelpers.uploadFile(pdfBlob, fileName);
+            const pdfUrl = await window.firebaseService.uploadFile(pdfBlob, fileName);
             
-            // Save to Firestore
+            // שמירה בפיירסטור
             submission.pdfUrl = pdfUrl;
-            const docId = await window.firebaseHelpers.saveForm(submission);
+            const docId = await window.firebaseService.saveForm(submission);
 
             console.log('[DEBUG] Form submitted successfully:', docId);
 
-            // Clear saved data
+            // ניקוי נתונים שמורים
             localStorage.removeItem('formData');
             this.hasChanges = false;
 
-            // Show success message and redirect
+            // הצגת הודעת הצלחה והפניה
             this.showMessage('הטופס נשלח בהצלחה!', 'success');
             setTimeout(() => {
                 window.location.href = '/thank-you.html';
@@ -258,12 +288,12 @@ class FormHandler {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Add form content to PDF
+        // הוספת תוכן הטופס ל-PDF
         Object.entries(this.formData).forEach(([key, value], index) => {
             doc.text(`${key}: ${value}`, 10, 10 + (index * 10));
         });
 
-        // Add signature
+        // הוספת חתימה
         if (this.signaturePad) {
             const signatureImage = this.signaturePad.toDataURL();
             doc.addImage(signatureImage, 'PNG', 10, 10 + (Object.keys(this.formData).length * 10));
@@ -307,31 +337,16 @@ class FormHandler {
         console.log('[DEBUG] Form Status Check');
         console.log('-'.repeat(50));
         console.log('Current Section:', this.currentSection);
+        console.log('Total Sections:', this.sections.length);
         console.log('Form Data:', this.formData);
         console.log('Has Changes:', this.hasChanges);
         console.log('Firebase Status:', window.db ? 'Connected' : 'Not Connected');
+        console.log('Current Section Content:', this.sections[this.currentSection]?.innerHTML);
         console.log('Signature Status:', this.signaturePad ? 
             (!this.signaturePad.isEmpty() ? 'Signed' : 'Empty') : 
             'Not Initialized');
 
-        // Check form validity
-        const form = document.getElementById('mainForm');
-        const isValid = form?.checkValidity();
-        console.log('Form Validity:', isValid);
-
-        // Test Firebase connection
-        if (window.db) {
-            window.db.collection('test').add({
-                test: 'Connection Test',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => console.log('[DEBUG] Firebase Write Test: Success'))
-            .catch(err => console.error('[ERROR] Firebase Write Test:', err));
-        }
-
-        console.log('-'.repeat(50));
-
-        // Show debug panel if exists
+        // עדכון פאנל דיבאג
         const debugOutput = document.getElementById('debugOutput');
         if (debugOutput) {
             debugOutput.innerHTML = `
@@ -348,10 +363,8 @@ class FormHandler {
     }
 }
 
-// Initialize form handler when DOM is ready
+// אתחול המחלקה כשהדף נטען
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] DOM loaded, initializing form handler');
-    if (!window.formHandler) {
-        new FormHandler();
-    }
+    new FormHandler();
 });
