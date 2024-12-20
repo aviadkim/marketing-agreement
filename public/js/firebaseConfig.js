@@ -1,7 +1,6 @@
 // Firebase Configuration and Initialization
 console.log('[DEBUG] Starting Firebase configuration');
 
-// Global config object
 window.firebaseConfig = {
     apiKey: "AIzaSyBlrfwQJmkUSnqoNZp3bxfH9DH0QuuJtMs",
     authDomain: "client-d5bfe.firebaseapp.com",
