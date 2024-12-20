@@ -1,163 +1,154 @@
-// Form validation functions
-function validateIdNumber(value) {
-    if (value.length !== 9) return false;
-    return Array.from(value, Number)
-        .reduce((sum, digit, i) => {
-            const step = digit * ((i % 2) + 1);
-            sum += step > 9 ? step - 9 : step;
-            return sum;
-        }, 0) % 10 === 0;
-}
+// Form Validation Helper
+class FormValidator {
+    constructor() {
+        if (window.formValidator) {
+            return window.formValidator;
+        }
+        window.formValidator = this;
+        this.initializeValidation();
+    }
 
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
+    initializeValidation() {
+        // ID number validation
+        this.addIdNumberValidation();
+        
+        // Phone number validation
+        this.addPhoneValidation();
+        
+        // Email validation
+        this.addEmailValidation();
 
-function validatePhone(phone) {
-    return /^05\d{8}$/.test(phone);
-}
+        // Investment amount validation
+        this.addInvestmentAmountValidation();
 
-function getCleanNumber(value) {
-    return parseInt(value.replace(/[^\d]/g, ''));
-}
+        console.log('[DEBUG] Form validation initialized');
+    }
 
-function getErrorMessage(fieldName) {
-    const messages = {
-        'idNumber': 'מספר תעודת זהות לא תקין',
-        'email': 'כתובת דואר אלקטרוני לא תקינה',
-        'phone': 'מספר טלפון לא תקין (חייב להתחיל ב-05)',
-        'investmentAmount': 'סכום ההשקעה המינימלי הוא 100,000 ש"ח',
-        'investmentAmountTooLow': 'סכום ההשקעה חייב להיות לפחות 100,000 ש"ח',
-        'currency': 'נא לבחור מטבע',
-        'timeline': 'נא לבחור טווח השקעה',
-        'purpose': 'נא לבחור לפחות מטרת השקעה אחת',
-        'purposeOther': 'נא לפרט את מטרת ההשקעה האחרת',
-        'signature': 'נא לחתום במקום המיועד',
-        'default': 'נא למלא שדה זה'
-    };
-    return messages[fieldName] || messages.default;
-}
+    addIdNumberValidation() {
+        const idInput = document.querySelector('input[name="idNumber"]');
+        if (!idInput) return;
 
-function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    errorDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #dc3545;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
-        z-index: 1000;
-        animation: fadeIn 0.3s;
-    `;
-    document.body.appendChild(errorDiv);
-    setTimeout(() => errorDiv.remove(), 3000);
-}
-
-function validateForm() {
-    const form = document.querySelector('form');
-    if (!form) return false;
-    
-    let isValid = true;
-    let firstError = null;
-    
-    // Validate regular required fields
-    const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
-    requiredFields.forEach(field => {
-        field.classList.remove('error');
-        let fieldIsValid = true;
-
-        // Skip radio and checkbox validation here - we'll handle those separately
-        if (field.type !== 'radio' && field.type !== 'checkbox') {
-            if (!field.value.trim()) {
-                fieldIsValid = false;
-            } else {
-                // Specific validations
-                switch(field.name) {
-                    case 'idNumber':
-                        fieldIsValid = validateIdNumber(field.value);
-                        break;
-                    case 'email':
-                        fieldIsValid = validateEmail(field.value);
-                        break;
-                    case 'phone':
-                        fieldIsValid = validatePhone(field.value);
-                        break;
-                    case 'investmentAmount':
-                        const cleanAmount = getCleanNumber(field.value);
-                        fieldIsValid = !isNaN(cleanAmount);
-                        
-                        // Check minimum amount and show specific error
-                        if (fieldIsValid && cleanAmount < 100000) {
-                            fieldIsValid = false;
-                            showError(getErrorMessage('investmentAmountTooLow'));
-                            field.classList.add('error');
-                            if (!firstError) firstError = field;
-                            return; // Skip the general error message
-                        }
-                        break;
+        idInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            // Allow only numbers
+            e.target.value = value.replace(/[^\d]/g, '');
+            
+            // Israeli ID validation
+            if (value.length === 9) {
+                if (!this.validateIsraeliID(value)) {
+                    idInput.setCustomValidity('מספר תעודת זהות לא תקין');
+                } else {
+                    idInput.setCustomValidity('');
                 }
             }
+        });
+    }
 
-            if (!fieldIsValid) {
-                field.classList.add('error');
-                isValid = false;
-                if (!firstError) firstError = field;
-                const errorMessage = getErrorMessage(field.name);
-                showError(errorMessage);
+    addPhoneValidation() {
+        const phoneInput = document.querySelector('input[name="phone"]');
+        if (!phoneInput) return;
+
+        phoneInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            // Allow only numbers
+            e.target.value = value.replace(/[^\d]/g, '');
+            
+            // Israeli phone validation
+            if (value.length === 10) {
+                if (!this.validateIsraeliPhone(value)) {
+                    phoneInput.setCustomValidity('מספר טלפון לא תקין');
+                } else {
+                    phoneInput.setCustomValidity('');
+                }
             }
-        }
-    });
-
-    // Validate radio button groups
-    const radioGroups = ['currency', 'timeline'];
-    radioGroups.forEach(groupName => {
-        const checkedRadio = form.querySelector(`input[name="${groupName}"]:checked`);
-        if (!checkedRadio) {
-            isValid = false;
-            showError(getErrorMessage(groupName));
-        }
-    });
-
-    // Validate investment purpose (at least one checkbox must be checked)
-    const purposeChecked = form.querySelectorAll('input[name="purpose"]:checked');
-    if (purposeChecked.length === 0) {
-        isValid = false;
-        showError(getErrorMessage('purpose'));
-    } else {
-        // If 'other' is selected, validate the detail field
-        const otherPurpose = Array.from(purposeChecked).find(input => input.value === 'other');
-        if (otherPurpose && !form.elements['purposeOther'].value.trim()) {
-            isValid = false;
-            showError(getErrorMessage('purposeOther'));
-        }
+        });
     }
 
-    // Validate signature
-    const signatureData = document.getElementById('signatureData');
-    if (!signatureData || !signatureData.value) {
-        isValid = false;
-        showError(getErrorMessage('signature'));
+    addEmailValidation() {
+        const emailInput = document.querySelector('input[name="email"]');
+        if (!emailInput) return;
+
+        emailInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (value && !this.validateEmail(value)) {
+                emailInput.setCustomValidity('כתובת אימייל לא תקינה');
+            } else {
+                emailInput.setCustomValidity('');
+            }
+        });
     }
 
-    if (!isValid && firstError) {
-        firstError.focus();
+    addInvestmentAmountValidation() {
+        const amountInput = document.querySelector('input[name="investmentAmount"]');
+        if (!amountInput) return;
+
+        amountInput.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            if (value < 0) {
+                amountInput.setCustomValidity('סכום ההשקעה חייב להיות חיובי');
+            } else if (value > 10000000) {
+                amountInput.setCustomValidity('סכום ההשקעה גדול מדי');
+            } else {
+                amountInput.setCustomValidity('');
+            }
+        });
     }
 
-    return isValid;
+    validateIsraeliID(id) {
+        // Israeli ID validation algorithm
+        if (id.length !== 9) return false;
+        
+        let sum = 0;
+        for (let i = 0; i < 9; i++) {
+            let digit = parseInt(id.charAt(i));
+            if (i % 2 === 0) {
+                digit *= 1;
+            } else {
+                digit *= 2;
+                if (digit > 9) {
+                    digit = digit % 10 + Math.floor(digit / 10);
+                }
+            }
+            sum += digit;
+        }
+        return sum % 10 === 0;
+    }
+
+    validateIsraeliPhone(phone) {
+        // Must start with 05 and be 10 digits
+        return /^05\d{8}$/.test(phone);
+    }
+
+    validateEmail(email) {
+        // Basic email validation
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    validateSection(sectionElement) {
+        const inputs = sectionElement.querySelectorAll('input, select, textarea');
+        let isValid = true;
+        let firstInvalid = null;
+
+        inputs.forEach(input => {
+            if (!input.checkValidity()) {
+                isValid = false;
+                if (!firstInvalid) {
+                    firstInvalid = input;
+                }
+            }
+        });
+
+        if (firstInvalid) {
+            firstInvalid.reportValidity();
+            firstInvalid.focus();
+        }
+
+        return isValid;
+    }
 }
 
-// Export for use in other modules if needed
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { 
-        validateForm,
-        validateIdNumber,
-        validateEmail,
-        validatePhone,
-        showError
-    };
-}
+// Initialize validation when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DEBUG] Initializing form validation');
+    new FormValidator();
+});
