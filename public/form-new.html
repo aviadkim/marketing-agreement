@@ -4,7 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הסכם שיווק השקעות</title>
+    
+    <!-- Styles -->
     <link href="/css/styles.css" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+    
+    <!-- PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="form-container">
@@ -17,7 +28,7 @@
         <!-- Progress Bar -->
         <div class="progress-container">
             <div class="progress-steps">
-                <div class="step" data-step="1">
+                <div class="step active" data-step="1">
                     <div class="step-circle">1</div>
                     <div class="step-label">פרטים אישיים</div>
                 </div>
@@ -36,73 +47,63 @@
             </div>
         </div>
 
-        <!-- Debug Tools -->
-        <div class="debug-tools">
-            <button type="button" id="checkLogsBtn" class="btn-secondary" onclick="window.formHandler.checkLogs()">
-                בדוק לוגים
-            </button>
+        <!-- Debug Panel -->
+        <div class="debug-panel" style="display: none;">
+            <button type="button" id="checkLogsBtn" class="btn-secondary">בדוק לוגים</button>
+            <div id="debugOutput"></div>
         </div>
 
-        <!-- Main Form -->
+        <!-- Form Content -->
         <form id="mainForm" class="form-content">
-            <!-- All sections in one form -->
-            <div class="form-sections-container">
-                <!-- Section 1 -->
-                <div class="form-section active" id="section1">
-                    <div class="section-content">
-                        <h2 class="section-title">פרטים אישיים</h2>
-                        <div class="grid-2">
-                            <div class="input-group">
-                                <label>שם פרטי</label>
-                                <input type="text" name="firstName" required>
-                            </div>
-                            <div class="input-group">
-                                <label>שם משפחה</label>
-                                <input type="text" name="lastName" required>
-                            </div>
-                            <div class="input-group">
-                                <label>תעודת זהות</label>
-                                <input type="text" name="idNumber" pattern="\d{9}" 
-                                       minlength="9" maxlength="9" required>
-                            </div>
-                            <div class="input-group">
-                                <label>דוא"ל</label>
-                                <input type="email" name="email" required>
-                            </div>
-                            <div class="input-group">
-                                <label>טלפון נייד</label>
-                                <input type="tel" name="phone" pattern="[0-9]{10}" 
-                                       minlength="10" maxlength="10" required>
-                            </div>
-                        </div>
+            <!-- Section 1: Personal Details -->
+            <div class="form-section active" id="section1">
+                <h2>פרטים אישיים</h2>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>שם פרטי</label>
+                        <input type="text" name="firstName" required>
+                    </div>
+                    <div class="input-group">
+                        <label>שם משפחה</label>
+                        <input type="text" name="lastName" required>
+                    </div>
+                    <div class="input-group">
+                        <label>תעודת זהות</label>
+                        <input type="text" name="idNumber" pattern="\d{9}" minlength="9" maxlength="9" required>
+                    </div>
+                    <div class="input-group">
+                        <label>דוא"ל</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="input-group">
+                        <label>טלפון נייד</label>
+                        <input type="tel" name="phone" pattern="[0-9]{10}" minlength="10" maxlength="10" required>
                     </div>
                 </div>
+            </div>
 
-                <!-- Section 2 -->
-                <div class="form-section" id="section2">
-                    <!-- תוכן סקשן 2 -->
-                </div>
+            <!-- Section 2: Investment Details -->
+            <div class="form-section" id="section2" style="display: none;">
+                <h2>פרטי השקעה</h2>
+                <!-- תוכן סקשן 2 -->
+            </div>
 
-                <!-- Section 3 -->
-                <div class="form-section" id="section3">
-                    <!-- תוכן סקשן 3 -->
-                </div>
+            <!-- Section 3: Risk Questionnaire -->
+            <div class="form-section" id="section3" style="display: none;">
+                <h2>שאלון סיכון</h2>
+                <!-- תוכן סקשן 3 -->
+            </div>
 
-                <!-- Section 4 -->
-                <div class="form-section" id="section4">
-                    <div class="section-content">
-                        <h2 class="section-title">חתימה ואישור</h2>
-                        <div class="signature-section">
-                            <h3>חתימה דיגיטלית</h3>
-                            <div class="signature-container">
-                                <canvas id="signatureCanvas" class="signature-canvas"></canvas>
-                                <div class="signature-controls">
-                                    <button type="button" data-clear-signature>נקה חתימה</button>
-                                    <button type="button" data-copy-signature>הדבק חתימה קודמת</button>
-                                    <button type="button" data-save-signature>שמור חתימה</button>
-                                </div>
-                            </div>
-                            <input type="hidden" id="signatureData" name="signature" required>
+            <!-- Section 4: Declarations -->
+            <div class="form-section" id="section4" style="display: none;">
+                <h2>הצהרות וחתימה</h2>
+                <div class="signature-section">
+                    <h3>חתימה דיגיטלית</h3>
+                    <div class="signature-container">
+                        <canvas id="signatureCanvas"></canvas>
+                        <div class="signature-controls">
+                            <button type="button" data-clear-signature>נקה חתימה</button>
+                            <button type="button" data-save-signature>שמור חתימה</button>
                         </div>
                     </div>
                 </div>
@@ -111,29 +112,22 @@
 
         <!-- Navigation -->
         <div class="form-navigation">
-            <button type="button" id="prevBtn" class="btn-prev">חזור</button>
+            <button type="button" id="prevBtn" class="btn-prev" style="display: none;">חזור</button>
             <button type="button" id="nextBtn" class="btn-next">המשך</button>
-            <button type="button" id="submitBtn" class="btn-submit" style="display:none;">
-                שלח טופס
-            </button>
+            <button type="button" id="submitBtn" class="btn-submit" style="display: none;">שלח טופס</button>
         </div>
 
         <!-- Loader -->
-        <div class="loader" style="display:none;">
+        <div class="loader" style="display: none;">
             <div class="spinner"></div>
             <div class="loader-text">מעבד את הטופס...</div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
+    <!-- Application Scripts -->
     <script src="/js/signature_pad.umd.min.js"></script>
     <script src="/js/firebaseConfig.js"></script>
+    <script src="/js/validation.js"></script>
     <script src="/js/formHandlerNew.js"></script>
 </body>
 </html>
